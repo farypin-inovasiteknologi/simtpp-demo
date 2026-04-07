@@ -1473,20 +1473,33 @@
 </div>
 
 <div class="modal fade" id="modalDownloadReady" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-sm modal-dialog-centered">
-    <div class="modal-content text-center shadow">
-      <div class="modal-body py-4">
-        <div class="text-success mb-2" style="font-size: 3rem;">✔️</div>
-        <h5 class="fw-bold text-dark">File Siap Diunduh!</h5>
-        <p class="text-muted small">Laporan Anda telah berhasil disusun oleh server.</p>
-        <a id="btnRealDownload" href="#" target="_blank" class="btn btn-success fw-bold w-100 py-2 fs-5" onclick="tutupModalDownload()">
-          📥 UNDUH SEKARANG
+  <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-content text-center shadow-lg border-0 rounded-4">
+      <div class="modal-header bg-success text-white border-0">
+        <h5 class="modal-title fw-bold"><i class="bi bi-check-circle-fill"></i> File Laporan Siap!</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body py-4 px-4">
+        
+        <div class="alert alert-danger border-danger shadow-sm mb-4 text-start" style="border-width: 2px;">
+          <h6 class="fw-bold text-danger mb-2" style="font-size: 1.05rem;">
+            <i class="bi bi-exclamation-triangle-fill fs-4 me-1"></i> PENGUMUMAN PENTING!
+          </h6>
+          <p class="mb-0 text-dark" style="font-size: 0.9rem; line-height: 1.5;">
+            Pastikan Anda telah mengeklik tombol <b>SIMPAN AMPRAH GAJI</b> dan <b>SIMPAN PERHITUNGAN TPP</b> untuk pegawai yang Anda kelola bulan ini.<br><br>
+            <span class="bg-warning text-dark px-2 py-1 fw-bold rounded d-inline-block border border-dark">
+              🔥 DATA YANG BELUM DISIMPAN TIDAK AKAN MUNCUL DI HASIL CETAKAN INI!
+            </span>
+          </p>
+        </div>
+        
+        <a id="btnRealDownload" href="#" target="_blank" class="btn btn-success fw-bold w-100 py-3 fs-5 rounded-pill shadow-sm" onclick="tutupModalDownload()">
+          <i class="bi bi-cloud-arrow-down-fill me-2"></i> UNDUH SEKARANG
         </a>
       </div>
     </div>
   </div>
 </div>
-
 
     <div class="custom-footer text-center no-print">
       <p class="mb-1 fw-bold">SIM TPP ONLINE &copy; 2026 Pemerintah Provinsi Jambi</p>

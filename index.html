@@ -2185,16 +2185,32 @@ function muatDropdownJabatan(selectedValue = "") {
   let currentPage = 1;
   let rowsPerPage = 15; 
 
-  function muatDataPegawai() {
-    google.script.run.withSuccessHandler(data => {
+  async function muatDataPegawai() {
+    startLoading("Memuat Data Pegawai...");
+    
+    // 👇 MEMANGGIL BACKEND MENGGUNAKAN API (BUKAN GOOGLE LAGI) 👇
+    let data = await fetchAPI("getDaftarPegawai", {
+        bulanAktif: globalBulanAktif, 
+        roleUser: currentUser.role, 
+        unitkerjaUser: currentUser.unitkerja, 
+        jenisASN: globalJenisASN
+    });
+    
+    stopLoading();
+    
+    // Jika data berhasil ditarik
+    if (data && !data.error && Array.isArray(data)) {
       globalDataPegawai = data; 
       let unitList = [...new Set(data.map(item => item[4]).filter(Boolean))];
       let unitDropdown = document.getElementById('filterUnitKerja');
       unitDropdown.innerHTML = '<option value="">Semua Unit Kerja</option>';
       unitList.forEach(s => unitDropdown.innerHTML += `<option value="${s}">${s}</option>`);
       terapkanFilter(); 
-    // TAMBAHKAN globalJenisASN DI BAWAH INI
-    }).getDaftarPegawai(globalBulanAktif, currentUser.role, currentUser.unitkerja, globalJenisASN);
+    } else {
+      // Jika terjadi error dari server
+      document.getElementById('tabelBodyPegawai').innerHTML = '<tr><td colspan="7" class="text-center text-danger fw-bold">Gagal memuat data dari server.</td></tr>';
+      console.error("Error muatDataPegawai:", data);
+    }
   }
 
   function terapkanFilter() {

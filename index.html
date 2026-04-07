@@ -511,9 +511,9 @@
           <form id="formSetting" onsubmit="submitSetting(event)">
             <h6 class="fw-bold text-primary border-bottom pb-2">Informasi Kop Laporan</h6>
             <div class="row mb-3">
-              <div class="col-md-4"><label>Nama Instansi</label><input type="text" id="sInstansi" class="form-control" placeholder="PEMERINTAH PROVINSI JAMBI" required</div>
-              <div class="col-md-4"><label>Nama Dinas/Badan</label><input type="text" id="sDinas" class="form-control" placeholder="DINAS......." required></div>
-              <div class="col-md-4"><label>Nama Sub Dinas/Badan (Opsional)</label><input type="text" id="sSubDinas" class="form-control" placeholder="kosongkan jika tidak perlu...." required></div>  
+              <div class="col-md-12"><label>Nama Instansi</label><input type="text" id="sInstansi" class="form-control" placeholder="PEMERINTAH PROVINSI JAMBI" required</div>
+              <div class="col-md-6"><label>Nama Dinas/Badan</label><input type="text" id="sDinas" class="form-control" placeholder="DINAS......." required></div>
+              <div class="col-md-6"><label>Nama Sub Dinas/Badan (Opsional)</label><input type="text" id="sSubDinas" class="form-control" placeholder="kosongkan jika tidak perlu...."></div>  
             </div>
             
             <h6 class="fw-bold text-info border-bottom pb-2 mt-4"><i class="bi bi-images"></i> Pengaturan Logo (Otomatis Crop 1:1 & Kompres)</h6>
@@ -1677,10 +1677,34 @@
   }
 
   async function submitSetting(e) {
-    e.preventDefault(); startLoading("Menyimpan Pengaturan..."); 
-    let d = { usernameAksi: currentUser.username, Nama_Dinas: document.getElementById('sDinas').value, Nama_Sub_Dinas: document.getElementById('sSubDinas').value, Nama_Instansi: document.getElementById('sInstansi').value, Kepala_Jabatan: document.getElementById('sKepJab').value, Kepala_Nama: document.getElementById('sKepNama').value, Kepala_Pangkat: document.getElementById('sKepPangkat').value, Kepala_NIP: document.getElementById('sKepNIP').value, Bendahara_Nama: document.getElementById('sBenNama').value, Bendahara_Pangkat: document.getElementById('sBenPangkat').value, Bendahara_NIP: document.getElementById('sBenNIP').value, Rek_Korpri: document.getElementById('sRekKorpri').value, Pot_Korpri: document.getElementById('sPotKorpri').value, Logo_Dinas: document.getElementById('sLogoDinas').value, Logo_Instansi: document.getElementById('sLogoInstansi').value };
-    let res = await fetchAPI("simpanSetting", d); stopLoading(); 
-    if(res.includes("Akses Ditolak") || res.includes("Error")) { alertError(res); } else { alertSukses(res); }
+    e.preventDefault(); 
+    startLoading("Menyimpan Pengaturan..."); 
+    
+    let d = { 
+      usernameAksi: currentUser.username, 
+      Nama_Dinas: document.getElementById('sDinas').value, 
+      Nama_Sub_Dinas: document.getElementById('sSubDinas').value || "", // <-- Aman jika dikosongkan
+      Nama_Instansi: document.getElementById('sInstansi').value, 
+      Kepala_Jabatan: document.getElementById('sKepJab').value, 
+      Kepala_Nama: document.getElementById('sKepNama').value, 
+      Kepala_Pangkat: document.getElementById('sKepPangkat').value, 
+      Kepala_NIP: document.getElementById('sKepNIP').value, 
+      Bendahara_Nama: document.getElementById('sBenNama').value, 
+      Bendahara_Pangkat: document.getElementById('sBenPangkat').value, 
+      Bendahara_NIP: document.getElementById('sBenNIP').value, 
+      Rek_Korpri: document.getElementById('sRekKorpri').value, 
+      Pot_Korpri: document.getElementById('sPotKorpri').value || 0, 
+      Logo_Dinas: document.getElementById('sLogoDinas').value || "", 
+      Logo_Instansi: document.getElementById('sLogoInstansi').value || "" 
+    };
+    
+    let res = await fetchAPI("simpanSetting", d); 
+    stopLoading(); 
+    if(res.includes("Akses Ditolak") || res.includes("Error")) { 
+      alertError(res); 
+    } else { 
+      alertSukses(res); 
+    }
   }
 
   function handleLogoUpload(input, hiddenId, previewId) { const file = input.files[0]; if(!file) return; const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = (e) => { const img = new Image(); img.src = e.target.result; img.onload = () => { const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const size = Math.min(img.width, img.height); const startX = (img.width - size) / 2; const startY = (img.height - size) / 2; canvas.width = 150; canvas.height = 150; ctx.clearRect(0, 0, 150, 150); ctx.drawImage(img, startX, startY, size, size, 0, 0, 150, 150); const base64Str = canvas.toDataURL('image/png'); document.getElementById(hiddenId).value = base64Str; let preview = document.getElementById(previewId); preview.src = base64Str; preview.classList.remove('hidden'); }; }; }

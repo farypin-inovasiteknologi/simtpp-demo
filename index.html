@@ -1,0 +1,3237 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <title>Demo SIMTPP Pemprov Jambi/title>
+    <link rel="icon" type="image/png" href="./logo.png">
+
+
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  
+
+  <style>
+    body { background-color: #f4f6f9; padding-top: 20px; font-size: 0.90rem; }
+    .hidden { display: none !important; }
+    tr.clickable td:not(.no-click) { cursor: pointer; }
+    tr.clickable:hover td:not(.no-click) { background-color: #e9ecef; }
+    .readonly-field { background-color: #e9ecef; font-weight: bold; cursor: not-allowed;}
+    .box-amprah { border: 1px solid #ddd; border-radius: 8px; padding: 15px; background: #fff; margin-bottom: 10px; }
+    .table-tpp th { font-size: 0.85rem; text-align: center; vertical-align: middle; }
+    .table-tpp td { font-size: 0.85rem; text-align: right; }
+    .flex-row-center { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .input-absen { width: 55px; text-align: center; font-weight: bold; margin: auto; }
+    .bg-soft-blue { background-color: #e3f2fd !important; }
+    
+    /* Print Layout & PDF Generation Mode */
+    @media print {
+      body * { visibility: hidden; }
+      #printArea, #printArea * { visibility: visible; }
+      #printArea { position: absolute; left: 0; top: 0; width: 100%; }
+      .no-print { display: none !important; }
+      .table-bordered th, .table-bordered td { border: 1px solid black !important; }
+    }
+    
+    /* KUNCI PERBAIKAN BUG PDF TERPOTONG & FREEZE */
+    .pdf-mode button, .pdf-mode .nav-pills { display: none !important; }
+    .pdf-mode .table-responsive { overflow: visible !important; }
+    .pdf-mode { height: auto !important; overflow: visible !important; padding-bottom: 20px; }
+    /* --- EFEK VISUAL BARU --- */
+    @keyframes floatAnim {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-12px); }
+      100% { transform: translateY(0px); }
+    }
+    .floating-logo {
+      animation: floatAnim 3s ease-in-out infinite;
+      filter: drop-shadow(0px 8px 6px rgba(0,0,0,0.2)); /* Efek bayangan melayang */
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.45) !important; /* Dibuat sangat transparan */
+      backdrop-filter: blur(15px); /* Efek kaca buram (frosted glass) ditingkatkan */
+      -webkit-backdrop-filter: blur(15px);
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.5); /* Garis pinggir mengkilap */
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2) !important; /* Bayangan 3D */
+    }
+    .custom-footer {
+      border-top: 1px solid #eaeaea;
+      padding-top: 20px;
+      margin-top: 40px;
+      color: #6c757d;
+      font-size: 0.85rem;
+    }
+
+    /* --- ANIMASI BACKGROUND LOGIN --- */
+    .bg-gradient-login {
+      background: linear-gradient(-45deg, #0d6efd, #198754, #0dcaf0, #20c997);
+      background-size: 400% 400%;
+      animation: gradientBG 10s ease infinite;
+      min-height: 100vh;
+    }
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* ==========================================
+       MOBILE NATIVE APP UI (RESPONSIVE)
+    ========================================== */
+    /* Header Atas Khusus HP */
+    .mobile-header {
+      position: fixed; top: 0; left: 0; right: 0;
+      background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 1030;
+      padding: 10px 15px; display: none; align-items: center; justify-content: space-between;
+    }
+    .m-header-left { display: flex; align-items: center; gap: 10px; }
+    .m-header-logo { width: 38px; height: 38px; border-radius: 50%; object-fit: contain; }
+    .m-header-title { font-weight: 800; font-size: 1.1rem; color: #198754; margin: 0; line-height: 1; }
+    .m-header-subtitle { font-size: 0.75rem; color: #6c757d; margin: 0; font-weight: bold; }
+    .m-header-right { display: flex; gap: 15px; align-items: center; }
+    .m-header-icon { color: #495057; font-size: 1.3rem; cursor: pointer; transition: 0.2s; }
+    .m-header-icon:hover { color: #198754; }
+
+    /* Menu Bawah (Bottom Navigation) Khusus HP */
+    .mobile-bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: #ffffff; box-shadow: 0 -2px 15px rgba(0,0,0,0.08); z-index: 1030;
+      display: none; justify-content: space-around; align-items: center;
+      padding: 5px 0; height: 65px; border-radius: 20px 20px 0 0;
+    }
+    .m-nav-item {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: #adb5bd; text-decoration: none; font-size: 0.65rem; width: 20%; font-weight: bold; transition: 0.3s;
+    }
+    .m-nav-item i { font-size: 1.4rem; margin-bottom: 2px; }
+    .m-nav-item.active { color: #198754; }
+    .m-nav-item.active i { transform: translateY(-3px); }
+
+    /* Tombol Tengah (Pegawai) Berbeda Sendiri (Floating Action Button) */
+    .m-nav-center {
+      position: relative; top: -20px; width: 60px; height: 60px;
+      background: linear-gradient(135deg, #198754, #20c997);
+      border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center;
+      color: white !important; box-shadow: 0 6px 15px rgba(25, 135, 84, 0.4);
+      border: 5px solid #f4f6f9;
+    }
+    .m-nav-center i { font-size: 1.8rem; margin: 0; }
+    .m-nav-center.disabled { background: #6c757d !important; box-shadow: none; opacity: 0.6; }
+
+    /* Tombol Scroll ke Atas */
+    .scroll-to-top {
+      position: fixed; bottom: 85px; right: 15px; width: 45px; height: 45px;
+      background: rgba(13, 110, 253, 0.8); color: white; border-radius: 50%;
+      display: none; justify-content: center; align-items: center; font-size: 1.5rem;
+      z-index: 1020; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: 0.3s;
+      border: 2px solid white;
+    }
+
+    /* PENGATURAN TOMBOL LAPTOP/DESKTOP (Normal 1 Baris) */
+    .action-left-wrapper { display: flex; gap: 8px; }
+    .action-right-wrapper { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+
+    /* Media Queries: Mengatur apa yang tampil di HP vs Laptop */
+    @media (max-width: 768px) {
+      body { padding-top: 60px; padding-bottom: 80px; } 
+      #mainNav { display: none !important; } 
+      .mobile-header, .mobile-bottom-nav { display: flex; } 
+      #appContainer { min-height: calc(100vh - 140px); margin-top: 5px; box-shadow: none !important; }
+      .custom-footer { margin-bottom: 30px; } 
+
+      /* 1. PERBAIKAN TABEL PEGAWAI KHUSUS HP */
+      /* Membatasi lebar Nama dan Unit Kerja */
+      #tabelBodyPegawai td:nth-child(2), 
+      #tabelBodyPegawai td:nth-child(4) {
+        min-width: 120px;
+        max-width: 140px;
+        white-space: normal !important; /* Izinkan turun baris */
+      }
+      /* Bikin efek titik-titik (...) jika lebih dari 2 baris */
+      #tabelBodyPegawai td:nth-child(2) b,
+      #tabelBodyPegawai td:nth-child(4) {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        word-break: break-word;
+      }
+      /* Tombol aksi berjejer ke samping, tidak turun ke bawah */
+      #tabelBodyPegawai td:nth-child(7) {
+        white-space: nowrap !important; 
+      }
+
+      /* 2. PERBAIKAN 4 MENU ASN JADI KOTAK 2x2 KHUSUS HP */
+      #viewManajemenASN .nav-pills {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr; /* Bagi jadi 2 kolom (Kiri-Kanan) */
+        gap: 10px; /* Jarak antar tombol agak dilegakan */
+        padding-bottom: 10px;
+      }
+      #viewManajemenASN .nav-pills .nav-item {
+        width: 100%;
+        height: 100%; /* Paksa kotak luar sama tinggi */
+        margin: 0 !important;
+        display: flex; /* Jurus rahasia agar isi dalamnya bisa melar */
+      }
+      #viewManajemenASN .nav-pills .nav-link {
+        width: 100%; /* Warna latar penuh ke samping */
+        height: 100%; /* Warna latar penuh ke atas-bawah */
+        min-height: 60px; /* Paksa tinggi rata-rata pas untuk 2 baris teks */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-size: 0.75rem; 
+        padding: 5px !important;
+        white-space: normal; /* Izinkan teks turun baris */
+        line-height: 1.3;
+        border-radius: 0.375rem !important; /* Rapikan sudutnya biar bulat sempurna */
+      }
+
+      /* 3. PERBAIKAN KOTAK JUMLAH BERSIH GAJI KHUSUS HP */
+      .box-jml-bersih {
+        flex-direction: column !important; /* Turunkan input ke bawah teks */
+        align-items: stretch !important;
+        text-align: center;
+        padding: 15px !important;
+      }
+      .box-jml-bersih h4 {
+        font-size: 0.95rem !important;
+        margin-bottom: 10px !important;
+      }
+      .box-jml-bersih input {
+        width: 100% !important; /* Kolom angka memenuhi lebar layar hp */
+        text-align: center !important; /* Angka rata tengah */
+        font-size: 1.5rem !important;
+      }
+    }
+
+    /* KUNCI TAMPILAN HP: GRID 2 KOTAK RAPI & TIDAK MELAR */
+      .action-left, .action-right {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        width: 100%;
+      }
+      .action-left button, .action-right .btn-group, .action-right .btn-group button {
+        width: 100% !important;
+        margin: 0 !important;
+      }
+      .action-right .dropdown-menu { width: 100%; text-align: center; }
+
+    /* ==========================================
+       OBAT ANTI-MELAR KHUSUS LAPTOP/DESKTOP 
+       ========================================== */
+    @media (min-width: 769px) {
+      .action-left, .action-right {
+        display: flex !important;
+        width: auto !important; /* KUNCI 1: Paksa wadahnya jangan memanjang 100% */
+      }
+      .action-left button, .action-right .btn-group, .action-right .btn-group button {
+        width: auto !important; /* KUNCI 2: Paksa tombolnya kembali ke ukuran asli / pendek */
+        flex: none !important;  /* Mencegah flexbox menarik tombol kesamping */
+      }
+    }
+  </style>
+</head>
+<body class="bg-gradient-login">
+
+<div id="viewLogin" class="text-center" style="padding-top: 10vh;">
+  <div class="card mx-auto border-0 glass-card p-3 shadow-lg" style="max-width: 450px;">
+    <div class="card-body py-4">
+      <div class="d-flex justify-content-center gap-4 mb-3" style="min-height: 90px;">
+        <img id="loginLogoInstansi" src="" width="85" height="85" class="floating-logo hidden" style="object-fit: contain;">
+        <img id="loginLogoDinas" src="" width="85" height="85" class="floating-logo hidden" style="object-fit: contain; animation-delay: 0.5s;">
+      </div>
+      <h6 class="fw-bold mb-0 text-dark" id="loginNamaInstansi" style="letter-spacing: 1px;">PEMERINTAH PROVINSI JAMBI</h6>
+      <h6 class="fw-bold mb-0 text-dark" id="loginNamaDinas">MEMUAT DATA...</h6>
+      <h6 class="fw-bold mb-4 text-secondary small" id="loginSubDinas"></h6>
+      <h4 class="fw-bold mb-4 pt-3" style="color: #198754; border-top: 2px dashed #e9ecef;">SIM TPP ONLINE</h4>
+      
+      <form onsubmit="doLogin(event)">
+            <div class="input-group mb-3 shadow-sm rounded-pill overflow-hidden bg-light">
+              <span class="input-group-text bg-light border-0 text-secondary ps-4"><i class="bi bi-person-fill"></i></span>
+              <input type="text" id="logUser" class="form-control form-control-lg bg-light border-0" placeholder="Username" required>
+            </div>
+            
+            <div class="input-group mb-3 shadow-sm rounded-pill overflow-hidden bg-light">
+              <span class="input-group-text bg-light border-0 text-secondary ps-4"><i class="bi bi-lock-fill"></i></span>
+              <input type="password" id="logPass" class="form-control form-control-lg bg-light border-0" placeholder="Password" required>
+              <button class="btn btn-light bg-light border-0 px-4 text-secondary" type="button" onclick="togglePassword('logPass', this)"><i class="bi bi-eye"></i></button>
+            </div>
+            
+            <div class="mb-4 text-end px-2">
+              <a href="javascript:void(0)" class="small text-decoration-none text-danger fw-bold" onclick="bukaLupaPassword()">Lupa Password?</a>
+            </div>
+            <button type="submit" class="btn btn-success btn-lg w-100 fw-bold rounded-pill shadow-sm">MASUK <i class="bi bi-arrow-right-circle ms-1"></i></button>
+          </form>
+    </div>
+  </div>
+</div>
+
+<div class="mobile-header hidden" id="mobileHeader">
+  <div class="m-header-left">
+    <img id="mHeaderLogo" src="" class="m-header-logo hidden">
+    <div>
+      <p class="m-header-title">SIM TPP</p>
+      <p class="m-header-subtitle" id="mHeaderUnit">Unit Kerja</p>
+    </div>
+  </div>
+  <div class="m-header-right" id="mHeaderAdminIcons">
+    <i class="bi bi-box-seam m-header-icon" onclick="switchView('viewMasterPergub')" title="Master TPP"></i>
+    <i class="bi bi-people-fill m-header-icon" onclick="muatDaftarAkun()" title="Kelola Akun"></i>
+    <i class="bi bi-gear-fill m-header-icon" onclick="bukaSetting()" title="Pengaturan"></i>
+  </div>
+</div>
+
+<div class="mobile-bottom-nav hidden" id="mobileBottomNav">
+  <a href="javascript:void(0)" class="m-nav-item" id="mNavHome" onclick="switchView('viewPilihBulan')">
+    <i class="bi bi-house-door-fill"></i><span>Home</span>
+  </a>
+  <a href="javascript:void(0)" class="m-nav-item" id="mNavPanduan" onclick="switchView('viewPanduan')">
+    <i class="bi bi-book-half"></i><span>Panduan</span>
+  </a>
+  <a href="javascript:void(0)" class="m-nav-item m-nav-center disabled" id="mNavPegawai" onclick="if(!this.classList.contains('disabled')) switchView('viewDaftarPegawai')">
+    <i class="bi bi-person-lines-fill"></i>
+  </a>
+  <a href="javascript:void(0)" class="m-nav-item" id="mNavProfil" onclick="bukaModalProfil()">
+    <i class="bi bi-person-circle"></i><span>Profil</span>
+  </a>
+  <a href="javascript:void(0)" class="m-nav-item text-danger" onclick="logoutApp()">
+    <i class="bi bi-box-arrow-right"></i><span>Keluar</span>
+  </a>
+</div>
+
+<div class="scroll-to-top" id="btnScrollTop" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+  <i class="bi bi-chevron-up"></i>
+</div>
+
+
+<div id="appContainer" class="container bg-white shadow p-0 rounded hidden" style="min-height: 90vh;">
+  
+  <nav id="mainNav" class="navbar navbar-expand-lg navbar-dark bg-dark px-3 no-print">
+
+    <a class="navbar-brand" href="#">SIM TPP <span id="navInfoRole" class="badge bg-success ms-2"></span></a>
+    <div class="navbar-nav ms-auto">
+  <button class="btn btn-sm fw-bold me-2" 
+          style="background-color: #90EE90; color: #000; border: none;" 
+          onclick="switchView('viewPilihBulan')">🏠 Home</button>
+
+  <button class="btn btn-sm fw-bold me-2" 
+          id="btnMenuPegawai" 
+          style="background-color: #8A2BE2; color: #fff; border: none;" 
+          onclick="switchView('viewDaftarPegawai')" disabled>Data Pegawai</button>
+
+  <button class="btn btn-warning fw-bold btn-sm" onclick="switchView('viewMasterPergub')" id="btnMasterAdmin">Master TPP</button>
+      <button class="btn btn-info text-white fw-bold btn-sm ms-1" onclick="switchView('viewPanduan')">Panduan</button>
+      <button class="btn btn-secondary fw-bold btn-sm ms-1" onclick="bukaSetting()" id="btnSettingAdmin"><i class="bi bi-gear"></i> Setting</button>
+      
+      <button class="btn btn-primary fw-bold btn-sm ms-1" onclick="muatDaftarAkun()" id="btnAkunAdmin"><i class="bi bi-people"></i> Kelola Akun</button>
+      <button class="btn btn-light fw-bold btn-sm ms-1 text-dark" onclick="bukaModalProfil()"><i class="bi bi-person-circle"></i> Profil Saya</button>
+      
+      <button class="btn btn-danger fw-bold btn-sm ms-2" onclick="logoutApp()">Keluar</button>
+    </div>
+  </nav>
+
+  <div class="p-4 no-print">
+
+    <div id="viewPilihBulan" class="text-center mt-5 hidden">
+      <div class="card mx-auto shadow-sm" style="max-width: 450px; border-top: 4px solid #0d6efd;">
+        <div class="card-body py-5">
+          <h4 class="fw-bold text-primary mb-2">Pilih Periode TPP</h4>
+          <p class="text-muted mb-4 small">Anda hanya dapat mengelola TPP pada periode bulan yang telah ditambahkan dan diaktifkan secara berurutan.</p>
+          
+          <div class="mb-3 text-start">
+  <label class="fw-bold">Periode Aktif:</label>
+  <select id="pilihPeriodeUtama" class="form-select form-select-lg text-center fw-bold border-primary mb-3">
+    <option value="">-- Memuat Data Periode --</option>
+  </select>
+
+  <label class="fw-bold text-success">Kelola Jenis ASN:</label>
+  <select id="pilihJenisASN" class="form-select form-select-lg text-center fw-bold border-success">
+    <option value="PNS">Pegawai Negeri Sipil (PNS)</option>
+    <option value="PPPK">Pegawai Pemerintah dengan Perjanjian Kerja (PPPK)</option>
+  </select>
+</div>
+          
+          <button class="btn btn-primary btn-lg w-100 fw-bold mb-3" onclick="masukAplikasi()">MASUK APLIKASI ➔</button>
+          <hr>
+          <button id="btnTambahBulan" class="btn btn-outline-secondary w-100 fw-bold hidden" onclick="bukaModalTambahPeriode()">+ Tambah Periode Bulan Baru</button>
+          <button id="btnKelolaBulan" class="btn btn-outline-danger w-100 fw-bold mt-2 hidden" onclick="bukaModalEditPeriode()">⚙️ Kelola (Edit / Kunci / Hapus) Periode Aktif</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="viewDaftarPegawai" class="hidden">
+      <div class="alert alert-primary fw-bold text-center fs-5 shadow-sm mb-3">
+        PENGELOLAAN DATA PEGAWAI & TPP<br>
+        <span class="text-dark" style="font-size: 1rem; font-weight: normal;">
+          Periode : <span id="labelBulanAktif" class="text-danger fw-bold text-uppercase"></span> 
+          <span class="d-block d-md-inline mt-1 mt-md-0">( HK : <span id="labelHKAktif"></span> Hari )</span>
+        </span>
+      </div>
+      <div id="warningLock" class="alert alert-danger fw-bold text-center shadow-sm hidden border-danger">
+        <i class="bi bi-lock-fill"></i> PERIODE INI SUDAH DIKUNCI OLEH ADMIN <br> <span class="small text-dark">Data hanya dapat dilihat dan dicetak. Anda tidak dapat menambah/mengedit data pegawai.</span>
+      </div>
+      
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-start mb-3 gap-3">
+        
+        <div class="action-left d-flex flex-wrap gap-2">
+          <button id="btnTambahPegawai" class="btn btn-primary btn-sm fw-bold shadow-sm" onclick="bukaModalPegawai('tambah')">
+            <i class="bi bi-person-plus"></i> Tambah
+          </button>
+          <button id="btnImportPegawai" class="btn btn-success btn-sm fw-bold shadow-sm" onclick="bukaModalImport('pegawai')">
+            <i class="bi bi-file-earmark-excel"></i> Import
+          </button>
+        </div>
+        
+        <div class="action-right d-flex flex-wrap gap-2 justify-content-md-end">
+          <div class="btn-group shadow-sm">
+            <button class="btn btn-success btn-sm dropdown-toggle fw-bold" data-bs-toggle="dropdown"><i class="bi bi-printer"></i> Nominatif</button>
+            <ul class="dropdown-menu shadow text-center">
+              <li><a class="dropdown-item fw-bold text-success" href="javascript:void(0)" onclick="unduhNominatifKolektif('excel', event)">Unduh Excel</a></li>
+              <li><a class="dropdown-item fw-bold text-danger" href="javascript:void(0)" onclick="unduhNominatifKolektif('pdf', event)">Unduh PDF</a></li>
+            </ul>
+          </div>
+          <div class="btn-group shadow-sm">
+            <button class="btn btn-warning btn-sm dropdown-toggle fw-bold" data-bs-toggle="dropdown"><i class="bi bi-printer"></i> Perhitungan</button>
+            <ul class="dropdown-menu shadow text-center">
+              <li><a class="dropdown-item fw-bold text-success" href="javascript:void(0)" onclick="unduhPerhitunganKolektif('excel', event)">Unduh Excel</a></li>
+              <li><a class="dropdown-item fw-bold text-danger" href="javascript:void(0)" onclick="unduhPerhitunganKolektif('pdf', event)">Unduh PDF</a></li>
+            </ul>
+          </div>
+          <div class="btn-group shadow-sm">
+            <button class="btn btn-info text-white btn-sm dropdown-toggle fw-bold" data-bs-toggle="dropdown"><i class="bi bi-bar-chart-fill"></i> Rekap Gol.</button>
+            <ul class="dropdown-menu shadow text-center">
+              <li><a class="dropdown-item fw-bold text-success" href="javascript:void(0)" onclick="unduhRekapGolongan('excel', event)">Unduh Excel</a></li>
+              <li><a class="dropdown-item fw-bold text-danger" href="javascript:void(0)" onclick="unduhRekapGolongan('pdf', event)">Unduh PDF</a></li>
+            </ul>
+          </div>
+          <div class="btn-group shadow-sm">
+            <button class="btn btn-secondary btn-sm dropdown-toggle fw-bold" data-bs-toggle="dropdown"><i class="bi bi-bank"></i> Rekening</button>
+            <ul class="dropdown-menu shadow text-center">
+              <li><a class="dropdown-item fw-bold text-success" href="javascript:void(0)" onclick="unduhRekening('excel', event)">Unduh Excel</a></li>
+              <li><a class="dropdown-item fw-bold text-danger" href="javascript:void(0)" onclick="unduhRekening('pdf', event)">Unduh PDF</a></li>
+            </ul>
+          </div>
+          <div class="btn-group shadow-sm">
+            <button class="btn btn-danger btn-sm dropdown-toggle fw-bold" data-bs-toggle="dropdown"><i class="bi bi-receipt"></i> Rekap Pajak</button>
+            <ul class="dropdown-menu shadow text-center">
+              <li><a class="dropdown-item fw-bold text-success" href="javascript:void(0)" onclick="unduhRekapPajak('excel', event)">Unduh Excel</a></li>
+              <li><a class="dropdown-item fw-bold text-danger" href="javascript:void(0)" onclick="unduhRekapPajak('pdf', event)">Unduh PDF</a></li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="row mb-3 bg-light p-2 border rounded shadow-sm mx-0">
+        <div class="col-md-4 mb-1">
+          <input type="text" id="filterCari" class="form-control border-primary" placeholder="🔍 Cari NIP atau Nama..." oninput="terapkanFilter()">
+        </div>
+        <div class="col-md-4 mb-1">
+          <select id="filterGol" class="form-select border-primary" onchange="terapkanFilter()">
+            <option value="">Semua Golongan</option>
+            <option value="IV">Golongan IV</option>
+            <option value="III">Golongan III</option>
+            <option value="II">Golongan II</option>
+            <option value="I">Golongan I</option>
+            <option value="PPPK">PPPK</option>
+          </select>
+        </div>
+        <div class="col-md-4 mb-1">
+          <select id="filterUnitKerja" class="form-select border-primary" onchange="terapkanFilter()">
+            <option value="">Semua Unit Kerja</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-responsive bg-white">
+        <table class="table table-bordered table-hover align-middle">
+          <thead class="table-dark"><tr><th>NIP</th><th>Nama Pegawai</th><th>Golongan</th><th>Unit Kerja</th><th>Jabatan</th><th>Rekening</th><th class="text-center">Aksi</th></tr></thead>
+          <tbody id="tabelBodyPegawai"><tr><td colspan="7" class="text-center">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+      
+      <div class="d-flex justify-content-between align-items-center mt-2">
+        <span id="infoPagination" class="text-muted fw-bold small">Menampilkan 0 data</span>
+        <div id="btnPagination" class="btn-group"></div>
+      </div>
+    </div>
+
+    <div id="viewMasterPergub" class="hidden">
+      <div class="d-flex justify-content-between mb-3">
+        <h4 class="mb-0 fw-bold">Master TPP Kepgub</h4>
+        <div>
+          <button class="btn btn-warning fw-bold btn-sm me-1" onclick="bukaModalPergub('tambah')">+ Tambah</button>
+          <button class="btn btn-success fw-bold btn-sm shadow-sm" onclick="bukaModalImport('pergub')"><i class="bi bi-file-earmark-excel"></i> Import</button>
+        </div>
+      </div>
+      
+      <div class="row mb-3 bg-light p-2 border rounded shadow-sm mx-0">
+        <div class="col-md-12 mb-1">
+          <input type="text" id="filterCariPergub" class="form-control border-primary" placeholder="🔍 Cari Nama Jabatan..." oninput="terapkanFilterPergub()">
+        </div>
+      </div>
+
+      <div class="table-responsive bg-white">
+        <table class="table table-bordered table-hover align-middle">
+          <thead class="table-dark"><tr><th>Nama Jabatan</th><th>Kelas</th><th>Total TPP Bruto</th><th class="text-center">Aksi</th></tr></thead>
+          <tbody id="tabelBodyPergub"><tr><td colspan="4" class="text-center">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+      
+      <div class="d-flex justify-content-between align-items-center mt-2">
+        <span id="infoPaginationPergub" class="text-muted fw-bold small">Menampilkan 0 data</span>
+        <div id="btnPaginationPergub" class="btn-group"></div>
+      </div>
+    </div>
+
+    <div id="viewPanduan" class="hidden">
+      <div class="d-flex justify-content-between mb-3">
+        <h4 class="mb-0 fw-bold text-primary"><i class="bi bi-book-half"></i> Dasar Hukum & Simulasi Perhitungan</h4>
+        <button class="btn btn-sm btn-secondary" onclick="switchView('viewPilihBulan')">← Kembali</button>
+      </div>
+
+      <div class="alert alert-primary shadow-sm border-primary">
+        <h5 class="fw-bold"><i class="bi bi-bank"></i> Dasar Hukum Pemberian TPP & Pemotongan Pajak</h5>
+        <p class="mb-3 small">Berikut adalah landasan hukum yang digunakan sebagai pondasi algoritma perhitungan pada aplikasi SIM TPP ini.</p>
+        
+        <div class="row g-3">
+          <div class="col-md-3">
+            <div class="card h-100 border-primary">
+              <div class="card-body p-3 text-center">
+                <h6 class="fw-bold text-primary" style="font-size: 0.85rem;">Peraturan Gubernur Jambi No. 24 Tahun 2025</h6>
+                <p class="small text-muted" style="font-size: 0.75rem;">Perubahan Kedua Atas Peraturan Gubernur Jambi Nomor 3 Tahun 2022 Tentang Pedoman Pemberian Tambahan Penghasilan Pegawai Aparatur Sipil Negara.</p>
+                <a href="https://jdih.jambiprov.go.id/fileperaturan/695867PERGUB24TAHUN2025.pdf" target="_blank" class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-download"></i> Unduh PDF</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card h-100 border-primary">
+              <div class="card-body p-3 text-center">
+                <h6 class="fw-bold text-primary" style="font-size: 0.85rem;">Keputusan Gubernur Jambi No. ..../KEP.GUB/SETDA.BKD-5.1/2026</h6>
+                <p class="small text-muted" style="font-size: 0.75rem;">Tentang Penetapan Besaran TPP ASN di Lingkungan Pemerintah Provinsi Jambi Tahun Anggaran 2026.</p>
+                <a href="#" target="_blank" class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-download"></i> Unduh PDF</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card h-100 border-danger">
+              <div class="card-body p-3 text-center">
+                <h6 class="fw-bold text-danger" style="font-size: 0.85rem;">UU No. 7 Tahun 2021 (HPP)</h6>
+                <p class="small text-muted" style="font-size: 0.75rem;">Harmonisasi Peraturan Perpajakan. Merubah batas bawah PKP pajak 5% menjadi Rp60 Juta.</p>
+                <a href="https://peraturan.bpk.go.id/details/185162/uu-no-7-tahun-2021" target="_blank" class="btn btn-sm btn-outline-danger w-100"><i class="bi bi-download"></i> Unduh PDF</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card h-100 border-danger">
+              <div class="card-body p-3 text-center">
+                <h6 class="fw-bold text-danger" style="font-size: 0.85rem;">PP No 58 & PMK No 168 / 2023</h6>
+                <p class="small text-muted" style="font-size: 0.75rem;">Penerapan Tarif Efektif Rata-rata (TER) untuk pemotongan PPh 21 masa bulanan ASN.</p>
+                <a href="https://peraturan.bpk.go.id/Details/274247/pp-no-58-tahun-2023" target="_blank" class="btn btn-sm btn-outline-danger w-100"><i class="bi bi-download"></i> Unduh PDF</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h5 class="fw-bold mt-4 mb-3 text-success"><i class="bi bi-calculator"></i> Petunjuk & Simulasi Perhitungan Sistem</h5>
+      
+      <div class="accordion shadow-sm" id="accordionSimulasi">
+        
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button fw-bold text-dark bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#colGaji">
+              1. Simulasi Perhitungan Amprah Gaji Bersih
+            </button>
+          </h2>
+          <div id="colGaji" class="accordion-collapse collapse show" data-bs-parent="#accordionSimulasi">
+            <div class="accordion-body text-dark" style="font-size: 0.9rem;">
+              <p>Perhitungan amprah gaji di SIM TPP mengikuti standar akuntansi gaji ASN baku. Semua elemen dihitung bulat ke rupiah terdekat sebelum dijumlahkan, guna mencegah selisih 1 rupiah akibat pembulatan desimal massal.</p>
+              <ul>
+                <li><b>Gaji Pokok & Tunj. Jabatan:</b> Diambil dari Master Pegawai.</li>
+                <li><b>Tunj. Istri/Suami:</b> 10% x Gaji Pokok (Hanya jika status Kawin "K").</li>
+                <li><b>Tunj. Anak:</b> 2% x Gaji Pokok x Jumlah Anak (Maks 2 Anak yang diakui).</li>
+                <li><b>Tunj. Beras:</b> Rp 72.420 x Jumlah Jiwa (Pegawai + Istri + Anak).</li>
+                <li><b>Tunj. BPJS 4%:</b> 4% x (Gapok + Tj. Istri + Tj. Anak + Tj. Jabatan).</li>
+                <li><b>IWP 8% (Pensiun Hari Tua):</b> 8% x (Gapok + Tj. Istri + Tj. Anak).</li>
+                <li><b>IWP 1% (Kesehatan):</b> 1% x (Gapok + Tj. Istri + Tj. Anak + Tj. Jabatan).</li>
+              </ul>
+              <div class="alert alert-secondary p-2 border-secondary">
+                <b>Contoh Kasus:</b> Pegawai A, Status K/1 (Kawin, 1 Anak = 3 Jiwa). Gapok Rp 3.000.000, Tj. Jabatan Rp 500.000.
+                <br>> Tj Istri = Rp 300.000 | Tj Anak = Rp 60.000 | Tj Beras = Rp 217.260 (72.420 x 3).
+                <br>> Jml Keluarga (Gapok+Istri+Anak) = Rp 3.360.000.
+                <br>> IWP 8% = 8% x 3.360.000 = Rp 268.800.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed fw-bold text-dark bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#colTahunan">
+              2. Simulasi Perhitungan Penghasilan Setahun & Progresif (UU HPP)
+            </button>
+          </h2>
+          <div id="colTahunan" class="accordion-collapse collapse" data-bs-parent="#accordionSimulasi">
+            <div class="accordion-body text-dark" style="font-size: 0.9rem;">
+              <p>Perhitungan Pajak Penghasilan (PPh 21) berpatokan pada <b>Penghasilan Netto Setahun</b> dikurangi <b>PTKP</b> untuk mendapatkan <b>PKP</b> (Penghasilan Kena Pajak). Aplikasi ini sudah disesuaikan dengan UU No. 7/2021 tentang Harmonisasi Peraturan Perpajakan (HPP).</p>
+              <ul>
+                <li><b>Penghasilan Bruto Setahun:</b> (Gaji Kotor Amprah + TPP Netto Diterima) x 12 Bulan.</li>
+                <li><b>(-) Biaya Jabatan:</b> 5% x Bruto Setahun. <i>*Sesuai UU, maksimal pemotongan Biaya Jabatan adalah Rp 6.000.000 / Tahun.</i></li>
+                <li><b>(-) Iuran Pensiun / IWP:</b> 4,75% x (Gapok + Tj. Keluarga) x 12 Bulan.</li>
+                <li><b>= Penghasilan Netto Setahun</b> (Bruto - Biaya Jabatan - Iuran Pensiun).</li>
+              </ul>
+              <p><b>Menentukan PKP & Tarif Progresif:</b></p>
+              <ul>
+                <li><b>PKP = Netto Setahun - PTKP</b> (Contoh K/1 PTKP-nya adalah Rp 63.000.000). PKP wajib dibulatkan ke bawah dalam ribuan penuh.</li>
+                <li><b>Pajak 5%:</b> Dikenakan pada rentang PKP Rp 0 s/d Rp 60 Juta <i>(Sesuai UU HPP terbaru, dulunya hanya s/d 50 Juta)</i>.</li>
+                <li><b>Pajak 15%:</b> Dikenakan pada rentang sisa PKP Rp 60 Juta s/d Rp 250 Juta. Dan seterusnya hingga 35%.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed fw-bold text-dark bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#colTER">
+              3. Simulasi Perhitungan Pemotongan Pajak Bulanan (TER) PMK 168/2023
+            </button>
+          </h2>
+          <div id="colTER" class="accordion-collapse collapse" data-bs-parent="#accordionSimulasi">
+            <div class="accordion-body text-dark" style="font-size: 0.9rem;">
+              <p>Mulai 1 Januari 2024, pemotongan PPh 21 per bulan untuk ASN wajib menggunakan <b>Tarif Efektif Rata-rata (TER)</b> sesuai PP No.58/2023 & PMK No.168/2023.</p>
+              <p><b>Cara Kerja Sistem Aplikasi:</b></p>
+              <ol>
+                <li><b>Membaca Kategori TER (A/B/C):</b> Sistem mengecek status PTKP pegawai. Misal Status <b>K/1</b> masuk ke dalam tabel <b>TER A</b>.</li>
+                <li><b>Membaca Penghasilan Bruto Sebulan:</b> Sistem menjumlahkan Gaji Kotor (dari Amprah) + TPP Netto yang didapat di bulan tersebut.</li>
+                <li><b>Pencocokan Tarif di Tabel:</b> Sistem mencari posisi Bruto Sebulan di tabel TER A. Misal, Bruto Sebulan Rp 10.000.000, maka di tabel TER A kena tarif pemotongan <b>2,25%</b>.</li>
+                <li><b>Perhitungan PPh 21 Total:</b> Rp 10.000.000 x 2,25% = <b>Rp 225.000</b>.</li>
+                <li><b>Pembagian Beban Pajak Gaji & TPP:</b> Karena Gaji sudah dipotong PPh 21 duluan oleh negara (misal Rp 50.000 tertulis di amprah), maka beban PPh 21 untuk TPP adalah sisanya: <br><i>Rp 225.000 (Total) - Rp 50.000 (Pajak Gaji) = <b>Rp 175.000 (PPh 21 Potongan TPP)</b></i>.</li>
+              </ol>
+
+              <h6 class="fw-bold text-danger mt-3">Kenapa Pajak TER Bisa Rp 0 (Nol)?</h6>
+              <p class="mb-1">Pajak TER dihitung berdasarkan <b>Gaji Kotor + TPP Netto</b> di bulan tersebut. Jika total keduanya masih <b>di bawah Batas Aman</b>, maka pegawai tidak akan dipotong pajak (0%). Berikut batas amannya:</p>
+              <ul>
+                <li><b>Kategori TER A</b> (Lajang/Tanpa Tanggungan): Batas aman <b>Rp 5.400.000</b>.</li>
+                <li><b>Kategori TER B</b> (Kawin Anak 1 atau 2): Batas aman <b>Rp 6.200.000</b>.</li>
+                <li><b>Kategori TER C</b> (Kawin Anak 3): Batas aman <b>Rp 6.600.000</b>.</li>
+              </ul>
+
+              <div class="alert alert-success p-2 border-success mt-2">
+                <b>Contoh Kasus Pajak 0% (Bebas Potongan):</b><br>
+                Pegawai Lajang masuk ke tabel <b>TER A</b>. <br>
+                > Gaji Kotor = Rp 3.500.000 <br>
+                > TPP Netto = Rp 1.500.000 <br>
+                > <b>Total Bruto = Rp 5.000.000</b>. <br>
+                Karena Rp 5.000.000 masih <b>di bawah batas aman TER A (Rp 5.400.000)</b>, maka di tabel PMK tarifnya adalah <b>0%</b>.
+              </div>
+
+              <div class="alert alert-danger p-2 border-danger mt-2">
+                <b>Contoh Kasus Kena Pajak (Walau TPP Kecil):</b><br>
+                Pegawai Lajang (TER A). <br>
+                > Gaji Kotor = Rp 4.800.000 <br>
+                > TPP Netto = Rp 800.000 <br>
+                > <b>Total Bruto = Rp 5.600.000</b>. <br>
+                Karena Rp 5.600.000 sudah <b>melewati batas aman (Rp 5.400.000)</b>, maka di tabel PMK dia akan kena tarif potongan sebesar <b>0,25%</b> dari total penghasilannya.
+              </div>
+            </div>
+          </div>
+      </div>
+     </div>
+    </div>
+
+    <div id="viewSetting" class="hidden">
+      <div class="d-flex justify-content-between mb-3">
+        <h4 class="mb-0 fw-bold">Pengaturan Instansi & Tanda Tangan Cetak</h4>
+        <button class="btn btn-sm btn-secondary" onclick="switchView('viewPilihBulan')">← Kembali</button>
+      </div>
+      <div class="card shadow-sm border-secondary">
+        <div class="card-body bg-light">
+          <form id="formSetting" onsubmit="submitSetting(event)">
+            <h6 class="fw-bold text-primary border-bottom pb-2">Informasi Kop Laporan</h6>
+            <div class="row mb-3">
+              <div class="col-md-4"><label>Nama Instansi</label><input type="text" id="sInstansi" class="form-control" required></div>
+              <div class="col-md-4"><label>Nama Dinas/Badan</label><input type="text" id="sDinas" class="form-control" required></div>
+              <div class="col-md-4"><label>Nama Sub Dinas/Badan (Opsional)</label><input type="text" id="sSubDinas" class="form-control"></div>  
+            </div>
+            
+            <h6 class="fw-bold text-info border-bottom pb-2 mt-4"><i class="bi bi-images"></i> Pengaturan Logo (Otomatis Crop 1:1 & Kompres)</h6>
+            <div class="row mb-4 bg-white p-3 border rounded">
+              <div class="col-md-6 text-center">
+                <label class="fw-bold text-secondary d-block mb-2">Logo Instansi</label>
+                <img id="previewLogoInstansi" src="" width="100" height="100" class="rounded-circle object-fit-cover bg-light border mb-2 hidden mx-auto">
+                <input type="file" id="fileLogoInstansi" class="form-control form-control-sm mx-auto" style="max-width: 250px;" accept="image/*" onchange="handleLogoUpload(this, 'sLogoInstansi', 'previewLogoInstansi')">
+                <input type="hidden" id="sLogoInstansi">
+              </div>
+              <div class="col-md-6 text-center border-end">
+                <label class="fw-bold text-secondary d-block mb-2">Logo Dinas / Badan</label>
+                <img id="previewLogoDinas" src="" width="100" height="100" class="rounded-circle object-fit-cover bg-light border mb-2 hidden mx-auto">
+                <input type="file" id="fileLogoDinas" class="form-control form-control-sm mx-auto" style="max-width: 250px;" accept="image/*" onchange="handleLogoUpload(this, 'sLogoDinas', 'previewLogoDinas')">
+                <input type="hidden" id="sLogoDinas">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 border-end">
+                <h6 class="fw-bold text-success border-bottom pb-2 mt-2">Pejabat Mengetahui (Kiri)</h6>
+                <div class="mb-2"><label>Jabatan</label><input type="text" id="sKepJab" class="form-control" placeholder="Contoh: KEPALA SMAN 3 TEBO" required></div>
+                <div class="mb-2"><label>Nama Lengkap</label><input type="text" id="sKepNama" class="form-control" required></div>
+                <div class="mb-2"><label>Pangkat / Golongan</label><input type="text" id="sKepPangkat" class="form-control" required></div>
+                <div class="mb-3"><label>NIP</label><input type="text" id="sKepNIP" class="form-control" required></div>
+              </div>
+              <div class="col-md-6">
+                <h6 class="fw-bold text-danger border-bottom pb-2 mt-2">Bendahara Pengeluaran (Kanan)</h6>
+                <div class="mb-2"><label>Nama Lengkap</label><input type="text" id="sBenNama" class="form-control" required></div>
+                <div class="mb-2"><label>Pangkat / Golongan</label><input type="text" id="sBenPangkat" class="form-control" required></div>
+                <div class="mb-3"><label>NIP</label><input type="text" id="sBenNIP" class="form-control" required></div>
+              </div>
+            </div>
+            
+            <h6 class="fw-bold text-info border-bottom pb-2 mt-4"><i class="bi bi-bank"></i> Pengaturan Potongan Korpri (Otomatis untuk Semua Pegawai)</h6>
+            <div class="row mb-4 bg-white p-3 border rounded">
+              <div class="col-md-6"><label class="fw-bold text-secondary">No. Rekening Korpri</label><input type="text" id="sRekKorpri" class="form-control border-info" placeholder="Contoh: 3000109583" required></div>
+              <div class="col-md-6"><label class="fw-bold text-secondary">Jumlah Potongan (Rp)</label><input type="number" id="sPotKorpri" class="form-control border-info" placeholder="Contoh: 88200" required></div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 fw-bold py-2"><i class="bi bi-save"></i> SIMPAN PENGATURAN</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div id="viewManajemenAkun" class="hidden">
+      <div class="d-flex justify-content-between mb-3">
+        <h4 class="mb-0 fw-bold text-primary"><i class="bi bi-shield-lock"></i> Kelola Akun</h4>
+        <div>
+          <button class="btn btn-success fw-bold btn-sm me-1" onclick="bukaModalImport('akun')"><i class="bi bi-file-earmark-excel"></i> Import</button>
+          <button class="btn btn-primary fw-bold btn-sm" onclick="bukaModalAkun('tambah')">+ Tambah</button>
+        </div>
+      </div>
+
+      <div class="alert alert-info small">Hanya Admin yang dapat mengakses halaman ini. 1 Unit Kerja disarankan hanya memiliki 1 akun Operator.</div>
+      
+      <div class="row mb-3 bg-light p-2 border rounded shadow-sm mx-0 mt-2">
+        <div class="col-md-12 mb-1">
+          <input type="text" id="filterCariAkun" class="form-control border-primary" placeholder="🔍 Cari Username atau Unit Kerja..." oninput="terapkanFilterAkun()">
+        </div>
+      </div>
+
+      <div class="table-responsive bg-white shadow-sm border">
+        <table class="table table-bordered table-hover align-middle mb-0">
+          <thead class="table-dark"><tr><th>Username</th><th>Unit Kerja</th><th>Role</th><th>Email</th><th class="text-center">Aksi</th></tr></thead>
+          <tbody id="tabelBodyAkun"><tr><td colspan="5" class="text-center">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center mt-2 pb-4">
+        <span id="infoPaginationAkun" class="text-muted fw-bold small">Menampilkan 0 data</span>
+        <div id="btnPaginationAkun" class="btn-group"></div>
+      </div>
+    </div>
+
+<datalist id="listUnitKerjaUtama"></datalist>
+<datalist id="listJabatanUtama"></datalist>
+
+<div class="modal fade" id="modalKelolaAkun" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header bg-primary text-white"><h5 class="modal-title" id="akunModalTitle">Tambah Akun</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <form id="formAkun" onsubmit="submitAkun(event)">
+        <input type="hidden" id="uAksi"> <input type="hidden" id="uUuid">
+        <div class="mb-2"><label>Username</label><input type="text" id="uUser" class="form-control" required></div>
+        <div class="mb-2"><label>Password <small class="text-danger" id="uPassHint"></small></label><input type="text" id="uPass" class="form-control" required></div>
+        <div class="mb-2"><label>Role</label><select id="uRole" class="form-select" onchange="toggleUnitKerjaAkun()"><option value="Operator">Opt Unit Kerja</option><option value="Admin">Admin Pusat</option></select></div>
+
+        <div class="mb-2"><label>Pilih Unit Kerja</label>
+          <input type="text" id="uUnitKerjaOp" class="form-control border-primary" list="listUnitKerjaUtama" placeholder="Ketik mencari unit kerja.." autocomplete="off">
+          
+          <select id="uUnitKerjaAdmin" class="form-select border-danger hidden">
+            <option value="Dinas Pendidikan">Dinas Pendidikan</option>
+            <option value="Admin SubDinas">Admin SubDinas</option>
+            <option value="Opt. Kab/Kota">Opt. Kab/Kota</option>
+          </select>
+        </div>
+        <div class="mb-3"><label>Email (Untuk Lupa Password)</label><input type="email" id="uEmail" class="form-control" required></div>
+        <button type="submit" class="btn btn-primary w-100 fw-bold">SIMPAN AKUN</button>
+      </form>
+    </div>
+  </div></div>
+</div>
+
+<div class="modal fade" id="modalProfil" tabindex="-1">
+  <div class="modal-dialog"> <div class="modal-content">
+    <div class="modal-header bg-dark text-white"><h5 class="modal-title">Ubah Password & Email</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <form onsubmit="submitProfilSendiri(event)">
+        <div class="mb-2"><label>Username</label><input type="text" id="myUser" class="form-control bg-light text-muted fw-bold" readonly></div>
+        <div class="mb-3"><label>Email Saya</label><input type="email" id="myEmail" class="form-control border-primary" required></div>
+        <div class="mb-4"><label>Password Baru</label>
+          <div class="input-group">
+            <input type="password" id="myPass" class="form-control border-danger" placeholder="Kosongkan jika tidak ingin diubah">
+            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('myPass', this)"><i class="bi bi-eye"></i></button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-success w-100 fw-bold fs-5 py-2">UPDATE PROFIL SAYA</button>
+      </form>
+    </div>
+  </div></div>
+</div>
+    <div id="viewManajemenASN" class="hidden">
+      <button class="btn btn-sm btn-secondary mb-3" onclick="switchView('viewDaftarPegawai')">← Kembali ke Daftar Pegawai</button>
+
+      <ul class="nav nav-pills mb-3 mt-3 d-flex gap-2">
+        <li class="nav-item border border-primary rounded shadow-sm"><button id="navGaji" class="nav-link active fw-bold text-white px-4" style="background-color: #0d6efd;" onclick="navigasiTab('tabGaji')">1. Amprah Gaji</button></li>
+        <li class="nav-item border border-warning rounded shadow-sm"><button id="navAbsen" class="nav-link fw-bold text-dark px-4" style="background-color: #ffc107;" onclick="navigasiTab('tabAbsen')">2. Perhitungan TPP</button></li>
+        <li class="nav-item border border-danger rounded shadow-sm"><button id="navTahunan" class="nav-link fw-bold text-white px-4" style="background-color: #dc3545;" onclick="navigasiTab('tabTahunan')">3. Penghasilan Setahun / Pajak TER</button></li>
+        <li class="nav-item border border-success rounded shadow-sm"><button id="navNominatif" class="nav-link fw-bold text-white px-4" style="background-color: #198754;" onclick="navigasiTab('tabNominatif')">4. Nominatif TPP</button></li>
+      </ul>
+
+      <div class="alert alert-info border-info p-2 d-flex justify-content-between align-items-center mb-1">
+        <div>
+          <h5 id="labelNamaASN" class="mb-1 fw-bold">NAMA PEGAWAI</h5>
+          
+          <span id="labelStatusASN" class="badge bg-secondary">ASN: </span>
+          
+          <span id="labelNIPASN" class="badge bg-primary">NIP: </span>
+          <span id="labelGolonganASN" class="badge bg-success">Gol: </span>
+          <span id="labelJabatanASN" class="badge bg-dark">Jabatan: </span>
+          <span id="labelUnitKerjaASN" class="badge bg-info text-dark">Unit Kerja: </span>
+        </div>
+      </div>
+      
+      <div class="alert alert-secondary border-secondary p-1 mb-3 text-center shadow-sm" style="font-size: 0.9rem;">
+        <span class="text-dark">Periode : <span id="labelBulanASNPanel" class="text-danger fw-bold text-uppercase"></span></span>
+      </div>
+
+      <div class="tab-content border p-3 bg-light">
+   
+       <div class="tab-pane fade show active" id="tabGaji">
+          <form id="formGaji" onsubmit="submitGaji(event)">
+            <div class="alert alert-primary p-2 mb-3">
+              <i class="bi bi-info-circle"></i> <b>Info:</b> Gaji Pokok & Tunjangan Jabatan terisi otomatis dari <b>Data Pegawai</b> bulan ini. Jika berubah, edit data pegawai di menu depan.
+            </div>
+            <div class="row mb-3">
+              <div class="col-md-4"><label class="fw-bold">Gaji Pokok (Terkunci)</label><input type="number" class="form-control readonly-field bg-light text-primary" id="aGapok" readonly></div>
+              <div class="col-md-4"><label class="fw-bold">Tj. Jabatan (Terkunci)</label><input type="number" class="form-control readonly-field bg-light text-primary" id="aTjJab" readonly></div>
+              <div class="col-md-4"><label class="fw-bold">Pembulatan (Otomatis)</label><input type="number" class="form-control readonly-field bg-light text-success" id="aBulat" value="0" readonly></div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <div class="box-amprah">
+                  <h6 class="fw-bold text-success border-bottom pb-2">Rincian Penghasilan (Otomatis)</h6>
+                  <div class="flex-row-center"><span>Tj. Istri (10%)</span><input type="number" id="aTjIstri" class="form-control input-sm readonly-field w-50" readonly></div>
+                  <div class="flex-row-center"><span>Tj. Anak (2% / Anak)</span><input type="number" id="aTjAnak" class="form-control input-sm readonly-field w-50" readonly></div>
+                  <div class="flex-row-center fw-bold text-primary mt-2"><span>Jml. Keluarga (Gaji+Istri+Anak)</span><input type="number" id="aJmlKeluarga" class="form-control input-sm readonly-field bg-light text-primary w-50" readonly></div>
+                  <hr>
+                  <div class="flex-row-center"><span>Tj. Beras</span><input type="number" id="aTjBeras" class="form-control input-sm readonly-field w-50" readonly></div>
+                  <div class="flex-row-center">
+                    <span>Tj. Pajak PPh 21</span>
+                    <input type="number" id="aTjPajak" class="form-control input-sm readonly-field text-danger fw-bold w-50" readonly>
+                  </div>
+                  <div class="flex-row-center"><span>Tj. BPJS Kes (4%)</span><input type="number" id="aTjBPJS4" class="form-control input-sm readonly-field w-50" readonly></div>
+                  <div class="flex-row-center"><span>Tj. JKK (0.24%)</span><input type="number" id="aTjJKK" class="form-control input-sm readonly-field w-50" readonly></div>
+                  <div class="flex-row-center"><span>Tj. JKM (0.72%)</span><input type="number" id="aTjJKM" class="form-control input-sm readonly-field w-50" readonly></div>
+                  <hr>
+                  <div class="flex-row-center"><span class="fw-bold fs-6">GAJI KOTOR</span><input type="number" id="aJmlKotor" class="form-control form-control-sm readonly-field bg-success text-white w-50 fw-bold fs-6" readonly></div>
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <div class="box-amprah">
+                  <h6 class="fw-bold text-danger border-bottom pb-2">Rincian Potongan (Otomatis)</h6>
+                  <div class="flex-row-center"><span>IWP 8% (Pensiun)</span><input type="number" id="aPotIWP8" class="form-control input-sm readonly-field w-50" readonly></div>
+                  <div class="flex-row-center"><span>IWP 1% (Kes)</span><input type="number" id="aPotIWP1" class="form-control input-sm readonly-field w-50" readonly></div>
+                  <div class="flex-row-center"><span>Pot. BPJS (4%)</span><input type="number" id="aPotBPJS4" class="form-control input-sm readonly-field w-50" readonly></div>
+                  <div class="flex-row-center"><span>Potongan PPh 21</span><input type="number" id="aPotPajak" class="form-control input-sm readonly-field text-danger fw-bold w-50" readonly></div>
+                  <div class="flex-row-center"><span>Pot. JKK</span><input type="number" id="aPotJKK" class="form-control input-sm readonly-field w-50" readonly></div>
+                  <div class="flex-row-center"><span>Pot. JKM</span><input type="number" id="aPotJKM" class="form-control input-sm readonly-field w-50" readonly></div>
+                  <hr style="margin-top: 25px;">
+                  <div class="flex-row-center"><span class="fw-bold fs-6">TOTAL POTONGAN</span><input type="number" id="aJmlPotongan" class="form-control form-control-sm readonly-field bg-danger text-white w-50 fw-bold fs-6" readonly></div>
+                </div>
+              </div>
+            </div> 
+            <div class="alert alert-success d-flex justify-content-between align-items-center mt-2 shadow-sm border-success box-jml-bersih">
+              <h4 class="mb-0 fw-bold">JUMLAH GAJI BERSIH <span id="labelBulanGajiBersih" class="text-uppercase text-danger"></span></h4>
+              <input type="number" id="aJmlBersih" class="form-control readonly-field bg-white fw-bold fs-3 w-25 text-end text-success" readonly>
+            </div>
+            
+            <div class="d-flex gap-2 mt-4">
+              <button type="submit" id="btnSimpanGaji" class="btn btn-primary w-100 fw-bold fs-5 py-2"><i class="bi bi-save"></i> SIMPAN AMPRAH GAJI</button>
+              <button type="button" class="btn btn-danger w-100 fw-bold fs-5 py-2" onclick="cetakPDFPerorangan('tabGaji', 'Slip_Gaji')"><i class="bi bi-file-pdf-fill"></i> UNDUH PDF</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="tab-pane fade" id="tabAbsen">
+          <form id="formAbsen" onsubmit="submitPerhitunganTPP(event)">
+            <h5 class="border-bottom pb-2">Data Kehadiran & Penilaian SKP</h5>
+            <div class="row bg-white p-3 border rounded mb-3 shadow-sm">
+              <div class="col-md-2 mb-2"><label>Periode TPP</label><input type="text" class="form-control readonly-field text-danger fw-bold" id="inpBulan" readonly></div>
+              <div class="col-md-3 mb-2">
+                <label class="fw-bold text-primary">Pola Hari Kerja</label>
+                <select class="form-select border-primary fw-bold" id="inpPolaHK" onchange="ubahPolaHK()">
+                  <option value="5">5 Hari Kerja / Minggu</option>
+                  <option value="6">6 Hari Kerja / Minggu</option>
+                </select>
+              </div>
+              <div class="col-md-2 mb-2"><label>Total Hari</label><input type="number" class="form-control readonly-field bg-light" id="inpHariKerja" readonly></div>
+              
+              <div class="col-md-2 mb-2">
+                <label class="fw-bold text-primary">Bobot Nilai SKP</label>
+                <select class="form-select border-primary fw-bold" id="inpSKP" onchange="hitungMatriksTPP()" required>
+                  <option value="Sangat Baik">Sangat Baik (Bobot 100)</option>
+                  <option value="Baik" selected>Baik (Bobot 100)</option>
+                  <option value="Cukup">Cukup (Bobot 90)</option>
+                  <option value="Kurang">Kurang (Bobot 75)</option>
+                  <option value="Sangat Kurang">Sangat Kurang (Bobot 50)</option>
+                  <option value="Tidak Buat">Tidak Buat (Bobot 40)</option>
+                </select>
+              </div>
+              <div class="col-md-3 mb-2 d-flex align-items-end pb-2">
+                <div class="form-check border border-danger rounded p-2 bg-white w-100 shadow-sm" style="height: 38px; display: flex; align-items: center; padding-left: 35px !important;">
+                  <input class="form-check-input border-danger" type="checkbox" id="chkTidakMenilai" onchange="hitungMatriksTPP()" style="transform: scale(1.3); cursor: pointer;">
+                  <label class="form-check-label fw-bold text-danger ms-2" for="chkTidakMenilai" style="cursor: pointer;">
+                    Tidak Menilai (-5 Bobot)
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            <h6 class="fw-bold text-dark mt-4 border-bottom pb-2">Detail Ketidakhadiran & Pelanggaran Disiplin</h6>
+            
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <div class="alert alert-success py-2 mb-0 d-flex justify-content-between align-items-center shadow-sm border-success">
+                  <span class="fw-bold text-success"><i class="bi bi-calendar-check"></i> Jumlah Hadir:</span>
+                  <span id="txtHariMasuk" class="badge bg-success fs-6">0 Hari</span>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="alert alert-danger py-2 mb-0 d-flex justify-content-between align-items-center shadow-sm border-danger">
+                  <span class="fw-bold text-danger"><i class="bi bi-calendar-x"></i> Jumlah KTH (Tidak Hadir):</span>
+                  <span id="txtHariTidakMasuk" class="badge bg-danger fs-6">0 Hari</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="row g-2 mb-4">
+              <div class="col-md-6">
+                <div class="card border-info h-100 shadow-sm">
+                  <div class="card-header bg-info text-white fw-bold py-1"><i class="bi bi-info-circle"></i> Kehadiran Umum (Pot. 0% / 3%)</div>
+                  <div class="card-body p-2 bg-light">
+                    <div class="d-flex justify-content-between text-center">
+                      <div><label class="small fw-bold">DL (0%)</label><input type="number" id="vDL" min="0" class="form-control input-absen mx-auto border-info" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div>
+                      <div><label class="small fw-bold">Tugas (0%)</label><input type="number" id="vKP" min="0" class="form-control input-absen mx-auto border-info" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div>
+                      <div><label class="small fw-bold">Sakit (3%)</label><input type="number" id="vS" min="0" class="form-control input-absen mx-auto border-info" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div>
+                      <div><label class="small fw-bold">Cuti (3%)</label><input type="number" id="vC" min="0" class="form-control input-absen mx-auto border-info" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card border-danger h-100 shadow-sm">
+                  <div class="card-header bg-danger text-white fw-bold py-1"><i class="bi bi-exclamation-triangle"></i> Alpa/Tidak Hadir</div>
+                  <div class="card-body p-2 bg-light">
+                    <div class="d-flex justify-content-around text-center">
+                      <div><label class="small fw-bold">Tanpa Keterangan (3%)</label><input type="number" id="vTK" min="0" class="form-control input-absen mx-auto border-danger" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div>
+                      <div><label class="small fw-bold text-danger">AS/UB (Memotong DK)</label><input type="number" id="vASUB" min="0" class="form-control input-absen mx-auto border-danger" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card border-warning h-100 shadow-sm">
+                  <div class="card-header bg-warning text-dark fw-bold py-1"><i class="bi bi-clock"></i> Terlambat Datang (TL)</div>
+                  <div class="card-body p-2 bg-light">
+                    <div class="d-flex justify-content-between text-center">
+                      <div><label class="small fw-bold">TL1 (0.5%)</label><input type="number" id="vTL1" min="0" class="form-control input-absen mx-auto border-warning" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div>
+                      <div><label class="small fw-bold">TL2 (1%)</label><input type="number" id="vTL2" min="0" class="form-control input-absen mx-auto border-warning" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div>
+                      <div><label class="small fw-bold">TL3 (1.25%)</label><input type="number" id="vTL3" min="0" class="form-control input-absen mx-auto border-warning" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div>
+                      <div><label class="small fw-bold">TL4 (1.5%)</label><input type="number" id="vTL4" min="0" class="form-control input-absen mx-auto border-warning" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card border-success h-100 shadow-sm">
+                  <div class="card-header bg-success text-white fw-bold py-1"><i class="bi bi-box-arrow-right"></i> Cepat Pulang (CP)</div>
+                  <div class="card-body p-2 bg-light">
+                    <div class="d-flex justify-content-between text-center">
+                      <div><label class="small fw-bold">CP1 (0.5%)</label><input type="number" id="vCP1" min="0" class="form-control input-absen mx-auto border-success" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div>
+                      <div><label class="small fw-bold">CP2 (1%)</label><input type="number" id="vCP2" min="0" class="form-control input-absen mx-auto border-success" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div>
+                      <div><label class="small fw-bold">CP3 (1.25%)</label><input type="number" id="vCP3" min="0" class="form-control input-absen mx-auto border-success" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div>
+                      <div><label class="small fw-bold">CP4 (1.5%)</label><input type="number" id="vCP4" min="0" class="form-control input-absen mx-auto border-success" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+
+            <h5 class="fw-bold text-center border-bottom pb-2 mt-4">MATRIKS PENGURANGAN TPP (Real-Time)</h5>
+            <div class="table-responsive bg-white">
+              <table class="table table-bordered table-tpp align-middle">
+                <thead class="table-dark"><tr><th width="30%">URAIAN ELEMEN PENGHITUNGAN</th><th>BK</th><th>PK</th><th>KK</th><th>TB</th><th>KP</th><th class="bg-primary">JUMLAH</th></tr></thead>
+                <tbody>
+                  <tr class="table-secondary fw-bold text-dark">
+                    <td class="text-start">I. TPP KOTOR</td>
+                    <td id="mKotor_bk">0</td><td id="mKotor_pk">0</td><td id="mKotor_kk">0</td><td id="mKotor_tb">0</td><td id="mKotor_kp">0</td><td id="mKotor_total" class="text-primary">0</td>
+                  </tr>
+                  
+                  <tr class="bg-soft-blue fw-bold">
+                    <td class="text-start">II. Bobot Produktivitas Kerja Dasar (60%)</td>
+                    <td id="mBpk_bk">0</td><td id="mBpk_pk">0</td><td id="mBpk_kk">0</td><td id="mBpk_tb">0</td><td id="mBpk_kp">0</td><td id="mBpk_total">0</td>
+                  </tr>
+                  <tr class="text-primary fw-bold"><td class="text-start ps-4">a. Nilai PK setelah Bobot SKP (<span id="txtSkp" class="text-danger">100%</span>)</td><td id="mNskp_bk">0</td><td id="mNskp_pk">0</td><td id="mNskp_kk">0</td><td id="mNskp_tb">0</td><td id="mNskp_kp">0</td><td id="mNskp_total">0</td></tr>
+                  <tr><td class="text-start ps-4 text-danger">b. Potongan Absen PK (<span id="txtAbsPk" class="fw-bold">0%</span>)</td><td id="mPabspk_bk">0</td><td id="mPabspk_pk">0</td><td id="mPabspk_kk">0</td><td id="mPabspk_tb">0</td><td id="mPabspk_kp">0</td><td id="mPabspk_total">0</td></tr>
+                  <tr class="text-success fw-bold"><td class="text-start ps-4">c. Akhir Produktivitas Netto (a - b)</td><td id="mAkhpk_bk">0</td><td id="mAkhpk_pk">0</td><td id="mAkhpk_kk">0</td><td id="mAkhpk_tb">0</td><td id="mAkhpk_kp">0</td><td id="mAkhpk_total">0</td></tr>
+
+                  <tr class="bg-soft-blue fw-bold mt-2">
+                    <td class="text-start">III. Bobot Disiplin Kerja (40%)</td>
+                    <td id="mBdk_bk">0</td><td id="mBdk_pk">0</td><td id="mBdk_kk">0</td><td id="mBdk_tb">0</td><td id="mBdk_kp">0</td><td id="mBdk_total">0</td>
+                  </tr>
+                  <tr><td class="text-start ps-4 text-danger">a. Potongan Absen & AS/UB (<span id="txtAbsDk" class="fw-bold">0%</span>)</td><td id="mPabsdk_bk">0</td><td id="mPabsdk_pk">0</td><td id="mPabsdk_kk">0</td><td id="mPabsdk_tb">0</td><td id="mPabsdk_kp">0</td><td id="mPabsdk_total">0</td></tr>
+                  <tr class="text-success fw-bold"><td class="text-start ps-4">b. Akhir Disiplin Netto (40% - a)</td><td id="mAkhdk_bk">0</td><td id="mAkhdk_pk">0</td><td id="mAkhdk_kk">0</td><td id="mAkhdk_tb">0</td><td id="mAkhdk_kp">0</td><td id="mAkhdk_total">0</td></tr>
+
+                  <tr class="table-secondary fw-bold mt-2">
+                    <td class="text-start">IV. JUMLAH TOTAL TPP KOTOR</td><td id="mTotKotor_bk">0</td><td id="mTotKotor_pk">0</td><td id="mTotKotor_kk">0</td><td id="mTotKotor_tb">0</td><td id="mTotKotor_kp">0</td><td id="mTotKotor_total">0</td>
+                  </tr>
+                  
+                  <tr class="table-danger text-danger fw-bold">
+                    <td class="text-start">V. JUMLAH TOTAL POTONGAN (II.b + III.a)</td><td id="mTotPot_bk">0</td><td id="mTotPot_pk">0</td><td id="mTotPot_kk">0</td><td id="mTotPot_tb">0</td><td id="mTotPot_kp">0</td><td id="mTotPot_total">0</td>
+                  </tr>
+                  
+                  <tr class="table-success text-success fw-bold fs-6">
+                    <td class="text-start">VI. HASIL AKHIR TPP NETTO (II.c + III.b)</td><td id="mHasil_bk">0</td><td id="mHasil_pk">0</td><td id="mHasil_kk">0</td><td id="mHasil_tb">0</td><td id="mHasil_kp">0</td><td id="mHasil_total" class="fs-5">0</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+              <button type="submit" id="btnSimpanTPP" class="btn btn-primary w-100 fw-bold fs-5 py-2"><i class="bi bi-save"></i> SIMPAN PERHITUNGAN TPP</button>
+              <button type="button" class="btn btn-danger w-100 fw-bold fs-5 py-2" onclick="cetakPDFPerorangan('tabAbsen', 'Rincian_Absen')"><i class="bi bi-file-pdf-fill"></i> UNDUH PDF</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="tab-pane fade" id="tabTahunan">
+          <h5 class="text-center mb-1 fw-bold">LEMBAR PERTANGGUNGJAWABAN PPh 21 TKD</h5>
+          <p class="text-muted text-center small mb-3">Telah Disesuaikan dengan Peraturan Perpajakan Terbaru</p>
+          <div id="loaderTahunan" class="text-center text-danger fw-bold hidden">Memuat Logika Perhitungan...</div>
+          
+          <div id="hasilTahunan" class="hidden">
+            
+            <h5 class="fw-bold text-primary mb-3 border-bottom border-primary pb-2"><i class="bi bi-info-circle"></i> A. PERHITUNGAN PENGHASILAN SETAHUN (METODE ATURAN LAMA)</h5>
+            
+            <div class="row">
+              <div class="col-md-6">
+                <div class="card border-secondary mb-4 shadow-sm h-100">
+                  <div class="card-header bg-secondary text-white fw-bold py-2">1. PERHITUNGAN PPh 21 KHUSUS GAJI</div>
+                  <div class="card-body p-3 bg-light">
+                    <table class="table table-sm table-borderless mb-0" style="font-size: 0.8rem;">
+                      <tr><td width="65%">Gaji Kotor Sebulan</td><td id="thGajiBulanOnly" class="text-end fw-bold">0</td></tr>
+                      <tr class="border-bottom"><td>Gaji Kotor Setahun (12 x Gaji)</td><td id="thGajiTahunOnly" class="text-end">0</td></tr>
+                      <tr class="text-danger pt-2"><td>(-) Biaya Jabatan (5%)</td><td id="thBiayaJabGaji" class="text-end">0</td></tr>
+                      <tr class="text-danger border-bottom"><td>(-) Iuran Pensiun (IWP 4.75%)</td><td id="thIwpGaji" class="text-end">0</td></tr>
+                      <tr class="text-success fw-bold"><td>Penghasilan Netto Setahun</td><td id="thNettoGaji" class="text-end">0</td></tr>
+                      <tr class="text-danger border-bottom"><td>(-) PTKP (<span id="thStatusKwnGaji"></span>)</td><td id="thPtkpGaji" class="text-end">0</td></tr>
+                      <tr class="text-primary fw-bold"><td>PKP Gaji (Dibulatkan)</td><td id="thPkpGaji" class="text-end">0</td></tr>
+                      <tr class="fw-bold text-danger border-top mt-2"><td>PPh 21 Gaji Sebulan (Pasal 17)</td><td id="thPphGajiBulan" class="text-end fs-6">0</td></tr>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="card border-primary mb-4 shadow-sm h-100">
+                  <div class="card-header bg-primary text-white fw-bold py-2">2. PERHITUNGAN PPh 21 KOMULATIF (METODE PROGRESIF)</div>
+                  <div class="card-body p-3">
+                    <table class="table table-sm table-borderless mb-0" style="font-size: 0.8rem;">
+                      <tr><td width="60%">Gaji Kotor Sebulan</td><td id="thGajiBulan" class="text-end">0</td></tr>
+                      <tr><td>TPP Bruto (100%)</td><td id="thTPPBruto" class="text-end">0</td></tr>
+                      <tr class="text-danger"><td>(-) Potongan Kinerja (PK)</td><td id="thPotPK" class="text-end">0</td></tr>
+                      <tr class="text-danger border-bottom"><td>(-) Potongan Disiplin (DK)</td><td id="thPotDK" class="text-end">0</td></tr>
+                      <tr class="fw-bold"><td>TPP Netto Kinerja Sebulan</td><td id="thTPPBulan" class="text-end">0</td></tr>
+                      
+                      <tr class="border-bottom text-muted"><td>Bruto Sebulan (Gaji + TPP)</td><td id="thBrutoBulan" class="text-end">0</td></tr>
+                      
+                      <tr class="text-primary fw-bold border-bottom"><td>Total Bruto Setahun (x12)</td><td id="thBruto" class="text-end">0</td></tr>
+                      <tr class="text-danger pt-1"><td>(-) Biaya Jabatan Setahun</td><td id="thBiayaJab" class="text-end">0</td></tr>
+                      <tr class="text-danger border-bottom"><td>(-) IWP Setahun</td><td id="thIWP" class="text-end">0</td></tr>
+                      <tr class="text-success fw-bold"><td>Netto Total Setahun</td><td id="thNetto" class="text-end">0</td></tr>
+                      <tr class="text-danger border-bottom"><td>(-) PTKP (<span id="thStatusKwnTotal"></span>)</td><td id="thPTKP" class="text-end">0</td></tr>
+                      <tr class="text-primary fw-bold border-bottom"><td>PKP Total (Dibulatkan)</td><td id="thPKP" class="text-end">0</td></tr>
+                      
+                      <tr class="text-muted"><td>PPh 5% (s/d 60 Jt)</td><td id="thPph5" class="text-end">0</td></tr>
+                      <tr class="text-muted"><td>PPh 15% (60 Jt - 250 Jt)</td><td id="thPph15" class="text-end">0</td></tr>
+                      <tr class="text-muted"><td>PPh 25% (250 Jt - 500 Jt)</td><td id="thPph25" class="text-end">0</td></tr>
+                      <tr class="text-muted"><td>PPh 30% (500 Jt - 5 M)</td><td id="thPph30" class="text-end">0</td></tr>
+                      <tr class="text-muted border-bottom"><td>PPh 35% (> 5 M)</td><td id="thPph35" class="text-end">0</td></tr>
+                      <tr class="fw-bold text-danger"><td>Total PPh 21 Setahun</td><td id="thPajakTahun" class="text-end">0</td></tr>
+                      
+                      <tr class="fw-bold text-danger border-top mt-2"><td>Rata-rata PPh 21 Sebulan</td><td id="thPajakSebulanProg" class="text-end fs-6">0</td></tr>
+                      <tr class="hidden"><td id="thNettoData">0</td></tr>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div> <h5 class="fw-bold text-success mt-4 mb-3 border-bottom border-success pb-2"><i class="bi bi-calculator"></i> B. PERHITUNGAN PAJAK TER (PMK 168/2023)</h5>
+
+            <div class="row">
+              <div class="col-md-6 mb-3 mb-md-0">
+                <div class="card border-warning shadow-sm h-100">
+                  <div class="card-header bg-warning text-dark fw-bold py-2">
+                    1. AMBIL DATA GAJI BULAN: <span id="labelBulanPencairan" class="badge bg-danger ms-1 text-uppercase"></span>
+                  </div>
+                  <div class="card-body p-3 bg-light">
+                    <table class="table table-sm table-borderless mb-0" style="font-size: 0.85rem;">
+                      <tr><td width="60%">Gaji Kotor (Amprah)</td><td id="thTerGajiAwal" class="text-end">0</td></tr>
+                      <tr class="text-danger border-bottom"><td>(-) PPh 21 Gaji (Lunas)</td><td id="thTerPphGajiPengurang" class="text-end">0</td></tr>
+                      <tr class="fw-bold text-dark"><td>Gaji Bruto (Bersih PPh)</td><td id="thTerGajiBersih" class="text-end">0</td></tr>
+                      <tr class="border-bottom"><td>(+) TPP / TKD Bruto</td><td id="thTerTpp" class="text-end">0</td></tr>
+                      <tr class="text-primary fw-bold fs-6 mt-2 border-top"><td>TOTAL DPP TER SEBULAN</td><td id="thTerDasar" class="text-end">0</td></tr>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-6">
+                <div class="card border-success shadow-sm h-100">
+                  <div class="card-header bg-success text-white fw-bold py-2">2. DASAR PENGENAAN PAJAK (TER)</div>
+                  <div class="card-body p-3">
+                    <table class="table table-sm table-borderless mb-0" style="font-size: 0.85rem;">
+                      <tr><td width="60%">Kategori TER</td><td class="text-end fw-bold">TER <span id="thKatTER"></span></td></tr>
+                      <tr class="border-bottom"><td>Tarif Efektif TER</td><td id="thPctTER" class="text-end fw-bold text-danger fs-6">0%</td></tr>
+                      <tr class="fw-bold pt-2"><td id="teksRumusTER">Total PPh 21 Terutang</td><td id="thPphTER" class="text-end text-danger">0</td></tr>
+                      <tr><td>(-) PPh 21 Gaji (Lunas)</td><td id="thPphGajiLunas" class="text-end text-danger">0</td></tr>
+                    </table>
+                    
+                    <div class="alert alert-success p-3 mb-0 mt-3 border-success shadow-sm" style="border-width: 2px;">
+                      <div class="d-flex flex-column flex-md-row justify-content-between align-items-center text-center text-md-start">
+                        <strong style="font-size: 0.95rem;" class="mb-1 mb-md-0">PPh 21 TPP (PAJAK TER) :</strong> 
+                        <span id="thPphTKD" class="fw-bold text-success fs-4">0</span>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+
+            <div class="row hidden" id="boxTerGabungan">
+              <div class="col-md-12">
+                <div class="alert alert-danger fw-bold text-center mb-3 shadow-sm border-danger">
+                  <i class="bi bi-exclamation-triangle-fill"></i> MODE PAJAK GABUNGAN KHUSUS (<span id="txtJenisKhusus"></span>)
+                </div>
+                <div class="card border-danger shadow-sm">
+                  <div class="card-header bg-danger text-white fw-bold py-2">RINCIAN PERHITUNGAN PAJAK LINTAS BULAN</div>
+                  <div class="card-body p-3 bg-light">
+                    <table class="table table-bordered table-sm mb-0 align-middle" style="font-size: 0.85rem;">
+                      <thead class="table-secondary text-center">
+                        <tr><th width="50%">Uraian Penghasilan Bruto (DPP)</th><th>Nilai Pajak Terutang</th></tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>1. Total Bruto Induk (<span id="txtBulanInduk" class="text-primary fw-bold"></span>)</td>
+                          <td class="text-end" id="gabBrutoInduk">0</td>
+                        </tr>
+                        <tr class="border-bottom">
+                          <td>2. Total Bruto <span id="txtJenisKhusus2" class="text-danger fw-bold"></span> (Bulan Ini)</td>
+                          <td class="text-end" id="gabBrutoBulanIni">0</td>
+                        </tr>
+                        <tr class="table-warning fw-bold text-dark border-dark">
+                          <td>3. TOTAL PENGHASILAN GABUNGAN (1 + 2)</td>
+                          <td class="text-end fs-6" id="gabTotalBruto">0</td>
+                        </tr>
+                        <tr>
+                          <td>4. Tarif TER Berlaku (Kategori <span id="gabKatTer"></span>)</td>
+                          <td class="text-end fw-bold text-danger" id="gabTarifTer">0%</td>
+                        </tr>
+                        <tr class="table-primary fw-bold text-primary border-primary">
+                          <td>5. TOTAL PPh 21 TERUTANG (Baris 3 x Baris 4)</td>
+                          <td class="text-end" id="gabPajakTerutang">0</td>
+                        </tr>
+                        <tr>
+                          <td class="text-danger">6. (-) PPh 21 yang Sudah Dipotong di Bulan Induk</td>
+                          <td class="text-end text-danger fw-bold" id="gabPajakSudahDibayar">0</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <div class="alert alert-danger py-3 px-3 mb-0 mt-3 border-danger shadow-sm" style="border-width: 2px;">
+                      <h5 class="mb-0 fw-bold text-danger d-flex justify-content-between">
+                        <span>7. SISA PPh 21 DIPOTONG DI <span id="txtJenisKhusus3"></span> :</span>
+                        <span id="gabPajakFinalTKD" class="fs-4">0</span>
+                      </h5>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+            
+            <div class="mt-5 pt-4 border-top">
+               <h5 class="fw-bold"><i class="bi bi-journal-check"></i> CATATAN PEMERIKSAAN / VERIFIKASI</h5>
+               <p class="text-muted" style="font-size: 0.85rem;">Seluruh perhitungan di atas telah disesuaikan dengan regulasi Perpajakan (PMK 168/2023) dan regulasi TPP Provinsi Jambi (Pergub 2025).</p>
+               <p class="mb-1 text-dark">Perhitungan pada aplikasi ini telah diperbarui dan dikoreksi dari format Excel lama untuk memenuhi kepatuhan pajak terbaru:</p>
+              <ol class="mb-0 text-dark">
+                <li><b>UU No. 7 Tahun 2021 (Harmonisasi Peraturan Perpajakan):</b> Memperbarui rentang PKP untuk tarif progresif terendah (5%), yang sebelumnya maksimal Rp 60 Juta kini dinaikkan menjadi <b>Rp 60 Juta</b>. Hal ini mencegah pemotongan pajak yang terlalu besar <i>(over-taxing)</i> pada pegawai. Serta memperbaiki bug rumus tarif 25% pada format lama.</li>
+                <li><b>PP No. 58 Tahun 2023 & PMK No. 168 Tahun 2023:</b> Terhitung mulai 1 Januari 2024, pemotongan PPh 21 masa bulanan wajib menggunakan <b>Tarif Efektif Rata-rata (TER)</b> Kategori A/B/C yang dikalikan langsung dengan Penghasilan Bruto Sebulan.</li>
+                <li><b>Penerapan Biaya Jabatan:</b> Biaya jabatan sebesar 5% (Maksimal Rp 6.000.000 setahun) dan Iuran Pensiun diaktifkan kembali secara sistem sebagai pengurang Penghasilan Bruto demi mencerminkan nilai PKP yang sah secara hukum.</li>
+              </ol>
+            </div>
+
+
+            <div class="alert alert-info border-info mt-3 shadow-sm" style="font-size: 0.85rem;">
+              <h6 class="fw-bold text-dark mb-1"><i class="bi bi-info-circle-fill"></i> Info: Kenapa Potongan Pajak (TER) Bisa Rp 0?</h6>
+              <p class="mb-0 text-dark">Sesuai PMK No. 168/2023, Pajak PPh 21 TER memiliki <b>Batas Aman</b>. Jika total <b>Gaji Kotor + TPP Netto</b> di bulan ini belum melewati batas aman tersebut (Contoh TER A: <b>Rp 5.400.000</b>), maka tarif pemotongannya otomatis <b>0%</b>. Silakan cek menu "Dasar Hukum & Simulasi" untuk detailnya.</p>
+            </div>
+          </div>
+        </div>
+
+       <div class="tab-pane fade" id="tabNominatif">
+          <h5 class="text-center mb-1 fw-bold">RINCIAN DAFTAR NOMINATIF TPP</h5>
+          <h6 class="text-center fw-bold text-primary mb-2">PERIODE: <span id="labelBulanNominatif" class="text-uppercase"></span></h6>
+
+          
+          <div id="loaderNominatif" class="text-center text-primary fw-bold hidden">Memuat Sinkronisasi...</div>
+          
+          <div id="hasilNominatif" class="hidden">
+            <div class="table-responsive bg-white border rounded shadow-sm">
+              <table class="table table-bordered table-sm mb-0 align-middle" style="font-size: 0.85rem;">
+                
+                <tr class="table-primary fw-bold">
+                  <td colspan="2">I. GAJI KOTOR (Dari Amprah Gaji)</td>
+                  <td id="nomGajiKotor" class="text-end text-primary fs-6">0</td>
+                </tr>
+                
+                <tr class="table-success fw-bold"><td colspan="3">II. PERHITUNGAN TPP</td></tr>
+                <tr class="bg-light fw-bold text-success"><td colspan="3" class="ps-3">a. Kriteria TPP (Sesuai Persentase Kehadiran & SKP)</td></tr>
+                <tr><td class="ps-4 text-center" width="5%">1.</td><td width="55%">Beban Kerja (BK)</td><td id="nomBK" class="text-end">0</td></tr>
+                <tr><td class="ps-4 text-center">2.</td><td>Prestasi Kerja (PK)</td><td id="nomPK" class="text-end">0</td></tr>
+                <tr><td class="ps-4 text-center">3.</td><td>Kondisi Kerja (KK)</td><td id="nomKK" class="text-end">0</td></tr>
+                <tr><td class="ps-4 text-center">4.</td><td>Tempat Bertugas (TB)</td><td id="nomTB" class="text-end">0</td></tr>
+                <tr><td class="ps-4 text-center">5.</td><td>Kelangkaan Profesi (KP)</td><td id="nomKP" class="text-end">0</td></tr>
+                
+                <tr class="fw-bold bg-light">
+                  <td colspan="2" class="text-end">Jumlah TPP Netto (1+2+3+4+5)</td>
+                  <td id="nomTppNetto" class="text-end text-success">0</td>
+                </tr>
+                
+                <tr class="fw-bold">
+                  <td colspan="2" class="ps-3">b. Tambahan Tunjangan BPJS 4%</td>
+                  <td id="nomTambahanBpjs" class="text-end">0</td>
+                </tr>
+                
+                <tr class="table-warning fw-bold fs-6">
+                  <td colspan="2" class="ps-3">c. JUMLAH TPP + BPJS 4% (a + b)</td>
+                  <td id="nomTppPlusBpjs" class="text-end">0</td>
+                </tr>
+
+                <tr class="table-danger fw-bold"><td colspan="3">III. PERHITUNGAN PENGURANGAN TPP</td></tr>
+                <tr><td colspan="2" class="ps-3">a. Potongan IWP 1%</td><td id="nomPotIwp" class="text-end text-danger">0</td></tr>
+                <tr><td colspan="2" class="ps-3">b. Potongan PPh 21 (TER)</td><td id="nomPotPph" class="text-end text-danger">0</td></tr>
+                <tr><td colspan="2" class="ps-3">c. Potongan BPJS 4%</td><td id="nomPotBpjs" class="text-end text-danger">0</td></tr>
+                <tr class="fw-bold text-danger bg-light">
+                  <td colspan="2" class="text-end">d. JUMLAH POTONGAN (a + b + c)</td>
+                  <td id="nomJmlPotongan" class="text-end">0</td>
+                </tr>
+
+                <tr class="table-dark fw-bold fs-6">
+                  <td colspan="2">IV. TOTAL JUMLAH (II.c - III.d)</td>
+                  <td id="nomTotalDiterima" class="text-end">0</td>
+                </tr>
+                <tr class="table-success fw-bold text-success" style="font-size: 1.1rem;">
+                  <td colspan="2">V. JUMLAH BERSIH</td>
+                  <td id="nomBersih" class="text-end">0</td>
+                </tr>
+                
+                <tr class="border-0"><td colspan="3" class="border-0 py-2"></td></tr>
+                
+                <tr class="table-info fw-bold text-dark"><td colspan="3">VI. TRANSFER BANK</td></tr>
+                <tr><td colspan="2" class="ps-3">a. Jumlah Bersih TPP</td><td id="nomTrfBersih" class="text-end">0</td></tr>
+                <tr><td colspan="2" class="ps-3 text-danger">b. Potongan KORPRI</td><td id="nomTrfKorpri" class="text-end text-danger">0</td></tr>
+              </table>
+            </div>
+
+            <div class="alert alert-info d-flex justify-content-between align-items-center mt-3 shadow-sm border-info box-jml-bersih">
+              <h5 class="mb-0 fw-bold text-dark">VII. MASUK REKENING</h5>
+              <input type="text" id="nomMasukRekening" class="form-control readonly-field bg-white fw-bold fs-4 w-50 text-end text-primary" readonly>
+            </div>
+
+            <button type="button" class="btn btn-danger w-100 fw-bold fs-5 py-2 mt-4" onclick="cetakPDFPerorangan('tabNominatif', 'Nominatif_TPP')"><i class="bi bi-file-pdf-fill"></i> UNDUH PDF</button>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="printArea" class="hidden p-4 bg-white">
+  <div class="text-center mb-4">
+    <h4 id="printTitle">LAPORAN</h4>
+    <p>Periode: <span id="printPeriode"></span></p>
+  </div>
+  <div id="printContent"></div>
+</div>
+
+<div class="modal fade" id="modalTambahPeriode" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header bg-primary text-white"><h5 class="modal-title">Buka Periode TPP Baru</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <div class="alert alert-warning small">Periode dibuka secara berurutan. Pilih Jenis Periode dengan teliti.</div>
+      <form onsubmit="simpanPeriodeLanjut(event)">
+        <div class="mb-2"><label>Tahun</label><input type="number" id="pTahun" class="form-control readonly-field" readonly></div>
+        
+        <div class="mb-2"><label>Nama Periode</label><input type="text" id="pBulanNama" class="form-control fw-bold text-danger" required></div>
+        <input type="hidden" id="pBulanAngka">
+        
+        <div class="mb-2">
+          <label class="fw-bold text-primary">Jenis Periode</label>
+          <select id="pJenisPeriode" class="form-select border-primary fw-bold" onchange="toggleIndukPajak()">
+            <option value="Reguler">Bulan Reguler</option>
+            <option value="THR">Gaji 14 (THR)</option>
+            <option value="Gaji 13">Gaji 13</option>
+          </select>
+        </div>
+        
+        <div class="mb-3 hidden" id="boxIndukPajak">
+          <label class="fw-bold text-danger">Gabung Pajak TER ke Bulan?</label>
+          <select id="pIndukPajak" class="form-select border-danger fw-bold" onchange="sinkronHariKerja()">
+            </select>
+          <small class="text-muted d-block mt-1">Pilih bulan reguler tempat THR/Gaji 13 ini dihitung komulatif pajaknya (Misal: Maret).</small>
+        </div>
+
+        <div class="row">
+          <div class="col-6 mb-3"><label>HK (5 Hari Kerja)</label><input type="number" id="pHariKerja" class="form-control border-primary fw-bold" required placeholder="Cth: 22"></div>
+          <div class="col-6 mb-3"><label>HK (6 Hari Kerja)</label><input type="number" id="pHariKerja6" class="form-control border-primary fw-bold" required placeholder="Cth: 26"></div>
+        </div>
+
+        <div class="form-check mb-3 p-3 bg-light border rounded">
+          <input class="form-check-input" type="checkbox" id="pSalinPegawai" checked>
+          <label class="form-check-label fw-bold text-success" for="pSalinPegawai">
+            <i class="bi bi-copy"></i> Salin data pegawai dari bulan sebelumnya
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 fw-bold">BUKA PERIODE BARU</button>
+      </form>
+    </div>
+  </div></div>
+</div>
+
+<div class="modal fade" id="modalEditPeriode" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header bg-warning text-dark"><h5 class="modal-title fw-bold">Kelola Periode</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <div class="alert alert-danger small p-2">Hati-hati! Menghapus periode akan memusnahkan <b>seluruh data gaji dan TPP</b> di bulan ini secara permanen.</div>
+      <form onsubmit="submitEditPeriode(event)">
+        <div class="mb-3"><label>Periode Terpilih</label><input type="text" id="eBulanNama" class="form-control readonly-field fw-bold text-danger" readonly></div>
+        
+        <input type="hidden" id="eHk5Lama"><input type="hidden" id="eHk6Lama">
+        <div class="row">
+          <div class="col-6 mb-2"><label>HK (5 Hari Kerja)</label><input type="number" id="eHariKerja" class="form-control border-primary fw-bold" required></div>
+          <div class="col-6 mb-2"><label>HK (6 Hari Kerja)</label><input type="number" id="eHariKerja6" class="form-control border-primary fw-bold" required></div>
+        </div>
+
+        <div class="mb-3">
+          <label class="fw-bold text-primary">Referensi Gaji Lintas Bulan (Pajak TER)</label>
+          <select id="editRefBulanGaji" class="form-select border-primary fw-bold">
+            </select>
+          <small class="text-muted mt-1 d-block">Pilih bulan mana yang Gaji Kotor-nya akan dijadikan acuan potong Pajak TER.</small>
+        </div>
+        <div class="mb-3">
+          <label>Status Periode</label>
+          <select id="eStatusLock" class="form-select border-danger fw-bold">
+            <option value="Buka">🟢 Buka (Bisa Diedit)</option>
+            <option value="Kunci">🔒 KUNCI (Read-Only)</option>
+          </select>
+        </div>
+        
+        <button type="submit" class="btn btn-primary w-100 fw-bold mb-2">SIMPAN PENGATURAN</button>
+        <button type="button" class="btn btn-danger w-100 fw-bold" onclick="konfirmasiHapusPeriode()">🗑️ HAPUS PERIODE INI</button>
+      </form>
+    </div>
+  </div></div>
+</div>
+
+<div class="modal fade" id="modalImportExcel" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header bg-success text-white">
+      <h5 class="modal-title fw-bold" id="importModalTitle">Import Data Excel</h5>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    </div>
+    <div class="modal-body text-center">
+      <input type="hidden" id="importJenis">
+      <div class="alert alert-warning small text-start">
+        <b>PENTING:</b> Data yang diupload harus sesuai dengan format template (Urutan kolom dilarang diubah). Jika NIP atau Jabatan sudah ada, data lama otomatis di-update!
+      </div>
+      
+      <button class="btn btn-outline-success fw-bold mb-4 w-100" onclick="unduhTemplateExcel()"><i class="bi bi-download"></i> Unduh Format Template Excel</button>
+      
+      <h6 class="fw-bold text-dark border-bottom pb-2 text-start">Upload File Anda (.xlsx / .xls)</h6>
+      <input type="file" id="fileImport" class="form-control form-control-lg border-success mb-3" accept=".xlsx, .xls, .csv">
+      
+      <button class="btn btn-success w-100 fw-bold py-2 fs-5" onclick="prosesImportExcel()"><i class="bi bi-upload"></i> MULAI IMPORT SEKARANG</button>
+    </div>
+  </div></div>
+</div>
+
+<div class="modal fade" id="modalKelolaPegawai" tabindex="-1">
+  <div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header bg-primary text-white"><h5 class="modal-title" id="pegawaiModalTitle">Tambah Pegawai Baru</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <form id="formPegawai" onsubmit="submitPegawai(event)">
+        <input type="hidden" id="mAksi"> <input type="hidden" id="mNipLama"> <input type="hidden" id="mUuid">
+        <div class="row">
+          
+          <div class="col-md-6 border-end">
+            <h6 class="fw-bold text-primary border-bottom pb-2 mb-3"><i class="bi bi-person-badge"></i> Data ASN</h6>
+            <div class="mb-2">
+             <label>NIP</label>
+               <input type="text" id="mNip" class="form-control border-primary" onblur="validasiNIP(this)" placeholder="Masukkan 18 digit angka" required></div>
+            <div class="mb-2"><label>Nama Lengkap</label><input type="text" id="mNama" class="form-control" required></div>
+            <div class="mb-2"><label>Tanggal Lahir</label><input type="date" id="mTglLahir" class="form-control" required></div>
+            <div class="mb-2"><label>Pangkat / Golongan</label>
+            <select id="mGolongan" class="form-select" required> </select>
+            </div>
+            <div class="mb-3"><label>Unit Kerja</label>
+          <input type="text" id="mUnitKerja" class="form-control border-primary" list="listUnitKerjaUtama" placeholder="Ketik mencari unit kerja..." autocomplete="off" required>
+        </div>
+          </div>
+          
+          <div class="col-md-6">
+            <h6 class="fw-bold text-success border-bottom pb-2 mb-3"><i class="bi bi-briefcase"></i> Data Jabatan & Gaji Pokok</h6>
+            <div class="mb-2"><label>Jabatan (Master TPP)</label><input type="text" id="mJabatan" class="form-control border-success" list="listJabatanUtama" placeholder="Ketik mencari jabatan..." autocomplete="off" required></div>
+            <div class="mb-2"><label>Jenis Jabatan</label>
+              <select id="mJenis" class="form-select"><option value="Struktural">Struktural</option><option value="Fungsional Tertentu">Fungsional Tertentu</option><option value="Fungsional Umum">Fungsional Umum</option></select>
+            </div>
+            <div class="mb-2"><label>Status Kawin / Jiwa</label>
+              <select id="mStatus" class="form-select">
+                <option value="TK/0 = 1">TK/0 = 1 Jiwa (Sendiri)</option><option value="TK/1 = 2">TK/1 = 2 Jiwa</option><option value="TK/2 = 3">TK/2 = 3 Jiwa</option><option value="TK/3 = 4">TK/3 = 4 Jiwa</option>
+                <option value="K/0 = 2">K/0 = 2 Jiwa (Suami+Istri)</option><option value="K/1 = 3">K/1 = 3 Jiwa</option><option value="K/2 = 4">K/2 = 4 Jiwa</option><option value="K/3 = 5">K/3 = 5 Jiwa</option>
+              </select>
+            </div>
+            <div class="row g-2 mb-2">
+              <div class="col-6"><label>Gaji Pokok</label><input type="number" id="mGapok" class="form-control fw-bold" value="0" required></div>
+              <div class="col-6"><label>Tunj. Jabatan</label><input type="number" id="mTjJab" class="form-control fw-bold" value="0" required></div>
+            </div>
+            <div class="mb-3"><label>No. Rekening Bank Jambi</label><input type="text" id="mRekening" class="form-control" required></div>
+          </div>
+
+        </div>
+        <hr>
+        <button type="submit" class="btn btn-primary w-100 fw-bold py-2"><i class="bi bi-save"></i> SIMPAN DATA PEGAWAI</button>
+      </form>
+    </div>
+  </div></div>
+</div>
+
+<div class="modal fade" id="modalKelolaPergub" tabindex="-1">
+  <div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header bg-warning"><h5 class="modal-title fw-bold" id="pergubModalTitle">Kelola Master TPP</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+     <form id="formPergub" onsubmit="submitPergub(event)">
+  <input type="hidden" id="pAksi"><input type="hidden" id="pJabatanLama">
+  
+  <div class="mb-2">
+    <label class="fw-bold text-success">Peruntukan Jabatan</label>
+    <select id="pStatusPegawai" class="form-select border-success fw-bold" required>
+      <option value="PNS">Pegawai Negeri Sipil (PNS)</option>
+      <option value="PPPK">Pegawai Pemerintah dengan Perjanjian Kerja (PPPK)</option>
+    </select>
+  </div>
+  
+  <div class="row">
+    <div class="col-md-8 mb-2"><label>Nama Jabatan</label><input type="text" id="pJabatan" class="form-control" required></div>
+    <div class="col-md-4 mb-2"><label>Kelas Jabatan</label><input type="number" id="pKelas" class="form-control" required></div>
+</div><hr>
+
+
+        <div class="row">
+          <div class="col-md-4 mb-2"><label>Beban Kerja (BK)</label><input type="number" class="form-control" id="pBK" value="0" oninput="hitungTotalPergub()"></div>
+          <div class="col-md-4 mb-2"><label>Prestasi Kerja (PK)</label><input type="number" class="form-control" id="pPK" value="0" oninput="hitungTotalPergub()"></div>
+          <div class="col-md-4 mb-2"><label>Kondisi Kerja (KK)</label><input type="number" class="form-control" id="pKK" value="0" oninput="hitungTotalPergub()"></div>
+          <div class="col-md-6 mb-2"><label>Tempat Bertugas (TB)</label><input type="number" class="form-control" id="pTB" value="0" oninput="hitungTotalPergub()"></div>
+          <div class="col-md-6 mb-2"><label>Kelangkaan Profesi (KP)</label><input type="number" class="form-control" id="pKP" value="0" oninput="hitungTotalPergub()"></div>
+        </div>
+        <div class="mb-3"><label>Total TPP Bruto</label><input type="number" class="form-control bg-success text-white fw-bold readonly-field" id="pTotal" value="0" readonly></div>
+        <button type="submit" class="btn btn-warning w-100 fw-bold" id="btnSimpanPergub">Simpan Master TPP Kepgub</button>
+      </form>
+    </div>
+  </div></div>
+</div>
+
+<div class="modal fade" id="modalDownloadReady" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content text-center shadow">
+      <div class="modal-body py-4">
+        <div class="text-success mb-2" style="font-size: 3rem;">✔️</div>
+        <h5 class="fw-bold text-dark">File Siap Diunduh!</h5>
+        <p class="text-muted small">Laporan Anda telah berhasil disusun oleh server.</p>
+        <a id="btnRealDownload" href="#" target="_blank" class="btn btn-success fw-bold w-100 py-2 fs-5" onclick="tutupModalDownload()">
+          📥 UNDUH SEKARANG
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+    <div class="custom-footer text-center no-print">
+      <p class="mb-1 fw-bold">SIM TPP ONLINE &copy; 2026 Pemerintah Provinsi Jambi</p>
+      <p class="mb-0 small text-muted">Created with ❤️ by : Fary | <a href="#" class="text-decoration-none text-primary fw-bold" data-bs-toggle="modal" data-bs-target="#modalPrivasi"><i class="bi bi-shield-check"></i> Kebijakan Privasi & Keamanan</a></p>
+    </div>
+
+<div class="modal fade" id="modalPrivasi" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content shadow-lg border-0">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title fw-bold"><i class="bi bi-shield-lock-fill text-success"></i> KEBIJAKAN PRIVASI & KEAMANAN DATA</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-dark" style="font-size: 0.9rem; text-align: justify;">
+        <p>Sistem Informasi Manajemen Tambahan Penghasilan Pegawai (SIM TPP) Pemerintah Provinsi Jambi berkomitmen penuh untuk melindungi kerahasiaan dan keamanan data aparatur sipil negara (ASN) yang dikelola di dalam sistem ini.</p>
+        
+        <h6 class="fw-bold text-primary mt-4 border-bottom pb-1">1. Dasar Hukum Pengelolaan Data</h6>
+        <p>Pengumpulan, penyimpanan, dan pemrosesan data di dalam sistem ini tunduk pada peraturan perundang-undangan yang berlaku di Negara Kesatuan Republik Indonesia, meliputi:</p>
+        <ul>
+          <li><b>Undang-Undang Nomor 27 Tahun 2022</b> tentang Pelindungan Data Pribadi (UU PDP).</li>
+          <li><b>Undang-Undang Nomor 11 Tahun 2008</b> jo. <b>UU Nomor 1 Tahun 2024</b> tentang Informasi dan Transaksi Elektronik (UU ITE).</li>
+          <li>Peraturan dan regulasi turunan terkait sistem pemerintahan berbasis elektronik (SPBE) yang berlaku di lingkungan Pemerintah Provinsi Jambi.</li>
+        </ul>
+
+        <h6 class="fw-bold text-primary mt-4 border-bottom pb-1">2. Enkripsi dan Infrastruktur Keamanan</h6>
+        <p>Sistem ini beroperasi di atas infrastruktur *Cloud* yang dilengkapi dengan standar keamanan global. Akses pengguna dibatasi menggunakan sistem otentikasi (Username, Password, dan UUID terenkripsi). Seluruh lalu lintas data dilindungi oleh enkripsi yang mencegah pencegatan atau pencurian data oleh pihak yang tidak berwenang.</p>
+
+        <h6 class="fw-bold text-primary mt-4 border-bottom pb-1">3. Larangan dan Sanksi Hukum</h6>
+        <p>Peringatan keras kepada seluruh Admin dan Operator sistem:</p>
+        <ul>
+          <li><b>Dilarang Keras</b> menyalin, mengunduh, atau membagikan data identitas, Nomor Rekening, dan rincian gaji/TPP ASN ke pihak eksternal yang tidak memiliki wewenang.</li>
+          <li><b>Dilarang</b> memanipulasi, meretas, atau menggunakan akun milik pengguna lain.</li>
+          <li>Setiap aktivitas di dalam sistem ini dicatat oleh <i>Audit Trail / Timestamp</i>. Pelanggaran terhadap penyalahgunaan data akan ditindak tegas dan dapat diproses secara hukum pidana maupun perdata sesuai dengan <b>Pasal 65 UU Pelindungan Data Pribadi</b> dan <b>Pasal 32 UU ITE</b>.</li>
+        </ul>
+      </div>
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-secondary fw-bold px-4" data-bs-dismiss="modal">SAYA MENGERTI</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+
+  // =====================================
+  // 1. VARIABEL GLOBAL (BERSIH & TUNGGAL)
+  // =====================================
+  // 👇 PASTE URL YANG KAMU DAPAT DARI LANGKAH 2 DI SINI 👇
+  const API_URL = "https://script.google.com/a/macros/admin.sma.belajar.id/s/AKfycbzVOJQYbLZPGhG55OIW9ahWtDxlrmeBCyMw4knMPjDXA3YIMpAUGrm61BDIexmZMU8B/exec"; 
+
+  // INI ADALAH KURIR PENGGANTI google.script.run
+  async function fetchAPI(actionName, payloadData) {
+    let token = sessionStorage.getItem('authToken') || "";
+    
+    try {
+      let response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          // Menggunakan text/plain agar tidak diblokir oleh sistem keamanan CORS Browser
+          'Content-Type': 'text/plain;charset=utf-8' 
+        },
+        body: JSON.stringify({
+          action: actionName,
+          payload: payloadData,
+          token: token
+        })
+      });
+      
+      return await response.json();
+    } catch (error) {
+      return {status: "error", pesan: "Gagal terhubung ke server: " + error.message};
+    }
+  }
+
+  // =====================================
+  // 1. VARIABEL GLOBAL (BERSIH & TUNGGAL)
+  // =====================================
+  let globalBulanAktif = ""; let globalHariKerja = 0; let globalHariKerja6 = 0; let globalStatusLock = "Buka"; let globalPotKorpri = 0;
+  let globalRefBulanGaji = ""; // <--- VARIABEL BARU
+  let globalJenisASN = "";
+  let asNIPAktif = ""; let statusTERAktif = ""; let objNominatifSetahun = null;
+  let baseTPP = {bk: 0, pk: 0, kk: 0, tb: 0, kp: 0, total: 0}; 
+  let arrayPeriode = [];
+  let arrayUnitKerjaValid = []; // RAM untuk menyimpan kamus unit kerja
+  let arrayJabatanValid = []; // RAM untuk menyimpan kamus jabatan
+  let isGajiTersimpan = false;  // Pelacak status save
+  let isAbsenTersimpan = false; // Pelacak status save
+
+  let currentUser = { role: "", unitkerja: "", username: "", email: "", uuid: "" };
+
+  // =====================================
+  // 2. SINKRONISASI AWAL (ONLOAD)
+  // =====================================
+  window.onload = () => { 
+    google.script.run.withSuccessHandler(res => {
+      if(res) {
+        document.getElementById('loginNamaInstansi').innerText = res.Nama_Instansi || "PEMERINTAH PROVINSI JAMBI";
+        document.getElementById('loginNamaDinas').innerText = res.Nama_Dinas || "DINAS PENDIDIKAN";
+        document.getElementById('loginSubDinas').innerText = res.Nama_Sub_Dinas ? res.Nama_Sub_Dinas.toUpperCase() : (res.Nama_Instansi ? res.Nama_Instansi.toUpperCase() : "");
+
+        if(res.Logo_Instansi) { 
+          let pI = document.getElementById('loginLogoInstansi'); pI.src = res.Logo_Instansi; pI.classList.remove('hidden'); 
+          // TAMBAHKAN BARIS INI:
+          let mLogo = document.getElementById('mHeaderLogo'); if(mLogo) { mLogo.src = res.Logo_Instansi; mLogo.classList.remove('hidden'); }
+        }
+        if(res.Logo_Dinas) { let pD = document.getElementById('loginLogoDinas'); pD.src = res.Logo_Dinas; pD.classList.remove('hidden'); }
+        globalPotKorpri = parseFloat(res.Pot_Korpri) || 0; // Simpan nilai Korpri ke memori
+      }
+    }).getSetting();
+
+    muatDaftarPeriode();
+    muatDataUnitKerja(); 
+    muatDataPergub(); 
+
+    if(sessionStorage.getItem('isLoggedIn') === 'true') {
+      currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+      document.getElementById('navInfoRole').innerText = currentUser.unitkerja;
+      
+      if(currentUser.role !== "Admin") {
+        document.getElementById('btnMasterAdmin').classList.add('hidden');
+        document.getElementById('btnSettingAdmin').classList.add('hidden');
+        document.getElementById('btnAkunAdmin').classList.add('hidden'); 
+        document.getElementById('btnTambahBulan').classList.add('hidden'); 
+        document.getElementById('btnKelolaBulan').classList.add('hidden'); 
+      } else {
+        document.getElementById('btnMasterAdmin').classList.remove('hidden');
+        document.getElementById('btnSettingAdmin').classList.remove('hidden');
+        document.getElementById('btnAkunAdmin').classList.remove('hidden'); 
+        document.getElementById('btnTambahBulan').classList.remove('hidden'); 
+        document.getElementById('btnKelolaBulan').classList.remove('hidden'); 
+      }
+      document.getElementById('viewLogin').classList.add('hidden');
+      document.getElementById('mainNav').classList.remove('hidden');
+      
+      globalBulanAktif = sessionStorage.getItem('globalBulanAktif') || "";
+      globalHariKerja = parseInt(sessionStorage.getItem('globalHariKerja')) || 22;
+      
+      // 👇 TAMBAHKAN BARIS INI UNTUK MENGINGAT PNS / PPPK SAAT RELOAD 👇
+      globalJenisASN = sessionStorage.getItem('globalJenisASN') || ""; 
+      
+      if(globalBulanAktif) {
+        // 👇 UBAH BARIS INI AGAR LABELNYA TETAP ADA TULISAN (PNS/PPPK) 👇
+        document.getElementById('labelBulanAktif').innerText = globalBulanAktif + (globalJenisASN ? " (" + globalJenisASN + ")" : "");
+        document.getElementById('labelHKAktif').innerText = globalHariKerja;
+        document.getElementById('btnMenuPegawai').disabled = false;
+      }
+      
+      let savedView = sessionStorage.getItem('currentView') || 'viewPilihBulan';
+      if(savedView === 'viewManajemenASN') savedView = 'viewDaftarPegawai'; 
+      
+      switchView(savedView);
+      if(savedView === 'viewDaftarPegawai') muatDataPegawai();
+    }
+  };
+
+  // =====================================
+  // 3. FUNGSI LOGIN & NAVIGASI
+  // =====================================
+  function togglePassword(inputId, btn) {
+    let inp = document.getElementById(inputId);
+    let icon = btn.querySelector('i');
+    if(inp.type === "password") {
+      inp.type = "text";
+      icon.classList.replace('bi-eye', 'bi-eye-slash');
+    } else {
+      inp.type = "password";
+      icon.classList.replace('bi-eye-slash', 'bi-eye');
+    }
+  }
+
+  // Tambahkan kata 'async' di depan function
+  async function doLogin(e) {
+    e.preventDefault();
+    startLoading("Memeriksa Akses..."); 
+    let u = document.getElementById('logUser').value;
+    let p = document.getElementById('logPass').value;
+
+    // 👇 MENGGUNAKAN KURIR BARU (TIDAK PAKAI google.script.run LAGI) 👇
+    let res = await fetchAPI("prosesLogin", {username: u, password: p});
+    
+    stopLoading(); 
+    if(res.status === "sukses") {
+      sessionStorage.setItem('authToken', res.token); 
+      currentUser = res.user; 
+      document.getElementById('navInfoRole').innerText = currentUser.unitkerja;
+      document.getElementById('mHeaderUnit').innerText = currentUser.unitkerja; 
+      
+      if(currentUser.role !== "Admin") {
+        document.getElementById('btnMasterAdmin').classList.add('hidden');
+        document.getElementById('btnSettingAdmin').classList.add('hidden');
+        document.getElementById('btnAkunAdmin').classList.add('hidden'); 
+        document.getElementById('mHeaderAdminIcons').classList.add('hidden');
+        document.getElementById('btnTambahBulan').classList.add('hidden'); 
+        document.getElementById('btnKelolaBulan').classList.add('hidden'); 
+      } else {
+        document.getElementById('btnMasterAdmin').classList.remove('hidden');
+        document.getElementById('btnSettingAdmin').classList.remove('hidden');
+        document.getElementById('btnAkunAdmin').classList.remove('hidden'); 
+        document.getElementById('mHeaderAdminIcons').classList.remove('hidden');
+        document.getElementById('btnTambahBulan').classList.remove('hidden'); 
+        document.getElementById('btnKelolaBulan').classList.remove('hidden'); 
+      }
+      
+      document.getElementById('viewLogin').classList.add('hidden');
+      document.getElementById('mainNav').classList.remove('hidden');
+      
+      sessionStorage.setItem('isLoggedIn', 'true');
+      sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+      
+      switchView('viewPilihBulan');
+    } else { 
+      alertError(res.pesan); 
+    }
+  }
+
+  function logoutApp() { 
+    Swal.fire({
+      title: 'Yakin ingin keluar?', text: "Anda akan dikembalikan ke halaman awal.", icon: 'question',
+      showCancelButton: true, confirmButtonColor: '#dc3545', cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Ya, Keluar!', cancelButtonText: 'Batal'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        sessionStorage.clear();
+        currentUser = { role: "", unitkerja: "", username: "", email: "", uuid: "" };
+        globalBulanAktif = ""; globalHariKerja = 0; globalHariKerja6 = 0; globalStatusLock = "Buka";
+        document.getElementById('mainNav').classList.add('hidden');
+        document.getElementById('logUser').value = "";
+        document.getElementById('logPass').value = "";      
+          // TAMBAHKAN BARIS INI: Untuk mematikan kembali tombol Pegawai di HP
+          toggleTombolPegawaiHP(false); 
+
+        switchView('viewLogin');
+        alertSukses("Anda berhasil logout dari sistem.");
+      }
+    });
+  }
+
+  function switchView(viewId) { 
+    document.querySelectorAll('#viewLogin, #viewPilihBulan, #viewDaftarPegawai, #viewMasterPergub, #viewManajemenASN, #viewSetting, #viewPanduan, #viewManajemenAkun').forEach(el => el.classList.add('hidden')); 
+    
+    let appContainer = document.getElementById('appContainer');
+    let mHeader = document.getElementById('mobileHeader');
+    let mBottomNav = document.getElementById('mobileBottomNav');
+    
+    if(viewId === 'viewLogin') {
+      document.body.classList.add('bg-gradient-login');
+      if(appContainer) appContainer.classList.add('hidden'); 
+      if(mHeader) mHeader.classList.add('hidden'); // Hilangkan di HP saat login
+      if(mBottomNav) mBottomNav.classList.add('hidden');
+      
+      document.getElementById('viewLogin').classList.remove('hidden'); 
+    } else {
+      document.body.classList.remove('bg-gradient-login');
+      document.body.style.backgroundColor = "#f4f6f9"; 
+      if(appContainer) appContainer.classList.remove('hidden'); 
+      if(mHeader) mHeader.classList.remove('hidden'); // Munculkan di HP
+      if(mBottomNav) mBottomNav.classList.remove('hidden');
+      
+      document.getElementById(viewId).classList.remove('hidden'); 
+    }
+
+    // --- Atur Indikator Warna di Menu Bawah HP ---
+    document.querySelectorAll('.m-nav-item').forEach(el => el.classList.remove('active'));
+    if(viewId === 'viewPilihBulan') document.getElementById('mNavHome').classList.add('active');
+    if(viewId === 'viewPanduan') document.getElementById('mNavPanduan').classList.add('active');
+    // Tombol Pegawai (Tengah)
+    if(viewId === 'viewDaftarPegawai' || viewId === 'viewManajemenASN') {
+      document.getElementById('mNavPegawai').classList.add('active');
+    }
+
+    if(viewId !== 'viewLogin') { sessionStorage.setItem('currentView', viewId); }
+  }
+
+  function masukAplikasi() {
+  let b = document.getElementById('pilihPeriodeUtama').value;
+  if(!b) { alertPeringatan("Pilih atau Tambah periode terlebih dahulu!"); return; }
+  
+  // Tangkap Pilihan ASN
+  globalJenisASN = document.getElementById('pilihJenisASN').value;
+
+  globalBulanAktif = b;
+  let obj = arrayPeriode.find(x => x.namaPeriode === b);
+    globalHariKerja = obj ? obj.hariKerja : 22;
+    globalHariKerja6 = obj ? obj.hariKerja6 : 26;
+    globalStatusLock = obj ? obj.statusLock : "Buka";
+    
+    // TETAPKAN BULAN REFERENSI GAJI (Jika kosong, samakan dengan bulan aktif)
+    globalRefBulanGaji = obj ? (obj.refBulanGaji || b) : b;
+    globalJenisPeriode = obj ? (obj.jenisPeriode || "Reguler") : "Reguler";
+    if(document.getElementById('labelBulanPencairan')) document.getElementById('labelBulanPencairan').innerText = globalRefBulanGaji;
+
+    document.getElementById('labelBulanAktif').innerText = b + " (" + globalJenisASN + ")";
+
+    document.getElementById('labelHKAktif').innerText = `${globalHariKerja} / ${globalHariKerja6}`;
+    document.getElementById('btnMenuPegawai').disabled = false;
+      // TAMBAHKAN BARIS INI: Untuk menghidupkan tombol Pegawai di HP
+      toggleTombolPegawaiHP(true);
+
+    if (globalStatusLock === "Kunci") {
+      document.getElementById('warningLock').classList.remove('hidden');
+      document.getElementById('btnTambahPegawai').classList.add('hidden');
+      document.getElementById('btnImportPegawai').classList.add('hidden');
+    } else {
+      document.getElementById('warningLock').classList.add('hidden');
+      document.getElementById('btnTambahPegawai').classList.remove('hidden');
+      document.getElementById('btnImportPegawai').classList.remove('hidden');
+    }
+
+      sessionStorage.setItem('globalBulanAktif', globalBulanAktif);
+  sessionStorage.setItem('globalJenisASN', globalJenisASN); // Simpan ke memori
+  switchView('viewDaftarPegawai'); muatDataPegawai();
+}
+
+  const escapeStr = (str) => String(str).replace(/'/g, "\\'").replace(/"/g, "&quot;");
+
+  // =====================================
+  // 4. PERIODE (BULAN)
+  // =====================================
+ // 1. Tambahkan variabel global baru ini di jejeran variabel paling atas (di bawah let globalRefBulanGaji = "";)
+  let globalJenisPeriode = "Reguler";
+
+  // 2. Ganti fungsi bukaModalTambahPeriode menjadi ini:
+  function bukaModalTambahPeriode() {
+    let nextTahun = new Date().getFullYear();
+    let nextBulanAngka = 1;
+    
+    if(arrayPeriode.length > 0) {
+      // PERBAIKAN: Cari periode "Reguler" terakhir, abaikan THR/Gaji 13
+      // Kita pakai [...arrayPeriode].reverse() untuk mencari data dari yang paling bawah
+      let lastReguler = [...arrayPeriode].reverse().find(p => p.jenisPeriode === "Reguler" || !p.jenisPeriode);
+      
+      if(lastReguler) {
+        if(lastReguler.bulanAngka == 12) { 
+          nextTahun = parseInt(lastReguler.tahun) + 1; 
+          nextBulanAngka = 1; 
+        } else { 
+          nextTahun = parseInt(lastReguler.tahun); 
+          nextBulanAngka = parseInt(lastReguler.bulanAngka) + 1; 
+        }
+      } else {
+        // Jaga-jaga kalau database masih kosong melompong
+        let last = arrayPeriode[arrayPeriode.length - 1];
+        nextTahun = parseInt(last.tahun);
+        nextBulanAngka = parseInt(last.bulanAngka);
+      }
+    }
+    
+    const namaBulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    
+    document.getElementById('pTahun').value = nextTahun;
+    document.getElementById('pBulanAngka').value = nextBulanAngka;
+    document.getElementById('pBulanNama').value = namaBulan[nextBulanAngka] + " " + nextTahun;
+    document.getElementById('pHariKerja').value = ""; document.getElementById('pHariKerja6').value = "";
+    
+    // Reset Dropdown
+    document.getElementById('pJenisPeriode').value = "Reguler";
+    toggleIndukPajak();
+
+    // Isi pilihan bulan Induk Pajak dengan bulan Reguler yang sudah ada
+    let selInduk = document.getElementById('pIndukPajak');
+    selInduk.innerHTML = "";
+    arrayPeriode.forEach(p => {
+      if(p.jenisPeriode === "Reguler" || !p.jenisPeriode) {
+        selInduk.innerHTML += `<option value="${p.namaPeriode}">${p.namaPeriode}</option>`;
+      }
+    });
+
+    new bootstrap.Modal(document.getElementById('modalTambahPeriode')).show();
+  }
+
+  // 3. Tambahkan fungsi baru ini tepat di bawah bukaModalTambahPeriode:
+  function toggleIndukPajak() {
+    let jenis = document.getElementById('pJenisPeriode').value;
+    let inputNama = document.getElementById('pBulanNama');
+    let inputAngka = document.getElementById('pBulanAngka');
+    let tahun = document.getElementById('pTahun').value;
+
+    let nextBulanAngka = 1;
+    if(arrayPeriode.length > 0) {
+      let lastReguler = [...arrayPeriode].reverse().find(p => p.jenisPeriode === "Reguler" || !p.jenisPeriode);
+      if(lastReguler) {
+         nextBulanAngka = lastReguler.bulanAngka == 12 ? 1 : parseInt(lastReguler.bulanAngka) + 1;
+      }
+    }
+    const namaBulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+    if(jenis === "Reguler") {
+      inputNama.value = namaBulan[nextBulanAngka] + " " + tahun; 
+      inputAngka.value = nextBulanAngka;
+      document.getElementById('pHariKerja').value = ""; document.getElementById('pHariKerja6').value = "";
+    } else {
+      inputNama.value = jenis + " " + tahun; 
+      inputAngka.value = (jenis === "THR") ? 14 : 13;
+      // Beri default HK penuh agar TPP tidak terpotong
+      document.getElementById('pHariKerja').value = 22; 
+      document.getElementById('pHariKerja6').value = 26;
+    }
+  }
+
+  function sinkronHariKerja() {
+    let namaInduk = document.getElementById('pIndukPajak').value;
+    if(!namaInduk) return;
+
+    // Cari data bulan induk di memori arrayPeriode
+    let dataInduk = arrayPeriode.find(p => p.namaPeriode === namaInduk);
+    
+    if(dataInduk) {
+      // Set otomatis ke kotak input Hari Kerja
+      document.getElementById('pHariKerja').value = dataInduk.hariKerja;
+      document.getElementById('pHariKerja6').value = dataInduk.hariKerja6;
+    }
+  }
+
+  // 4. Ganti fungsi simpanPeriodeLanjut menjadi ini:
+  function simpanPeriodeLanjut(e) {
+    e.preventDefault();
+    let btnSubmit = e.target.querySelector('button[type="submit"]'); btnSubmit.disabled = true;
+    
+    let jenis = document.getElementById('pJenisPeriode').value;
+    let namaPeriode = document.getElementById('pBulanNama').value;
+    
+    // PERBAIKAN: Pisahkan variabelnya!
+    let refBulan = namaPeriode; // Default: Gaji referensi adalah bulannya sendiri
+    let indukPajakVal = (jenis === "Reguler") ? "" : document.getElementById('pIndukPajak').value;
+
+    const d = { 
+      tahun: document.getElementById('pTahun').value, 
+      bulanAngka: document.getElementById('pBulanAngka').value, 
+      namaPeriode: namaPeriode, 
+      hariKerja: document.getElementById('pHariKerja').value,
+      hariKerja6: document.getElementById('pHariKerja6').value,
+      salinData: document.getElementById('pSalinPegawai').checked,
+      jenisPeriode: jenis,
+      refBulanGaji: refBulan,    // Tetap aman untuk lintas bulan
+      indukPajak: indukPajakVal  // <--- VARIABEL BARU KHUSUS THR (Masuk ke Kolom 10)
+    };
+    
+    google.script.run.withSuccessHandler(res => {
+      btnSubmit.disabled = false;
+      if(res.status === "sukses") { 
+        alertSukses(res.pesan); 
+        bootstrap.Modal.getInstance(document.getElementById('modalTambahPeriode')).hide(); 
+        renderDropdownPeriode(res.dataTerbaru); 
+      }
+      else { alertError(res.pesan); }
+    }).simpanPeriode(d);
+  }
+
+  function muatDaftarPeriode() {
+    google.script.run.withSuccessHandler(data => { renderDropdownPeriode(data); }).getDaftarPeriode();
+  }
+
+  function renderDropdownPeriode(data) {
+    arrayPeriode = data;
+    let sel = document.getElementById('pilihPeriodeUtama');
+    sel.innerHTML = "";
+    if(!data || data.length === 0) {
+      sel.innerHTML = `<option value="">Belum ada periode. Klik Tambah!</option>`;
+    } else {
+      data.forEach(p => { sel.innerHTML += `<option value="${p.namaPeriode}">${p.namaPeriode}</option>`; });
+      sel.value = data[data.length - 1].namaPeriode;
+    }
+  }
+
+ 
+  function bukaModalEditPeriode() {
+    let b = document.getElementById('pilihPeriodeUtama').value;
+    if(!b) return alertPeringatan("Pilih periode terlebih dahulu!");
+    let obj = arrayPeriode.find(x => x.namaPeriode === b);
+    document.getElementById('eBulanNama').value = obj.namaPeriode;
+    document.getElementById('eHariKerja').value = obj.hariKerja;
+    document.getElementById('eHariKerja6').value = obj.hariKerja6;
+    document.getElementById('eHk5Lama').value = obj.hariKerja;
+    document.getElementById('eHk6Lama').value = obj.hariKerja6;
+    document.getElementById('eStatusLock').value = obj.statusLock || "Buka";
+
+    // MENGISI DROPDOWN PILIHAN BULAN GAJI UNTUK ADMIN
+    let selRef = document.getElementById('editRefBulanGaji');
+    if(selRef) {
+       selRef.innerHTML = "";
+       arrayPeriode.forEach(p => { selRef.innerHTML += `<option value="${p.namaPeriode}">${p.namaPeriode}</option>`; });
+       selRef.value = obj.refBulanGaji || obj.namaPeriode;
+    }
+    
+    new bootstrap.Modal(document.getElementById('modalEditPeriode')).show();
+  }
+
+  function submitEditPeriode(e) {
+    e.preventDefault();
+    let b = document.getElementById('eBulanNama').value;
+    let d = {
+      bulan: b, 
+      hk5: document.getElementById('eHariKerja').value, hk6: document.getElementById('eHariKerja6').value,
+      hk5Lama: document.getElementById('eHk5Lama').value, hk6Lama: document.getElementById('eHk6Lama').value,
+      statusLock: document.getElementById('eStatusLock').value,
+      refBulan: document.getElementById('editRefBulanGaji').value // <--- TANGKAP INPUT LINTAS BULAN
+    };
+    startLoading("Menyimpan Pengaturan Periode...");
+    
+    google.script.run.withSuccessHandler(res => {
+      stopLoading(); alertSukses(res.pesan);
+      bootstrap.Modal.getInstance(document.getElementById('modalEditPeriode')).hide();
+      renderDropdownPeriode(res.dataTerbaru); document.getElementById('pilihPeriodeUtama').value = b;
+    }).updateHariKerja(d);
+  }
+
+  function konfirmasiHapusPeriode() {
+    let b = document.getElementById('eBulanNama').value;
+    if(confirm(`AWAS! Anda akan menghapus periode "${b}".\n\nIni akan menghapus SELURUH DATA PEGAWAI, GAJI, DAN TPP pada bulan tersebut. Yakin ingin melanjutkan?`)) {
+      startLoading("Menghapus Periode...");
+      google.script.run.withSuccessHandler(res => {
+        stopLoading(); alertSukses(res.pesan);
+        bootstrap.Modal.getInstance(document.getElementById('modalEditPeriode')).hide();
+        renderDropdownPeriode(res.dataTerbaru);
+      }).hapusPeriodeUtama(b);
+    }
+  }
+
+  // =====================================
+  // 5. MASTER DATA (UNIT KERJA & PERGUB)
+  // =====================================
+  function muatDataUnitKerja() {
+    google.script.run.withSuccessHandler(data => {
+      arrayUnitKerjaValid = data; 
+      let list = document.getElementById('listUnitKerjaUtama');
+      if(list) {
+        list.innerHTML = "";
+        data.forEach(unit => { list.innerHTML += `<option value="${unit}">`; });
+      }
+    }).getDaftarUnitKerja();
+  }
+
+  let globalDataPergub = [];
+  let currentPergubPage = 1;
+  let pergubRowsPerPage = 15;
+
+  function muatDataPergub() {
+    google.script.run.withSuccessHandler(data => {
+      globalDataPergub = data;
+      terapkanFilterPergub();
+    }).getDaftarPergub();
+  }
+
+  function terapkanFilterPergub() {
+    let cari = document.getElementById('filterCariPergub').value.toLowerCase();
+    
+    // 1. Ambil SEMUA data, hanya filter berdasarkan teks pencarian saja
+    let filtered = globalDataPergub.filter(row => {
+      let namaJab = String(row[1]).toLowerCase();
+      return namaJab.includes(cari);
+    });
+
+    // 2. URUTKAN DATA: PNS taruh di atas, PPPK taruh di bawah
+    filtered.sort((a, b) => {
+      let statusA = String(a[9] || "PNS").toUpperCase();
+      let statusB = String(b[9] || "PNS").toUpperCase();
+      
+      if (statusA === "PNS" && statusB !== "PNS") return -1; // A naik
+      if (statusA !== "PNS" && statusB === "PNS") return 1;  // B naik
+      return 0; // Jika sama-sama PNS atau sama-sama PPPK, biarkan posisinya
+    });
+    
+    renderTabelPergub(filtered);
+  }
+  
+  function renderTabelPergub(data) {
+  let tbody = document.getElementById('tabelBodyPergub');
+  if(!data.length) {
+    document.getElementById('infoPaginationPergub').innerText = "Menampilkan 0 data";
+    document.getElementById('btnPaginationPergub').innerHTML = "";
+    return tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger fw-bold">Data tidak ditemukan.</td></tr>';
+  }
+  
+  let totalPages = Math.ceil(data.length / pergubRowsPerPage);
+  if(currentPergubPage > totalPages) currentPergubPage = totalPages;
+  let start = (currentPergubPage - 1) * pergubRowsPerPage; 
+  let end = start + pergubRowsPerPage;
+  let paginatedData = data.slice(start, end);
+  
+  let html = "";
+  paginatedData.forEach(row => {
+    let total = parseFloat(row[8]) || 0; 
+    let jab = escapeStr(row[1]); let kls = escapeStr(row[2]); 
+    let bk=row[3], pk=row[4], kk=row[5], tb=row[6], kp=row[7];
+    
+    // TANGKAP STATUS PEGAWAI DARI DATABASE (Index 9)
+    let statusPeg = escapeStr(row[9] || "PNS");
+
+    // PERBAIKAN: Masukkan statusPeg ke dalam parameter tombol
+    let args = `'lihat', '${jab}', '${kls}', ${bk}, ${pk}, ${kk}, ${tb}, ${kp}, '${statusPeg}'`;
+    let argsE = `'edit', '${jab}', '${kls}', ${bk}, ${pk}, ${kk}, ${tb}, ${kp}, '${statusPeg}'`;
+    
+    // Bikin label warna agar admin enak melihatnya
+    let badgeStatus = statusPeg === "PPPK" ? "bg-warning text-dark" : "bg-primary";
+    
+    html += `<tr>
+               <td><b>${jab}</b> <span class="badge ${badgeStatus} ms-1">${statusPeg}</span></td>
+               <td>${kls}</td>
+               <td>Rp ${Math.round(total).toLocaleString('id-ID')}</td>
+               <td class="text-center">
+                 <button class="btn btn-sm btn-info text-white me-1" onclick="bukaModalPergub(${args})">Lihat</button>
+                 <button class="btn btn-sm btn-primary me-1" onclick="bukaModalPergub(${argsE})">Edit</button>
+                 <button class="btn btn-sm btn-danger" onclick="hapusPergub('${jab}')">Del</button>
+               </td>
+             </tr>`;
+  });
+  tbody.innerHTML = html;
+  
+  document.getElementById('infoPaginationPergub').innerText = `Tampil ${start + 1} - ${Math.min(end, data.length)} dari ${data.length}`;
+  let btnHtml = `<button class="btn btn-sm btn-outline-primary" onclick="ubahHalamanPergub(${currentPergubPage - 1})" ${currentPergubPage === 1 ? 'disabled' : ''}>Mundur</button>`;
+  btnHtml += `<span class="btn btn-sm btn-primary disabled text-white fw-bold">Hal ${currentPergubPage}/${totalPages}</span>`;
+  btnHtml += `<button class="btn btn-sm btn-outline-primary" onclick="ubahHalamanPergub(${currentPergubPage + 1})" ${currentPergubPage === totalPages ? 'disabled' : ''}>Maju</button>`;
+  document.getElementById('btnPaginationPergub').innerHTML = btnHtml;
+}
+
+  function ubahHalamanPergub(page) { currentPergubPage = page; terapkanFilterPergub(); }
+
+function muatDropdownJabatan(selectedValue = "") {
+  google.script.run.withSuccessHandler(data => {
+    // FILTER JABATAN SESUAI MODE PNS / PPPK SEBELUM DIMASUKKAN KE ARRAY
+    let dataTerfilter = data.filter(row => String(row[9] || "PNS") === globalJenisASN);
+    
+    arrayJabatanValid = dataTerfilter.map(r => String(r[1]).trim()); 
+    let list = document.getElementById('listJabatanUtama');
+    if(list) {
+      list.innerHTML = "";
+      dataTerfilter.forEach(row => { 
+        let totalTPP = parseFloat(row[8]) || 0;
+        let tppFormat = totalTPP.toLocaleString('id-ID');
+        list.innerHTML += `<option value="${row[1]}">Kls: ${row[2]} - TPP: Rp ${tppFormat}</option>`; 
+      });
+    }
+    if(selectedValue) document.getElementById('mJabatan').value = selectedValue;
+  }).getDaftarPergub();
+}
+
+  function bukaModalPergub(aksi, jabatan="", kelas="", bk=0, pk=0, kk=0, tb=0, kp=0, statusPegawai="PNS") {
+  document.getElementById('pAksi').value = aksi; 
+  document.getElementById('pJabatanLama').value = jabatan; 
+  document.getElementById('pJabatan').value = jabatan; 
+  document.getElementById('pKelas').value = kelas;
+  document.getElementById('pBK').value = bk; 
+  document.getElementById('pPK').value = pk; 
+  document.getElementById('pKK').value = kk; 
+  document.getElementById('pTB').value = tb; 
+  document.getElementById('pKP').value = kp;
+  document.getElementById('pStatusPegawai').value = statusPegawai; // <--- BARU
+  
+    hitungTotalPergub(); let els = document.getElementById('formPergub').elements; let isRO = (aksi === 'lihat');
+    for (let i = 0; i < els.length; i++) { if(els[i].id !== 'btnSimpanPergub' && els[i].id !== 'pTotal') { els[i].readOnly = isRO; if(isRO) els[i].classList.add('readonly-field'); else els[i].classList.remove('readonly-field'); } }
+    document.getElementById('pergubModalTitle').innerText = aksi === 'tambah' ? 'Tambah Master TPP' : (aksi === 'edit' ? 'Edit Master TPP' : 'Detail Master TPP'); document.getElementById('btnSimpanPergub').style.display = isRO ? 'none' : 'block';
+    new bootstrap.Modal(document.getElementById('modalKelolaPergub')).show();
+  }
+
+  function submitPergub(e) { 
+  e.preventDefault(); let aksi = document.getElementById('pAksi').value; 
+  startLoading("Menyimpan Master...");
+  const d = { 
+    jabatanLama: document.getElementById('pJabatanLama').value, 
+    namaJabatan: document.getElementById('pJabatan').value, 
+    kelasJabatan: document.getElementById('pKelas').value, 
+    bk: document.getElementById('pBK').value, 
+    pk: document.getElementById('pPK').value, 
+    kk: document.getElementById('pKK').value, 
+    tb: document.getElementById('pTB').value, 
+    kp: document.getElementById('pKP').value, 
+    totalTpp: document.getElementById('pTotal').value,
+    statusPegawai: document.getElementById('pStatusPegawai').value // <--- BARU
+  }; 
+  let runner = google.script.run.withSuccessHandler(res => { stopLoading(); alertSukses(res); bootstrap.Modal.getInstance(document.getElementById('modalKelolaPergub')).hide(); muatDataPergub(); }); 
+  if(aksi === 'edit') runner.updatePergub(d); else runner.simpanPergub(d); 
+}
+
+
+
+  function hitungTotalPergub() { let inputs = ['pBK', 'pPK', 'pKK', 'pTB', 'pKP'].map(id => parseFloat(document.getElementById(id).value) || 0); document.getElementById('pTotal').value = inputs.reduce((a,b)=>a+b, 0); }
+  function hapusPergub(jab) { if(confirm("Hapus master jabatan " + jab + "?")) { google.script.run.withSuccessHandler(res => { alertSukses(res); muatDataPergub(); }).hapusPergub(jab); } }
+
+  // =====================================
+  // 6. PEGAWAI & FILTERING
+  // =====================================
+  let globalDataPegawai = [];
+  let currentPage = 1;
+  let rowsPerPage = 15; 
+
+  function muatDataPegawai() {
+    google.script.run.withSuccessHandler(data => {
+      globalDataPegawai = data; 
+      let unitList = [...new Set(data.map(item => item[4]).filter(Boolean))];
+      let unitDropdown = document.getElementById('filterUnitKerja');
+      unitDropdown.innerHTML = '<option value="">Semua Unit Kerja</option>';
+      unitList.forEach(s => unitDropdown.innerHTML += `<option value="${s}">${s}</option>`);
+      terapkanFilter(); 
+    // TAMBAHKAN globalJenisASN DI BAWAH INI
+    }).getDaftarPegawai(globalBulanAktif, currentUser.role, currentUser.unitkerja, globalJenisASN);
+  }
+
+  function terapkanFilter() {
+    let cari = document.getElementById('filterCari').value.toLowerCase();
+    let fGol = document.getElementById('filterGol').value;
+    let fUnit = document.getElementById('filterUnitKerja').value;
+
+    let filtered = globalDataPegawai.filter(row => {
+      let nip = String(row[0]).toLowerCase(); let nama = String(row[1]).toLowerCase();
+      let gol = String(row[3]); let unit = String(row[4]);
+      let matchCari = nip.includes(cari) || nama.includes(cari);
+      let golDasar = gol.split("/")[0].trim(); if(golDasar.includes("IX") || golDasar.includes("X")) golDasar = "PPPK";
+      let matchGol = (fGol === "" || golDasar === fGol);
+      let matchUnit = (fUnit === "" || unit === fUnit);
+      return matchCari && matchGol && matchUnit;
+    });
+    renderTabelPegawai(filtered);
+  }
+
+  function renderTabelPegawai(data) {
+    let tbody = document.getElementById('tabelBodyPegawai');
+    if(!data.length) {
+      document.getElementById('infoPagination').innerText = "Menampilkan 0 data";
+      document.getElementById('btnPagination').innerHTML = "";
+      return tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger fw-bold">Data tidak ditemukan.</td></tr>';
+    }
+
+    let totalPages = Math.ceil(data.length / rowsPerPage);
+    if(currentPage > totalPages) currentPage = totalPages;
+    let start = (currentPage - 1) * rowsPerPage; let end = start + rowsPerPage;
+    let paginatedData = data.slice(start, end);
+    let html = "";
+    
+    paginatedData.forEach(row => {
+      let nip = escapeStr(row[0]); let nama = escapeStr(row[1]); let tglLahir = escapeStr(row[2]||""); let gol = escapeStr(row[3]); let unit = escapeStr(row[4]); let jab = escapeStr(row[5]); let jenis = escapeStr(row[6]); let stat = escapeStr(row[7]); 
+      let gapok = row[8]||0; let tjJab = row[9]||0; let rek = escapeStr(row[10]); let uuid = escapeStr(row[12]||""); 
+      
+      let args = `'${nip}', '${nama}', '${tglLahir}', '${gol}', '${unit}', '${jab}', '${jenis}', '${stat}', ${gapok}, ${tjJab}, '${rek}', '${uuid}'`; 
+      let openPanel = `bukaPanel('${nip}', '${nama}', '${gol}', '${jab}', '${stat}', '${unit}')`;
+      
+      let btnEdit = globalStatusLock === "Kunci" ? `<button class="btn btn-sm btn-secondary me-1" onclick="alertPeringatan('Periode ini sudah dikunci Admin!')"><i class="bi bi-lock"></i></button>` : `<button class="btn btn-sm btn-primary me-1" onclick="bukaModalPegawai('edit', ${args})">Edit</button>`;
+      let btnDel = globalStatusLock === "Kunci" ? `<button class="btn btn-sm btn-secondary" onclick="alertPeringatan('Periode ini sudah dikunci Admin!')"><i class="bi bi-lock"></i></button>` : `<button class="btn btn-sm btn-danger" onclick="hapusPegawai('${nip}', '${nama}', '${uuid}')">Del</button>`;
+
+      html += `<tr class="clickable"><td onclick="${openPanel}">${nip}</td><td onclick="${openPanel}"><b>${nama}</b></td><td onclick="${openPanel}">${gol}</td><td onclick="${openPanel}">${unit}</td><td onclick="${openPanel}">${jab}</td><td onclick="${openPanel}">${rek}</td><td class="text-center no-click"><button class="btn btn-sm btn-info text-white me-1" onclick="${openPanel}">Buka</button>${btnEdit}${btnDel}</td></tr>`;
+    });
+    tbody.innerHTML = html;
+    document.getElementById('infoPagination').innerText = `Menampilkan ${start + 1} - ${Math.min(end, data.length)} dari Total ${data.length} Pegawai`;
+    
+    let btnHtml = `<button class="btn btn-sm btn-outline-primary" onclick="ubahHalaman(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>Mundur</button>`;
+    btnHtml += `<span class="btn btn-sm btn-primary disabled text-white fw-bold">Hal ${currentPage} / ${totalPages}</span>`;
+    btnHtml += `<button class="btn btn-sm btn-outline-primary" onclick="ubahHalaman(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Maju</button>`;
+    document.getElementById('btnPagination').innerHTML = btnHtml;
+  }
+  function ubahHalaman(page) { currentPage = page; terapkanFilter(); }
+
+  function renderDropdownGolongan(selectedValue = "") {
+  let sel = document.getElementById('mGolongan');
+  sel.innerHTML = ""; // Bersihkan isi sebelumnya
+  let html = "";
+
+  if (globalJenisASN === "PNS") {
+    html += `<optgroup label="Golongan IV">
+               <option value="IV/e">IV/e</option><option value="IV/d">IV/d</option><option value="IV/c">IV/c</option><option value="IV/b">IV/b</option><option value="IV/a">IV/a</option>
+             </optgroup>
+             <optgroup label="Golongan III">
+               <option value="III/d">III/d</option><option value="III/c">III/c</option><option value="III/b">III/b</option><option value="III/a">III/a</option>
+             </optgroup>
+             <optgroup label="Golongan II">
+               <option value="II/d">II/d</option><option value="II/c">II/c</option><option value="II/b">II/b</option><option value="II/a">II/a</option>
+             </optgroup>
+             <optgroup label="Golongan I">
+               <option value="I/d">I/d</option><option value="I/c">I/c</option><option value="I/b">I/b</option><option value="I/a">I/a</option>
+             </optgroup>`;
+  } else if (globalJenisASN === "PPPK") {
+    html += `<optgroup label="Golongan XVII - XIII">
+               <option value="XVII">XVII</option><option value="XVI">XVI</option><option value="XV">XV</option><option value="XIV">XIV</option><option value="XIII">XIII</option>
+             </optgroup>
+             <optgroup label="Golongan XII - IX">
+               <option value="XII">XII</option><option value="XI">XI</option><option value="X">X</option><option value="IX">IX</option>
+             </optgroup>
+             <optgroup label="Golongan VIII - V">
+               <option value="VIII">VIII</option><option value="VII">VII</option><option value="VI">VI</option><option value="V">V</option>
+             </optgroup>
+             <optgroup label="Golongan IV - I">
+               <option value="IV">IV</option><option value="III">III</option><option value="II">II</option><option value="I">I</option>
+             </optgroup>`;
+  }
+  
+  sel.innerHTML = html;
+  if (selectedValue) { sel.value = selectedValue; }
+}
+
+  function bukaModalPegawai(aksi, nip="", nama="", tglLahir="", golongan="", unitkerja="", jabatan="", jenis="Struktural", status="TK/0 = 1", gapok=0, tjJab=0, rekening="", uuid="") {
+    document.getElementById('mAksi').value = aksi; 
+    document.getElementById('mNipLama').value = nip; 
+    document.getElementById('mTglLahir').value = tglLahir;
+    document.getElementById('mGolongan').value = golongan; 
+    document.getElementById('mUuid').value = uuid; 
+    // PANGGIL FUNGSI INI AGAR DROPDOWN BERUBAH SESUAI MODE
+    renderDropdownGolongan(golongan);
+    document.getElementById('mJenis').value = jenis; 
+    document.getElementById('mStatus').value = status; 
+    document.getElementById('mGapok').value = gapok; 
+    document.getElementById('mTjJab').value = tjJab; 
+    document.getElementById('mRekening').value = rekening;
+
+    let elNip = document.getElementById('mNip');
+    let elNama = document.getElementById('mNama');
+    let elUnitKerja = document.getElementById('mUnitKerja');
+    elNip.value = nip; elNama.value = nama; elUnitKerja.value = unitkerja;
+
+    let isOperatorEdit = (aksi === 'edit' && currentUser.role !== "Admin");
+    if (isOperatorEdit) {
+      elNip.readOnly = true; elNip.classList.add("readonly-field");
+      elNama.readOnly = true; elNama.classList.add("readonly-field");
+    } else {
+      elNip.readOnly = false; elNip.classList.remove("readonly-field");
+      elNama.readOnly = false; elNama.classList.remove("readonly-field");
+    }
+
+    if (currentUser.role !== "Admin") {
+      elUnitKerja.value = currentUser.unitkerja; 
+      elUnitKerja.readOnly = true; elUnitKerja.classList.add("readonly-field");
+    } else {
+      elUnitKerja.readOnly = false; elUnitKerja.classList.remove("readonly-field");
+    }
+
+    muatDropdownJabatan(jabatan); 
+    document.getElementById('pegawaiModalTitle').innerText = aksi === 'edit' ? 'Edit Pegawai' : 'Tambah Pegawai Baru'; 
+    new bootstrap.Modal(document.getElementById('modalKelolaPegawai')).show();
+  }
+
+  function submitPegawai(e) {
+    e.preventDefault(); let aksi = document.getElementById('mAksi').value;
+    
+    // --> TAMBAHAN GEMBOK NIP <--
+    let nipCek = document.getElementById('mNip').value.trim();
+    if (!/^\d{18}$/.test(nipCek)) {
+      return alertPeringatan("Gagal menyimpan! NIP belum valid (Wajib 18 digit angka). Silakan perbaiki NIP terlebih dahulu.");
+    }
+    
+    // VALIDASI KETAT UNIT KERJA
+    let s = document.getElementById('mUnitKerja').value.trim();
+    if(currentUser.role === 'Admin' && !arrayUnitKerjaValid.includes(s)) {
+      return alertPeringatan("Unit Kerja tidak valid! Silakan hapus dan pilih dari daftar dropdown.");
+    }
+
+    // VALIDASI KETAT JABATAN
+    let j = document.getElementById('mJabatan').value.trim();
+    if(!arrayJabatanValid.includes(j)) {
+      return alertPeringatan("Jabatan tidak valid! Silakan ketik dan pilih dari daftar dropdown jabatan.");
+    }
+
+    startLoading("Menyimpan Pegawai..."); 
+    
+    const d = { 
+      nipLama: document.getElementById('mNipLama').value, 
+      nip: document.getElementById('mNip').value, 
+      nama: document.getElementById('mNama').value, 
+      tglLahir: document.getElementById('mTglLahir').value, 
+      golongan: document.getElementById('mGolongan').value, 
+      unitkerja: document.getElementById('mUnitKerja').value, 
+      namaJabatan: document.getElementById('mJabatan').value, 
+      jenisJab: document.getElementById('mJenis').value, 
+      statusKawin: document.getElementById('mStatus').value, 
+      gapok: document.getElementById('mGapok').value, 
+      tjJab: document.getElementById('mTjJab').value, 
+      rekening: document.getElementById('mRekening').value, 
+      bulan: globalBulanAktif, 
+      statusPegawai: globalJenisASN, // <--- TAMBAHAN BARU
+      uuid: document.getElementById('mUuid').value,
+      roleUser: currentUser.role, 
+      unitkerjaUser: currentUser.unitkerja  
+    };
+    
+    let runner = google.script.run.withSuccessHandler(res => { 
+      stopLoading(); 
+      let pesan = String(res).toLowerCase();
+      if (pesan.includes("gagal") || pesan.includes("error")) { alertError(res); } 
+      else { alertSukses(res); bootstrap.Modal.getInstance(document.getElementById('modalKelolaPegawai')).hide(); document.getElementById('formPegawai').reset(); muatDataPegawai(); muatDataUnitKerja(); }
+    }); 
+    if(aksi === 'edit') runner.updatePegawai(d); else runner.simpanPegawai(d);
+  }
+
+  function hapusPegawai(nip, nama, uuid) { 
+    if(confirm("Hapus pegawai " + nama + " dari bulan ini saja?")) { 
+      startLoading("Menghapus Pegawai...");
+      google.script.run.withSuccessHandler(res => { 
+        stopLoading();
+        let pesan = String(res).toLowerCase();
+        if (pesan.includes("gagal") || pesan.includes("error")) { alertError(res); } 
+        else { alertSukses(res); muatDataPegawai(); }
+      }).hapusPegawai({nip: nip, bulan: globalBulanAktif, uuid: uuid}); 
+    } 
+  }
+
+  // =====================================
+  // VALIDASI NIP (18 DIGIT ANGKA)
+  // =====================================
+  function validasiNIP(input) {
+    // 1. Hapus spasi atau tanda strip jika user tidak sengaja mengetiknya
+    let nilaiBersih = input.value.replace(/[\s-]/g, '');
+    input.value = nilaiBersih; // Kembalikan nilai yang sudah dibersihkan ke kotak
+    
+    if (nilaiBersih !== "") {
+      // 2. Cek apakah murni angka dan panjangnya tepat 18
+      let isAngka = /^\d+$/.test(nilaiBersih);
+      if (!isAngka || nilaiBersih.length !== 18) {
+        alertPeringatan("Perhatian! NIP wajib terdiri dari tepat 18 digit angka murni.");
+        input.classList.add('border-danger'); // Ubah kotak jadi merah
+      } else {
+        input.classList.remove('border-danger'); // Kembalikan ke normal jika sudah benar
+      }
+    }
+  }
+
+  // =====================================
+  // 7. HITUNG AMPRAH & TPP (PANEL ASN)
+  // =====================================
+function bukaPanel(nip, nama, gol, jabatan, statusTER, unitKerja) {
+    asNIPAktif = nip; statusTERAktif = statusTER || "";
+    
+    // 🌟 TAMBAHAN SUPER AMAN: PAKSA APLIKASI MENGINGAT JENIS PERIODE
+    let objPer = arrayPeriode.find(x => x.namaPeriode === globalBulanAktif);
+    globalJenisPeriode = objPer ? (objPer.jenisPeriode || "Reguler") : "Reguler";
+    
+    // (Cari baris-baris ini dan tambahkan yang ada tulisan BARU)
+    document.getElementById('labelNamaASN').innerText = nama; 
+    // 👇 TAMBAHKAN BARIS INI 👇
+    document.getElementById('labelStatusASN').innerText = "Status ASN: " + globalJenisASN;
+    document.getElementById('labelNIPASN').innerText = "NIP: " + nip; 
+    document.getElementById('labelGolonganASN').innerText = "Gol: " + gol;
+    document.getElementById('labelJabatanASN').innerText = "Jabatan: " + jabatan;
+
+    // 🌟 BARU: MENGISI KOTAK PERIODE KECIL
+    if(document.getElementById('labelBulanASNPanel')) document.getElementById('labelBulanASNPanel').innerText = globalBulanAktif;
+    if(document.getElementById('labelBulanGajiBersih')) document.getElementById('labelBulanGajiBersih').innerText = "(" + globalBulanAktif + ")";
+    if(document.getElementById('labelBulanTerBawah')) document.getElementById('labelBulanTerBawah').innerText = globalBulanAktif;
+    if(document.getElementById('labelBulanNominatif')) document.getElementById('labelBulanNominatif').innerText = globalBulanAktif;
+
+    let elUnit = document.getElementById('labelUnitKerjaASN');
+    if(elUnit) elUnit.innerText = "Unit: " + (unitKerja || "");
+    
+    document.getElementById('formGaji').reset(); 
+    document.getElementById('formAbsen').reset();
+    document.getElementById('inpBulan').value = globalBulanAktif; 
+    document.getElementById('inpHariKerja').value = globalHariKerja;
+    switchView('viewManajemenASN');
+    
+    google.script.run.withSuccessHandler(res => {
+      if(res) { 
+        isGajiTersimpan = (res.gaji) ? true : false;
+        isAbsenTersimpan = (res.absen) ? true : false;
+        
+        navigasiTab('tabGaji', true); 
+
+        if(res.pergub) { baseTPP = res.pergub; }
+        if(res.pegawaiInfo) { document.getElementById('aGapok').value = res.pegawaiInfo.gapok; document.getElementById('aTjJab').value = res.pegawaiInfo.tjJab; }
+        
+        const setV = (id, val) => { let el = document.getElementById(id); if(el) el.value = (val !== undefined && val !== null && !isNaN(val)) ? parseInt(val) : 0; };
+        
+        if(res.gaji) {
+            setV('aTjPajak', res.gaji[10]);
+            setV('aPotPajak', res.gaji[17]);
+        } else {
+            if(document.getElementById('aTjPajak')) document.getElementById('aTjPajak').value = 0;
+            if(document.getElementById('aPotPajak')) document.getElementById('aPotPajak').value = 0;
+        }
+
+        hitungAmprah(); 
+        
+        if(res.absen) {
+           let hkDb = parseInt(res.absen[3]);
+           if(hkDb === globalHariKerja6) { document.getElementById('inpPolaHK').value = "6"; } else { document.getElementById('inpPolaHK').value = "5"; }
+        } else { document.getElementById('inpPolaHK').value = "5"; }
+        ubahPolaHK(); 
+
+        let btnGaji = document.getElementById('btnSimpanGaji'); let btnTPP = document.getElementById('btnSimpanTPP');
+        if (globalStatusLock === "Kunci") {
+          btnGaji.disabled = true; btnGaji.innerHTML = "<i class='bi bi-lock'></i> TERKUNCI"; btnGaji.classList.replace('btn-primary', 'btn-secondary');
+          btnTPP.disabled = true; btnTPP.innerHTML = "<i class='bi bi-lock'></i> TERKUNCI"; btnTPP.classList.replace('btn-primary', 'btn-secondary');
+        } else {
+          btnGaji.disabled = false; btnGaji.innerHTML = "<i class='bi bi-save'></i> SIMPAN AMPRAH GAJI"; btnGaji.classList.replace('btn-secondary', 'btn-primary');
+          btnTPP.disabled = false; btnTPP.innerHTML = "<i class='bi bi-save'></i> SIMPAN PERHITUNGAN TPP"; btnTPP.classList.replace('btn-secondary', 'btn-primary');
+        }
+        
+        if(res.absen) {
+          let skpRaw = String(res.absen[4] || "Baik|Menilai"); let skpParts = skpRaw.split("|");
+          document.getElementById('inpSKP').value = skpParts[0] || "Baik";
+          document.getElementById('chkTidakMenilai').checked = (skpParts[1] === "Tidak Menilai");
+          setV('vDL', res.absen[5]); setV('vS', res.absen[6]); setV('vC', res.absen[7]); setV('vKP', res.absen[8]); setV('vTL1', res.absen[9]); setV('vTL2', res.absen[10]); setV('vTL3', res.absen[11]); setV('vTL4', res.absen[12]); setV('vCP1', res.absen[13]); setV('vCP2', res.absen[14]); setV('vCP3', res.absen[15]); setV('vCP4', res.absen[16]); setV('vTK', res.absen[17]); setV('vASUB', res.absen[18]);
+        } else {
+          document.getElementById('inpSKP').value = "Baik"; document.getElementById('chkTidakMenilai').checked = false;
+          ['vDL','vS','vC','vKP','vTL1','vTL2','vTL3','vTL4','vCP1','vCP2','vCP3','vCP4','vTK','vASUB'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = 0; });
+        }
+        hitungMatriksTPP();
+      }
+    }).getDetailASN(nip, globalBulanAktif);
+  }
+
+  function hitungAmprah(isManualPajak = false) {
+    let gapok = parseFloat(document.getElementById('aGapok')?.value) || 0; 
+    let tjJab = parseFloat(document.getElementById('aTjJab')?.value) || 0; 
+    let statTer = statusTERAktif || "TK/0 = 1";
+    let isKawin = statTer.startsWith("K"); 
+    let jmlJiwa = parseInt(statTer.split("=")[1]) || 1; 
+    let jmlAnak = jmlJiwa - 1 - (isKawin ? 1 : 0); if(jmlAnak < 0) jmlAnak = 0;
+    
+    let tjIstri = Math.round(isKawin ? (gapok * 0.10) : 0); 
+    let tjAnak = Math.round(gapok * 0.02 * jmlAnak); 
+    let jmlKeluarga = gapok + tjIstri + tjAnak; 
+    let tjBeras = Math.round(72420 * jmlJiwa); 
+    let basisBPJS = jmlKeluarga + tjJab; 
+    let tjBPJS4 = Math.round(basisBPJS * 0.04); 
+    let tjJKK = Math.round(gapok * 0.0024); 
+    let tjJKM = Math.round(gapok * 0.0072); 
+
+    // 🌟 PERBAIKAN URUTAN: MATIKAN TUNJANGAN BPJS DULU JIKA INI THR
+    if (globalJenisPeriode !== "Reguler") {
+        tjBPJS4 = 0; tjJKK = 0; tjJKM = 0;
+    }
+
+    // RUMUS PAJAK OTOMATIS (TER)
+    if (!isManualPajak) {
+      let dppTER = gapok + tjIstri + tjAnak + tjJab + tjBeras + tjBPJS4 + tjJKK + tjJKM; 
+      let statusKawinShort = (isKawin ? "K/" : "TK/") + jmlAnak;
+      let katTER = "A";
+      if(["TK/0", "TK/1", "K/0"].includes(statusKawinShort)) katTER = "A"; 
+      else if(["TK/2", "TK/3", "K/1", "K/2"].includes(statusKawinShort)) katTER = "B"; 
+      else if(["K/3"].includes(statusKawinShort)) katTER = "C";
+
+      const terA = [[5400000,0],[5650000,0.25],[5950000,0.5],[6300000,0.75],[6750000,1],[7500000,1.25],[8550000,1.5],[9650000,1.75],[10050000,2],[10350000,2.25],[10700000,2.5],[11050000,3],[11600000,3.5],[12500000,4],[13750000,5],[15100000,6],[16950000,7],[19750000,8],[24100000,9],[26450000,10]];
+      const terB = [[6200000,0],[6500000,0.25],[6850000,0.5],[7300000,0.75],[9200000,1],[10750000,1.5],[11250000,2],[11600000,2.5],[12600000,3],[13600000,4],[14950000,5],[16400000,6],[18450000,7],[21850000,8],[26000000,9],[27700000,10]];
+      const terC = [[6600000,0],[6950000,0.25],[7350000,0.5],[7800000,0.75],[8850000,1],[9800000,1.25],[10950000,1.5],[11200000,2],[11600000,2.5],[12050000,3],[13200000,4],[14400000,5],[15900000,6],[17950000,7],[21200000,8],[25850000,9]];
+      
+      let tabelPilihan = katTER === "A" ? terA : (katTER === "B" ? terB : terC);
+      let pctTER = 0;
+      for(let i=0; i<tabelPilihan.length; i++) { 
+        if(dppTER <= tabelPilihan[i][0]) { pctTER = tabelPilihan[i][1]; break; } 
+      }
+      
+      let tjPajakOtomatis = Math.round(dppTER * (pctTER / 100));
+      if(document.getElementById('aTjPajak')) {
+        document.getElementById('aTjPajak').value = tjPajakOtomatis;
+        document.getElementById('aPotPajak').value = tjPajakOtomatis;
+      }
+    }
+
+    let tjPajak = parseFloat(document.getElementById('aTjPajak')?.value) || 0;
+    let potPajak = parseFloat(document.getElementById('aPotPajak')?.value) || 0;
+    
+    let potIWP8 = Math.round(jmlKeluarga * 0.08); 
+    let potIWP1 = Math.round(basisBPJS * 0.01); 
+    let potJKK = tjJKK; 
+    let potJKM = tjJKM; 
+
+    // 🌟 MATIKAN JUGA POTONGAN IURAN PEGAWAI JIKA INI THR
+    if (globalJenisPeriode !== "Reguler") {
+        potIWP8 = 0; potIWP1 = 0; potJKK = 0; potJKM = 0;
+    }
+    
+    // FINALISASI TOTAL KOTOR & BERSIH
+    let totalPotongan = potIWP8 + potIWP1 + tjBPJS4 + potJKK + potJKM + potPajak; 
+    let kotorSementara = gapok + tjIstri + tjAnak + tjJab + tjBeras + tjBPJS4 + tjJKK + tjJKM + tjPajak;
+    
+    let bersihSementara = kotorSementara - totalPotongan;
+    let sisa = bersihSementara % 100; 
+    let pembulatan = (sisa > 0) ? (100 - sisa) : 0; 
+    
+    let jmlKotor = kotorSementara + pembulatan; 
+    let gajiBersih = jmlKotor - totalPotongan;
+    
+    // TAMPILKAN KE LAYAR HTML
+    if(document.getElementById('aJmlKeluarga')) {
+      document.getElementById('aJmlKeluarga').value = jmlKeluarga; 
+      document.getElementById('aTjIstri').value = tjIstri; 
+      document.getElementById('aTjAnak').value = tjAnak; 
+      document.getElementById('aTjBeras').value = tjBeras; 
+      document.getElementById('aTjBPJS4').value = tjBPJS4; 
+      document.getElementById('aTjJKK').value = tjJKK; 
+      document.getElementById('aTjJKM').value = tjJKM; 
+      
+      document.getElementById('aPotJKK').value = potJKK; 
+      document.getElementById('aPotJKM').value = potJKM; 
+      document.getElementById('aPotBPJS4').value = tjBPJS4; 
+      document.getElementById('aPotIWP1').value = potIWP1; 
+      document.getElementById('aPotIWP8').value = potIWP8; 
+      
+      document.getElementById('aBulat').value = pembulatan; 
+      document.getElementById('aJmlKotor').value = jmlKotor; 
+      document.getElementById('aJmlPotongan').value = totalPotongan; 
+      document.getElementById('aJmlBersih').value = gajiBersih;
+    }
+  }
+
+  function submitGaji(e) {
+    e.preventDefault(); 
+    startLoading("Menyimpan Amprah..."); 
+    const d = { 
+      nip: asNIPAktif, bulan: globalBulanAktif, gapok: document.getElementById('aGapok').value, tjIstri: document.getElementById('aTjIstri').value, 
+      tjAnak: document.getElementById('aTjAnak').value, jumlahKeluarga: document.getElementById('aJmlKeluarga').value, 
+      tjJabatan: document.getElementById('aTjJab').value, tjTerpencil: 0, tkd: 0, tjBeras: document.getElementById('aTjBeras').value, 
+      tjPajak: document.getElementById('aTjPajak').value, 
+      tjBPJS4: document.getElementById('aTjBPJS4').value, tjJKK: document.getElementById('aTjJKK').value, tjJKM: document.getElementById('aTjJKM').value, 
+      taperaPK: 0, pembulatan: document.getElementById('aBulat').value, jmlKotor: document.getElementById('aJmlKotor').value, 
+      potPajak: document.getElementById('aPotPajak').value, 
+      potBPJS: document.getElementById('aPotBPJS4').value, potIWP1: document.getElementById('aPotIWP1').value, 
+      potIWP8: document.getElementById('aPotIWP8').value, potTaperum: 0, potJKK: document.getElementById('aPotJKK').value, 
+      potJKM: document.getElementById('aPotJKM').value, jmlPotongan: document.getElementById('aJmlPotongan').value, jmlBersih: document.getElementById('aJmlBersih').value 
+    };
+    
+    google.script.run.withSuccessHandler(res => { 
+      stopLoading(); 
+      let pesan = String(res).toLowerCase();
+      // PERBAIKAN ALERT: Tangkap kata "peringatan" atau "ditolak" sebagai Error
+      if (pesan.includes("gagal") || pesan.includes("error") || pesan.includes("peringatan") || pesan.includes("ditolak")) { 
+          alertError(res); 
+          isGajiTersimpan = false;
+      } else { 
+          alertSukses(res); 
+          isGajiTersimpan = true; 
+      }
+    }).simpanGajiOtomatis(d);
+  }
+
+
+  function ubahPolaHK() {
+    let pola = document.getElementById('inpPolaHK').value;
+    document.getElementById('inpHariKerja').value = (pola === "5") ? globalHariKerja : globalHariKerja6;
+    hitungMatriksTPP();
+  }
+
+  function hitungMatriksTPP() {
+    if(!baseTPP || typeof baseTPP.bk === 'undefined') return;
+    const fR = (val) => Math.round(val).toLocaleString('id-ID'); const getV = (id) => parseFloat(document.getElementById(id).value) || 0;
+    
+    let hk = parseInt(document.getElementById('inpHariKerja').value) || 0;
+    let totalTidakMasuk = getV('vDL') + getV('vS') + getV('vC') + getV('vKP') + getV('vTK');
+    let totalMasuk = hk - totalTidakMasuk; if(totalMasuk < 0) totalMasuk = 0; 
+    document.getElementById('txtHariTidakMasuk').innerText = totalTidakMasuk + " Hari"; document.getElementById('txtHariMasuk').innerText = totalMasuk + " Hari";
+
+    let pctAbsPK = (getV('vS')*0.03) + (getV('vC')*0.03) + (getV('vTK')*0.03) + (getV('vTL1')*0.005) + (getV('vTL2')*0.01) + (getV('vTL3')*0.0125) + (getV('vTL4')*0.015) + (getV('vCP1')*0.005) + (getV('vCP2')*0.01) + (getV('vCP3')*0.0125) + (getV('vCP4')*0.015);
+    if(pctAbsPK > 1) pctAbsPK = 1;
+    let asubV = getV('vASUB'); let pctASUB = (asubV < 28) ? (asubV * 0.02) : 1.0; if (asubV === 0) pctASUB = 0; 
+    let pctAbsDK = pctAbsPK + pctASUB; if(pctAbsDK > 1) pctAbsDK = 1;
+
+    let skp = document.getElementById('inpSKP').value; let isChecked = document.getElementById('chkTidakMenilai').checked; 
+    let bobotSKP = 100;
+    if(skp === "Sangat Baik" || skp === "Baik") bobotSKP = 100; else if(skp === "Cukup") bobotSKP = 90; else if(skp === "Kurang") bobotSKP = 75; else if(skp === "Sangat Kurang") bobotSKP = 50; else if(skp === "Tidak Buat") bobotSKP = 40;
+    if (isChecked) bobotSKP -= 5; let rasioSKP = bobotSKP / 100; 
+    
+    document.getElementById('txtSkp').innerText = bobotSKP + "%"; document.getElementById('txtAbsPk').innerText = (pctAbsPK*100).toFixed(2) + "%"; document.getElementById('txtAbsDk').innerText = (pctAbsDK*100).toFixed(2) + "%";
+
+    const keys = ['bk', 'pk', 'kk', 'tb', 'kp', 'total'];
+    keys.forEach(k => {
+       let kotor = baseTPP[k] || 0;
+       let bPK = kotor * 0.60; let nSKP = bPK * rasioSKP; let pAbsPK = nSKP * pctAbsPK; let akhPK = nSKP - pAbsPK; 
+       let bDK = kotor * 0.40; let pAbsDK = bDK * pctAbsDK; let akhDK = bDK - pAbsDK;
+       let totKotor = kotor; let totPot = pAbsPK + pAbsDK; let hasilAkhir = akhPK + akhDK; 
+
+       if(document.getElementById('mKotor_'+k)) document.getElementById('mKotor_'+k).innerText = fR(kotor);
+       if(document.getElementById('mBpk_'+k)) document.getElementById('mBpk_'+k).innerText = fR(bPK);
+       if(document.getElementById('mNskp_'+k)) document.getElementById('mNskp_'+k).innerText = fR(nSKP);
+       if(document.getElementById('mPabspk_'+k)) document.getElementById('mPabspk_'+k).innerText = fR(pAbsPK);
+       if(document.getElementById('mAkhpk_'+k)) document.getElementById('mAkhpk_'+k).innerText = fR(akhPK);
+       if(document.getElementById('mBdk_'+k)) document.getElementById('mBdk_'+k).innerText = fR(bDK);
+       if(document.getElementById('mPabsdk_'+k)) document.getElementById('mPabsdk_'+k).innerText = fR(pAbsDK);
+       if(document.getElementById('mAkhdk_'+k)) document.getElementById('mAkhdk_'+k).innerText = fR(akhDK);
+       if(document.getElementById('mTotKotor_'+k)) document.getElementById('mTotKotor_'+k).innerText = fR(totKotor);
+       if(document.getElementById('mTotPot_'+k)) document.getElementById('mTotPot_'+k).innerText = fR(totPot); 
+       if(document.getElementById('mHasil_'+k)) document.getElementById('mHasil_'+k).innerText = fR(hasilAkhir);
+    });
+  }
+
+
+  function submitPerhitunganTPP(e) {
+    e.preventDefault(); const getV = (id) => document.getElementById(id).value; 
+    startLoading("Menyimpan Kehadiran..."); 
+    let statusMenilai = document.getElementById('chkTidakMenilai').checked ? "Tidak Menilai" : "Menilai";
+    let gabunganSKP = getV('inpSKP') + "|" + statusMenilai;
+    let hkDB = document.getElementById('inpHariKerja').value; 
+    const d = { nip: asNIPAktif, bulan: globalBulanAktif, hariKerja: hkDB, skp: gabunganSKP, dl: getV('vDL'), s: getV('vS'), c: getV('vC'), kp: getV('vKP'), tk: getV('vTK'), asub: getV('vASUB'), tl1: getV('vTL1'), tl2: getV('vTL2'), tl3: getV('vTL3'), tl4: getV('vTL4'), cp1: getV('vCP1'), cp2: getV('vCP2'), cp3: getV('vCP3'), cp4: getV('vCP4') };
+    
+    google.script.run.withSuccessHandler(res => { 
+      stopLoading(); alertSukses(res); 
+      isAbsenTersimpan = true; // <--- TANDAI SUDAH DISIMPAN
+      hitungPajakTahunan(); muatNominatif(); 
+    }).simpanPerhitunganTPP(d);
+  }
+
+  function hitungPajakTahunan() {
+    document.getElementById('loaderTahunan').classList.remove('hidden'); 
+    document.getElementById('hasilTahunan').classList.add('hidden');
+    
+    const getV = (id) => document.getElementById(id).value;
+    let statusMenilai = document.getElementById('chkTidakMenilai').checked ? "Tidak Menilai" : "Menilai";
+    let gabunganSKP = getV('inpSKP') + "|" + statusMenilai;
+    let customAbsen = { skp: gabunganSKP, s: getV('vS'), c: getV('vC'), tk: getV('vTK'), tl1: getV('vTL1'), tl2: getV('vTL2'), tl3: getV('vTL3'), tl4: getV('vTL4'), cp1: getV('vCP1'), cp2: getV('vCP2'), cp3: getV('vCP3'), cp4: getV('vCP4'), asub: getV('vASUB') };
+
+    google.script.run.withFailureHandler(err => { 
+      document.getElementById('loaderTahunan').classList.add('hidden'); alertError("Gagal: " + err); 
+    }).withSuccessHandler(res => {
+      document.getElementById('loaderTahunan').classList.add('hidden');
+      if(res.error) return alertPeringatan("Peringatan: " + res.error);
+      
+      objNominatifSetahun = res; 
+      document.getElementById('hasilTahunan').classList.remove('hidden');
+      const fRp = (angka) => "Rp " + Math.round(angka).toLocaleString('id-ID');
+      
+      if(document.getElementById('labelBulanPencairan')) document.getElementById('labelBulanPencairan').innerText = globalRefBulanGaji || globalBulanAktif;
+
+      // =========================================================
+      // 🌟 KEMBALIKAN BARIS INI: Blok Tampilan Bagian A (Aturan Lama)
+      // =========================================================
+      document.getElementById('thGajiBulanOnly').innerText = fRp(res.gajiKotor);
+      document.getElementById('thGajiTahunOnly').innerText = fRp(res.brutoGajiSetahun);
+      document.getElementById('thBiayaJabGaji').innerText = "- " + fRp(res.biayaJabatanGaji);
+      document.getElementById('thIwpGaji').innerText = "- " + fRp(res.iwpSetahun);
+      document.getElementById('thNettoGaji').innerText = fRp(res.nettoGajiSetahun);
+      document.getElementById('thPtkpGaji').innerText = "- " + fRp(res.ptkp);
+      if(document.getElementById('thStatusKwnGaji')) document.getElementById('thStatusKwnGaji').innerText = res.statusTER;
+      document.getElementById('thPkpGaji').innerText = fRp(res.pkpGaji);
+      document.getElementById('thPphGajiBulan').innerText = fRp(res.pph21GajiSebulanSimulasi);
+
+      document.getElementById('thGajiBulan').innerText = fRp(res.gajiKotor); 
+      document.getElementById('thTPPBruto').innerText = fRp(res.tppBruto); 
+      document.getElementById('thPotPK').innerText = "- " + fRp(res.totalPotPK); 
+      document.getElementById('thPotDK').innerText = "- " + fRp(res.totalPotDK); 
+      document.getElementById('thTPPBulan').innerText = fRp(res.tppNettoKinerja); 
+      document.getElementById('thBrutoBulan').innerText = fRp(res.brutoSebulan); 
+      document.getElementById('thBruto').innerText = fRp(res.brutoSetahun); 
+      document.getElementById('thBiayaJab').innerText = "- " + fRp(res.biayaJabatan); 
+      document.getElementById('thIWP').innerText = "- " + fRp(res.iwpSetahun); 
+      document.getElementById('thNetto').innerText = fRp(res.nettoSetahun); 
+      if(document.getElementById('thStatusKwnTotal')) document.getElementById('thStatusKwnTotal').innerText = res.statusTER;
+      document.getElementById('thPTKP').innerText = "- " + fRp(res.ptkp); 
+      document.getElementById('thPKP').innerText = fRp(res.pkp); 
+      document.getElementById('thPph5').innerText = fRp(res.pph5);
+      document.getElementById('thPph15').innerText = fRp(res.pph15);
+      document.getElementById('thPph25').innerText = fRp(res.pph25);
+      document.getElementById('thPph30').innerText = fRp(res.pph30);
+      document.getElementById('thPph35').innerText = fRp(res.pph35);
+      document.getElementById('thPajakTahun').innerText = fRp(res.pph21Setahun); 
+      document.getElementById('thPajakSebulanProg').innerText = fRp(res.pph21Setahun / 12); 
+      // =========================================================
+
+      // Blok Tampilan Bagian B (TER - PMK 168 Terbaru)
+      document.getElementById('thTerGajiAwal').innerText = fRp(res.gajiKotorTER);
+      document.getElementById('thTerPphGajiPengurang').innerText = "- " + fRp(res.pphGajiTER);
+      document.getElementById('thTerGajiBersih').innerText = fRp(res.gajiKotorTER - res.pphGajiTER);
+      document.getElementById('thTerTpp').innerText = "+ " + fRp(res.tppBruto);
+      document.getElementById('thTerDasar').innerText = fRp(res.dasarPajakTER);
+      document.getElementById('thKatTER').innerText = res.katTER; 
+      document.getElementById('thPctTER').innerText = res.pctTER + "%"; 
+      if(document.getElementById('teksRumusTER')) document.getElementById('teksRumusTER').innerText = `Total PPh21 (${fRp(res.dasarPajakTER)} x ${res.pctTER}%)`;
+      document.getElementById('thPphTER').innerText = fRp(res.pph21TotalSebulanTER); 
+      document.getElementById('thPphGajiLunas').innerText = "- " + fRp(res.pphGajiTER); 
+      document.getElementById('thPphTKD').innerText = fRp(res.pph21TKD);
+      
+    }).hitungNominatif(asNIPAktif, globalBulanAktif, customAbsen, null, globalRefBulanGaji); 
+  }
+
+  function muatNominatif() {
+    if(!objNominatifSetahun) { hitungPajakTahunan(); return; } 
+    let res = objNominatifSetahun; 
+    document.getElementById('loaderNominatif').classList.add('hidden'); 
+    document.getElementById('hasilNominatif').classList.remove('hidden');
+    const fRp = (angka) => "Rp " + Math.round(angka).toLocaleString('id-ID');
+    
+    let isSpesial = (res.jenisPeriode !== "Reguler"); // Deteksi apakah ini THR/Gaji 13
+    let rasio = res.tppBruto > 0 ? (res.tppNettoKinerja / res.tppBruto) : 0;
+    
+    document.getElementById('nomGajiKotor').innerText = fRp(res.gajiKotor); 
+    document.getElementById('nomBK').innerText = fRp(res.bk * rasio); 
+    document.getElementById('nomPK').innerText = fRp(res.pk * rasio); 
+    document.getElementById('nomKK').innerText = fRp(res.kk * rasio); 
+    document.getElementById('nomTB').innerText = fRp(res.tb * rasio); 
+    document.getElementById('nomKP').innerText = fRp(res.kp * rasio); 
+    document.getElementById('nomTppNetto').innerText = fRp(res.tppNettoKinerja); 
+    document.getElementById('nomTambahanBpjs').innerText = fRp(res.bpjs4);
+    
+    let tppPlusBpjs = res.tppNettoKinerja + res.bpjs4; 
+    document.getElementById('nomTppPlusBpjs').innerText = fRp(tppPlusBpjs);
+    
+    // RENDER POTONGAN (IWP & BPJS ADA LABEL BEBAS POTONGAN JIKA THR)
+    let infoBebas = isSpesial ? ` <span class="badge bg-danger ms-1">Bebas Pot. ${res.jenisPeriode}</span>` : "";
+    document.getElementById('nomPotIwp').innerHTML = "- " + fRp(res.iwp1) + infoBebas; 
+    document.getElementById('nomPotBpjs').innerHTML = "- " + fRp(res.bpjs4) + infoBebas; 
+    
+    // 🌟 PERBAIKAN: HAPUS LABEL "PAJAK GABUNGAN" (Tampil Normal Saja)
+    document.getElementById('nomPotPph').innerHTML = "- " + fRp(res.pph21TKD); 
+    
+    let jmlPotongan = res.iwp1 + res.pph21TKD + res.bpjs4; 
+    document.getElementById('nomJmlPotongan').innerText = "- " + fRp(jmlPotongan);
+
+    let totalDiterima = tppPlusBpjs - jmlPotongan; 
+    // ... baris kode sebelumnya ...
+    document.getElementById('nomTotalDiterima').innerText = fRp(totalDiterima); 
+    document.getElementById('nomBersih').innerText = fRp(totalDiterima);
+
+    // 👇 PERBAIKAN: Langsung ambil nilai globalPotKorpri, tidak perlu cek isPPPK 👇
+    let potonganKorpriAktual = globalPotKorpri; 
+
+    document.getElementById('nomTrfBersih').innerText = fRp(totalDiterima);
+    document.getElementById('nomTrfKorpri').innerText = "- " + fRp(potonganKorpriAktual);
+    
+    let masukRekening = totalDiterima - potonganKorpriAktual;
+    document.getElementById('nomMasukRekening').value = fRp(masukRekening);
+  }
+
+  // =====================================
+  // FUNGSI CEGATAN PINDAH TAB ASN
+  // =====================================
+  function navigasiTab(target, force = false) {
+    // Jika tidak dipaksa (diklik user) dan periode BUKAN mode Kunci
+    if (!force && globalStatusLock !== "Kunci") {
+       if (target !== 'tabGaji' && !isGajiTersimpan) {
+         return alertPeringatan("Anda belum menyimpan data bulan ini! Silakan klik SIMPAN AMPRAH GAJI terlebih dahulu.");
+       }
+       if ((target === 'tabTahunan' || target === 'tabNominatif') && !isAbsenTersimpan) {
+         return alertPeringatan("Anda belum menyimpan kehadiran! Silakan klik SIMPAN PERHITUNGAN TPP terlebih dahulu.");
+       }
+    }
+
+    // Matikan semua warna tab
+    ['navGaji', 'navAbsen', 'navTahunan', 'navNominatif'].forEach(id => document.getElementById(id).classList.remove('active'));
+    // Sembunyikan semua isi tab
+    ['tabGaji', 'tabAbsen', 'tabTahunan', 'tabNominatif'].forEach(id => document.getElementById(id).classList.remove('show', 'active'));
+
+    // Hidupkan tab yang dituju
+    let navId = "nav" + target.replace("tab", ""); 
+    document.getElementById(navId).classList.add('active');
+    document.getElementById(target).classList.add('show', 'active');
+
+    // Picu perhitungan otomatis jika menuju tab 3 atau 4
+    if (target === 'tabTahunan') hitungPajakTahunan();
+    if (target === 'tabNominatif') muatNominatif();
+  }
+
+  // =====================================
+  // 8. IMPORT EXCEL
+  // =====================================
+  function bukaModalImport(jenis) {
+    document.getElementById('importJenis').value = jenis; document.getElementById('fileImport').value = "";
+    document.getElementById('importModalTitle').innerText = jenis === 'pegawai' ? "Import Data Pegawai (Excel)" : "Import Master TPP (Excel)";
+    new bootstrap.Modal(document.getElementById('modalImportExcel')).show();
+  }
+
+  function unduhTemplateExcel() {
+    let jenis = document.getElementById('importJenis').value; let wb = XLSX.utils.book_new(); let wsData, sheetName, fileName;
+    if(jenis === 'pegawai') {
+      wsData = [ ["NIP (Angka Saja)", "Nama Lengkap", "Tanggal Lahir (YYYY-MM-DD)", "Golongan (Contoh: III/b)", "Unit Kerja", "Nama Jabatan (Sesuai Master)", "Jenis Jabatan (Struktural / Fungsional Tertentu / Fungsional Umum)", "Status Kawin (Contoh: K/1 = 3)", "Gaji Pokok", "Tunjangan Jabatan", "No. Rekening"] ];
+      sheetName = "Template_Pegawai"; fileName = "Template_Import_Pegawai.xlsx";
+    } else if(jenis === 'pergub') {
+      wsData = [ ["Nama Jabatan", "Kelas Jabatan", "Beban Kerja (BK)", "Prestasi Kerja (PK)", "Kondisi Kerja (KK)", "Tempat Bertugas (TB)", "Kelangkaan Profesi (KP)"] ];
+      sheetName = "Template_Master_TPP"; fileName = "Template_Import_Master_TPP.xlsx";
+    } else if(jenis === 'akun') {
+      wsData = [ ["Username", "Password", "Role (Admin / Operator)", "Unit Kerja (Harus sesuai ketikan DB_Unit_Kerja)", "Email"] ];
+      sheetName = "Template_Akun"; fileName = "Template_Import_Akun.xlsx";
+    }
+    let ws = XLSX.utils.aoa_to_sheet(wsData); XLSX.utils.book_append_sheet(wb, ws, sheetName); XLSX.writeFile(wb, fileName);
+  }
+
+  function prosesImportExcel() {
+    let fileInput = document.getElementById('fileImport'); if(!fileInput.files[0]) return alertPeringatan("Pilih file Excel terlebih dahulu!");
+    let jenis = document.getElementById('importJenis').value; let file = fileInput.files[0]; let reader = new FileReader();
+    startLoading("Membaca File Excel...");
+    
+    function formatTanggalExcel(excelDate) {
+      if(!excelDate) return "";
+      if(!isNaN(excelDate)) { let date = new Date((excelDate - (25567 + 2)) * 86400 * 1000); return date.toISOString().split('T')[0]; }
+      let strDate = String(excelDate).trim(); let regexBaku = /^\d{4}-\d{2}-\d{2}$/;
+      if(regexBaku.test(strDate)) return strDate; 
+      let parts = strDate.split(/[-/]/);
+      if(parts.length === 3) {
+         if(parts[0].length === 4) return `${parts[0]}-${parts[1].padStart(2,'0')}-${parts[2].padStart(2,'0')}`; 
+         return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`; 
+      }
+      return "1970-01-01"; 
+    }
+
+    reader.onload = function(e) {
+      let data = new Uint8Array(e.target.result); let workbook = XLSX.read(data, {type: 'array'});
+      let sheetName = workbook.SheetNames[0]; let json = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {defval: ""}); 
+      if(json.length === 0) { stopLoading(); return alertError("File Excel kosong atau format salah!"); }
+
+      let payload = [];
+      if(jenis === 'pegawai') {
+        if(!globalBulanAktif) { stopLoading(); return alertError("Pilih Periode Bulan terlebih dahulu!"); }
+        json.forEach(row => {
+          let keys = Object.keys(row); if(keys.length < 10) return; 
+          payload.push({ nip: row[keys[0]], nama: row[keys[1]], tglLahir: formatTanggalExcel(row[keys[2]]), golongan: row[keys[3]], unitkerja: row[keys[4]], namaJabatan: row[keys[5]], jenisJab: row[keys[6]], statusKawin: row[keys[7]], gapok: parseFloat(row[keys[8]])||0, tjJab: parseFloat(row[keys[9]])||0, rekening: String(row[keys[10]]||"") });
+        });
+        
+        // PERBAIKAN POPUP ALERT
+        google.script.run.withSuccessHandler(res => { 
+          stopLoading(); 
+          if(res.includes("Error")) {
+            alertError(res);
+          } else if(res.includes("PERHATIAN")) {
+            // Munculkan popup kuning jika ada data yang di-skip
+            Swal.fire({ icon: 'warning', title: 'Import Selesai dengan Catatan', text: res, confirmButtonColor: '#ffc107' });
+          } else {
+            alertSukses(res); // Hijau bersih jika semua sukses
+          }
+          bootstrap.Modal.getInstance(document.getElementById('modalImportExcel')).hide(); 
+          muatDataPegawai(); 
+        }).importPegawaiMassal(payload, globalBulanAktif);
+
+      } else if(jenis === 'pergub') {
+        json.forEach(row => {
+          let keys = Object.keys(row); if(keys.length < 7) return;
+          payload.push({ namaJabatan: row[keys[0]], kelasJabatan: row[keys[1]], bk: parseFloat(row[keys[2]])||0, pk: parseFloat(row[keys[3]])||0, kk: parseFloat(row[keys[4]])||0, tb: parseFloat(row[keys[5]])||0, kp: parseFloat(row[keys[6]])||0 });
+        });
+        google.script.run.withSuccessHandler(res => { stopLoading(); alertSukses(res); bootstrap.Modal.getInstance(document.getElementById('modalImportExcel')).hide(); muatDataPergub(); }).importPergubMassal(payload);
+      } else if(jenis === 'akun') {
+        json.forEach(row => {
+          let keys = Object.keys(row); if(keys.length < 2) return;
+          payload.push({ username: row[keys[0]], password: row[keys[1]], role: row[keys[2]], unitkerja: row[keys[3]], email: row[keys[4]] });
+        });
+        google.script.run.withSuccessHandler(res => { 
+          stopLoading(); 
+          if(res.includes("Error") || res.includes("Gagal")) alertError(res); else alertSukses(res);
+          bootstrap.Modal.getInstance(document.getElementById('modalImportExcel')).hide(); muatDaftarAkun(); 
+        }).importAkunMassal(payload);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  // =====================================
+  // 9. MANAJEMEN AKUN
+  // =====================================
+  let globalDataAkun = [];
+  let currentAkunPage = 1;
+  let akunRowsPerPage = 15;
+
+  function muatDaftarAkun() {
+    switchView('viewManajemenAkun'); startLoading("Memuat Data Akun...");
+    google.script.run.withSuccessHandler(data => {
+      stopLoading();
+      globalDataAkun = data;
+      terapkanFilterAkun();
+    }).getDaftarAkun();
+  }
+
+  function terapkanFilterAkun() {
+    let cari = document.getElementById('filterCariAkun').value.toLowerCase();
+    let filtered = globalDataAkun.filter(row => String(row[0]).toLowerCase().includes(cari) || String(row[3]).toLowerCase().includes(cari));
+    renderTabelAkun(filtered);
+  }
+
+  function renderTabelAkun(data) {
+    let tbody = document.getElementById('tabelBodyAkun');
+    if(!data.length) {
+      document.getElementById('infoPaginationAkun').innerText = "Menampilkan 0 data";
+      document.getElementById('btnPaginationAkun').innerHTML = "";
+      return tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger fw-bold">Data tidak ditemukan.</td></tr>';
+    }
+    
+    let totalPages = Math.ceil(data.length / akunRowsPerPage);
+    if(currentAkunPage > totalPages) currentAkunPage = totalPages;
+    let start = (currentAkunPage - 1) * akunRowsPerPage; 
+    let end = start + akunRowsPerPage;
+    let paginatedData = data.slice(start, end);
+    
+    let html = "";
+    paginatedData.forEach(r => {
+      let u = escapeStr(r[0]); let role = escapeStr(r[2]); let unit = escapeStr(r[3]); let email = escapeStr(r[4]); let uuid = escapeStr(r[5]);
+      let badge = role === 'Admin' ? 'bg-danger' : 'bg-primary';
+      let args = `'edit', '${u}', '${role}', '${unit}', '${email}', '${uuid}'`;
+      html += `<tr><td><b>${u}</b></td><td>${unit}</td><td><span class="badge ${badge}">${role}</span></td><td>${email}</td><td class="text-center"><button class="btn btn-sm btn-info text-white me-1 fw-bold" onclick="resetPasswordAkun('${uuid}', '${u}')"><i class="bi bi-key"></i></button><button class="btn btn-sm btn-warning me-1" onclick="bukaModalAkun(${args})"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-danger" onclick="hapusAkun('${uuid}', '${u}')"><i class="bi bi-trash"></i></button></td></tr>`;
+    });
+    tbody.innerHTML = html;
+    
+    document.getElementById('infoPaginationAkun').innerText = `Tampil ${start + 1} - ${Math.min(end, data.length)} dari ${data.length}`;
+    let btnHtml = `<button class="btn btn-sm btn-outline-primary" onclick="ubahHalamanAkun(${currentAkunPage - 1})" ${currentAkunPage === 1 ? 'disabled' : ''}>Mundur</button>`;
+    btnHtml += `<span class="btn btn-sm btn-primary disabled text-white fw-bold">Hal ${currentAkunPage}/${totalPages}</span>`;
+    btnHtml += `<button class="btn btn-sm btn-outline-primary" onclick="ubahHalamanAkun(${currentAkunPage + 1})" ${currentAkunPage === totalPages ? 'disabled' : ''}>Maju</button>`;
+    document.getElementById('btnPaginationAkun').innerHTML = btnHtml;
+  }
+  function ubahHalamanAkun(page) { currentAkunPage = page; terapkanFilterAkun(); }
+
+  function resetPasswordAkun(uuid, user) {
+    if(confirm(`Yakin ingin mereset password akun "${user}" menjadi standar "123456" ?`)) {
+      startLoading("Mereset Password..."); 
+      google.script.run.withSuccessHandler(res => { 
+        stopLoading(); 
+        if(res.includes("SUKSES")) alertSukses(res); else alertError(res);
+      }).resetPasswordAdmin(uuid);
+    }
+  }
+
+  function toggleUnitKerjaAkun() {
+    let r = document.getElementById('uRole').value;
+    let op = document.getElementById('uUnitKerjaOp'); let adm = document.getElementById('uUnitKerjaAdmin');
+    if(r === 'Admin') { 
+      op.classList.add('hidden'); op.required = false; adm.classList.remove('hidden'); adm.required = true;
+    } else { 
+      adm.classList.add('hidden'); adm.required = false; op.classList.remove('hidden'); op.required = true;
+    }
+  }
+
+  function bukaModalAkun(aksi, user="", role="Operator", unit="", email="", uuid="") {
+    document.getElementById('uAksi').value = aksi; document.getElementById('uUser').value = user; 
+    document.getElementById('uRole').value = role; document.getElementById('uEmail').value = email; document.getElementById('uUuid').value = uuid;
+    if(role === 'Admin') { document.getElementById('uUnitKerjaAdmin').value = unit || "Dinas Pendidikan"; document.getElementById('uUnitKerjaOp').value = ""; } 
+    else { document.getElementById('uUnitKerjaAdmin').value = "Dinas Pendidikan"; document.getElementById('uUnitKerjaOp').value = unit; }
+
+    let passInp = document.getElementById('uPass');
+    if(aksi === 'edit') {
+      passInp.required = false; passInp.value = ""; document.getElementById('uPassHint').innerText = "(Kosongkan jika tak ingin ganti)"; document.getElementById('akunModalTitle').innerText = "Edit Akun Pengguna";
+    } else {
+      passInp.required = true; passInp.value = ""; document.getElementById('uPassHint').innerText = ""; document.getElementById('akunModalTitle').innerText = "Tambah Akun Baru";
+    }
+    toggleUnitKerjaAkun(); new bootstrap.Modal(document.getElementById('modalKelolaAkun')).show();
+  }
+
+  function submitAkun(e) {
+    e.preventDefault(); let aksi = document.getElementById('uAksi').value; let r = document.getElementById('uRole').value;
+    let s = r === 'Admin' ? document.getElementById('uUnitKerjaAdmin').value : document.getElementById('uUnitKerjaOp').value.trim();
+    if(r !== 'Admin' && !arrayUnitKerjaValid.includes(s)) { return alertPeringatan("Unit Kerja tidak valid! Silakan hapus dan pilih dari daftar dropdown yang muncul saat Anda mengetik."); }
+    
+    startLoading("Menyimpan Akun...");
+    let d = { username: document.getElementById('uUser').value, password: document.getElementById('uPass').value, role: r, unitkerja: s, email: document.getElementById('uEmail').value, uuid: document.getElementById('uUuid').value };
+    let runner = google.script.run.withSuccessHandler(res => { 
+      stopLoading(); 
+      if(res.includes("Error")) { alertError(res); } else { alertSukses(res); bootstrap.Modal.getInstance(document.getElementById('modalKelolaAkun')).hide(); muatDaftarAkun(); }
+    });
+    if(aksi === 'edit') runner.updateAkun(d); else runner.simpanAkun(d);
+  }
+
+  function hapusAkun(uuid, user) {
+    if(confirm("Yakin ingin menghapus akun: " + user + "? (Akun tidak bisa dikembalikan!)")) {
+      startLoading("Menghapus..."); google.script.run.withSuccessHandler(res => { stopLoading(); alertSukses(res); muatDaftarAkun(); }).hapusAkun(uuid);
+    }
+  }
+
+  function bukaModalProfil() {
+    document.getElementById('myUser').value = currentUser.username; document.getElementById('myEmail').value = currentUser.email || ""; document.getElementById('myPass').value = "";
+    new bootstrap.Modal(document.getElementById('modalProfil')).show();
+  }
+
+  function submitProfilSendiri(e) {
+    e.preventDefault(); startLoading("Update Profil...");
+    let d = { uuid: currentUser.uuid, username: currentUser.username, role: currentUser.role, unitkerja: currentUser.unitkerja, email: document.getElementById('myEmail').value, password: document.getElementById('myPass').value };
+    google.script.run.withSuccessHandler(res => {
+      stopLoading(); alertSukses("Profil berhasil diupdate! Jika ganti password, ingat untuk login selanjutnya.");
+      bootstrap.Modal.getInstance(document.getElementById('modalProfil')).hide();
+    }).updateAkun(d);
+  }
+
+  function bukaLupaPassword() {
+    Swal.fire({
+      title: 'Lupa Password?', text: "Masukkan alamat email yang terdaftar pada akun Anda.", input: 'email',
+      showCancelButton: true, confirmButtonText: 'Kirim', cancelButtonText: 'Batal', showLoaderOnConfirm: true,
+      preConfirm: (email) => { return new Promise((resolve) => { google.script.run.withSuccessHandler(res => { resolve(res); }).prosesLupaPassword(email); }); }
+    }).then((result) => {
+      if (result.isConfirmed) { if(result.value.includes("SUKSES")) alertSukses(result.value); else alertError(result.value); }
+    });
+  }
+
+  // =====================================
+  // 10. PENGATURAN KOP (SETTINGS)
+  // =====================================
+  function bukaSetting() {
+    switchView('viewSetting');
+    google.script.run.withSuccessHandler(res => {
+      if(res) {
+        document.getElementById('sDinas').value = res.Nama_Dinas || ""; document.getElementById('sSubDinas').value = res.Nama_Sub_Dinas || ""; document.getElementById('sInstansi').value = res.Nama_Instansi || ""; document.getElementById('sKepJab').value = res.Kepala_Jabatan || ""; document.getElementById('sKepNama').value = res.Kepala_Nama || ""; document.getElementById('sKepPangkat').value = res.Kepala_Pangkat || ""; document.getElementById('sKepNIP').value = res.Kepala_NIP || ""; document.getElementById('sBenNama').value = res.Bendahara_Nama || ""; document.getElementById('sBenPangkat').value = res.Bendahara_Pangkat || ""; document.getElementById('sBenNIP').value = res.Bendahara_NIP || ""; document.getElementById('sRekKorpri').value = res.Rek_Korpri || ""; document.getElementById('sPotKorpri').value = res.Pot_Korpri || "";
+        document.getElementById('sLogoDinas').value = res.Logo_Dinas || ""; document.getElementById('sLogoInstansi').value = res.Logo_Instansi || "";
+        if(res.Logo_Dinas) { let pD = document.getElementById('previewLogoDinas'); pD.src = res.Logo_Dinas; pD.classList.remove('hidden'); }
+        if(res.Logo_Instansi) { let pI = document.getElementById('previewLogoInstansi'); pI.src = res.Logo_Instansi; pI.classList.remove('hidden'); }
+      }
+    }).getSetting();
+  }
+
+  function submitSetting(e) {
+    e.preventDefault(); startLoading("Menyimpan Pengaturan..."); 
+    
+    // 👇 TAHAP 2: AMBIL KUNCI TOKEN DARI BROWSER 👇
+    let token = sessionStorage.getItem('authToken'); 
+    
+    let d = { usernameAksi: currentUser.username, Nama_Dinas: document.getElementById('sDinas').value, Nama_Sub_Dinas: document.getElementById('sSubDinas').value, Nama_Instansi: document.getElementById('sInstansi').value, Kepala_Jabatan: document.getElementById('sKepJab').value, Kepala_Nama: document.getElementById('sKepNama').value, Kepala_Pangkat: document.getElementById('sKepPangkat').value, Kepala_NIP: document.getElementById('sKepNIP').value, Bendahara_Nama: document.getElementById('sBenNama').value, Bendahara_Pangkat: document.getElementById('sBenPangkat').value, Bendahara_NIP: document.getElementById('sBenNIP').value, Rek_Korpri: document.getElementById('sRekKorpri').value, Pot_Korpri: document.getElementById('sPotKorpri').value, Logo_Dinas: document.getElementById('sLogoDinas').value, Logo_Instansi: document.getElementById('sLogoInstansi').value };
+    
+    // 👇 KIRIMKAN TOKEN BERSAMA DATA 👇
+    google.script.run.withSuccessHandler(res => { 
+        stopLoading(); 
+        if(res.includes("Akses Ditolak")) { alertError(res); } // Jika ditolak satpam
+        else { alertSukses(res); }
+    }).simpanSetting(d, token);
+  }
+
+  function handleLogoUpload(input, hiddenId, previewId) {
+    const file = input.files[0]; if(!file) return;
+    const reader = new FileReader(); reader.readAsDataURL(file);
+    reader.onload = (e) => {
+      const img = new Image(); img.src = e.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
+        const size = Math.min(img.width, img.height); 
+        const startX = (img.width - size) / 2; const startY = (img.height - size) / 2;
+        canvas.width = 150; canvas.height = 150; 
+        
+        // PERBAIKAN LOGO: Hapus background putih, biarkan kanvas transparan murni
+        ctx.clearRect(0, 0, 150, 150); 
+        ctx.drawImage(img, startX, startY, size, size, 0, 0, 150, 150);
+        
+        // PERBAIKAN LOGO: Simpan sebagai format PNG agar tembus pandang
+        const base64Str = canvas.toDataURL('image/png'); 
+        
+        document.getElementById(hiddenId).value = base64Str;
+        let preview = document.getElementById(previewId); preview.src = base64Str; preview.classList.remove('hidden');
+      };
+    };
+  }
+
+  // =====================================
+  // 11. FITUR CETAK
+  // =====================================
+  function showDownloadModal(url) {
+    let modalEl = document.getElementById('modalDownloadReady');
+    if(modalEl) { document.getElementById('btnRealDownload').href = url; new bootstrap.Modal(modalEl).show(); } else { window.open(url, '_blank'); }
+  }
+
+  function tutupModalDownload() { setTimeout(() => { let modalEl = document.getElementById('modalDownloadReady'); let modal = bootstrap.Modal.getInstance(modalEl); if(modal) modal.hide(); }, 1000); }
+
+  function downloadLaporan(jenis, format, e) {
+    if(e) e.preventDefault(); if(!globalBulanAktif) return alertPeringatan("Pilih bulan terlebih dahulu!");
+    startLoading("Menyiapkan File..."); 
+    google.script.run.withSuccessHandler(urls => { stopLoading(); if(urls && urls[format.toLowerCase()]) { showDownloadModal(urls[format.toLowerCase()]); } else { alertError("❌ Gagal."); } }).withFailureHandler(err => { stopLoading(); alertError("Error Server: " + err); }).cetakKeSheet(jenis, globalBulanAktif);
+  }
+
+  function unduhNominatifKolektif(format, e) {
+    if(e) e.preventDefault(); if(!globalBulanAktif) return alertPeringatan("Pilih bulan terlebih dahulu!");
+    let fUnit = document.getElementById('filterUnitKerja').value; // Tangkap filter unit kerja
+    startLoading("Menyusun Data..."); 
+    google.script.run.withSuccessHandler(res => { stopLoading(); if(res && res.error) { alertError("❌ " + res.error); } else if(res && res[format.toLowerCase()]) { showDownloadModal(res[format.toLowerCase()]); } else { alertError("❌ Gagal."); } }).withFailureHandler(err => { stopLoading(); alertError("Error Server: " + err); })
+    .cetakNominatifKolektif(globalBulanAktif, globalJenisASN, currentUser.role, currentUser.unitkerja, fUnit);
+  }
+
+  function unduhPerhitunganKolektif(format, e) {
+    if(e) e.preventDefault(); if(!globalBulanAktif) return alertPeringatan("Pilih bulan dulu!");
+    let fUnit = document.getElementById('filterUnitKerja').value; // Tangkap filter unit kerja
+    startLoading("Merangkum Data..."); 
+    google.script.run.withSuccessHandler(res => { stopLoading(); if(res && res[format.toLowerCase()]) { showDownloadModal(res[format.toLowerCase()]); } else { alertError("❌ Gagal."); } }).withFailureHandler(err => { stopLoading(); alertError("Error Server: " + err); })
+    .cetakPerhitunganKolektif(globalBulanAktif, globalJenisASN, currentUser.role, currentUser.unitkerja, fUnit);
+  }
+
+  function unduhRekapGolongan(format, e) {
+    if(e) e.preventDefault(); if(!globalBulanAktif) return alertPeringatan("Pilih bulan dulu!");
+    let fUnit = document.getElementById('filterUnitKerja').value; // Tangkap filter unit kerja
+    startLoading("Merekap Golongan..."); 
+    google.script.run.withSuccessHandler(res => { stopLoading(); if(res && res.error) { alertError("❌ " + res.error); } else if(res && res[format.toLowerCase()]) { showDownloadModal(res[format.toLowerCase()]); } else { alertError("❌ Gagal."); } }).withFailureHandler(err => { stopLoading(); alertError("Error: " + err); })
+    .cetakRekapGolonganSheet(globalBulanAktif, globalJenisASN, currentUser.role, currentUser.unitkerja, fUnit);
+  }
+
+  function unduhRekening(format, e) {
+    if(e) e.preventDefault(); if(!globalBulanAktif) return alertPeringatan("Pilih bulan dulu!");
+    let fUnit = document.getElementById('filterUnitKerja').value; // Tangkap filter unit kerja
+    startLoading("Menyusun Rekening..."); 
+    google.script.run.withSuccessHandler(res => { stopLoading(); if(res && res.error) { alertError("❌ " + res.error); } else if(res && res[format.toLowerCase()]) { showDownloadModal(res[format.toLowerCase()]); } else { alertError("❌ Gagal."); } }).withFailureHandler(err => { stopLoading(); alertError("Error: " + err); })
+    .cetakRekeningSheet(globalBulanAktif, globalJenisASN, currentUser.role, currentUser.unitkerja, fUnit);
+  }
+
+  function unduhRekapPajak(format, e) {
+    if(e) e.preventDefault(); if(!globalBulanAktif) return alertPeringatan("Pilih bulan dulu!");
+    startLoading("Menyusun Rekap Pajak..."); 
+    google.script.run.withSuccessHandler(res => { 
+      stopLoading(); 
+      if(res && res.error) { alertError("❌ " + res.error); } 
+      else if(res && res[format.toLowerCase()]) { showDownloadModal(res[format.toLowerCase()]); } 
+      else { alertError("❌ Gagal."); } 
+    }).withFailureHandler(err => { stopLoading(); alertError("Error: " + err); })
+    .cetakRekapPajakTER(globalBulanAktif, currentUser.role, currentUser.unitkerja, globalJenisASN); // <--- TAMBAH globalJenisASN
+  }
+
+  function cetakPDFPerorangan(tabId, namaFile) {
+    window.scrollTo(0, 0); 
+    let element = document.getElementById('viewManajemenASN');
+    let navPills = element.querySelector('.nav-pills'); let actionBtns = element.querySelectorAll('button');
+    let origPillsDisplay = navPills ? navPills.style.display : '';
+    if(navPills) navPills.style.display = 'none'; 
+    actionBtns.forEach(b => { b.dataset.origDisplay = b.style.display; b.style.display = 'none'; });
+    
+    let tables = element.querySelectorAll('.table-responsive'); tables.forEach(t => { t.style.overflow = 'visible'; });
+    let selects = element.querySelectorAll('.form-select'); selects.forEach(s => { s.dataset.origBg = s.style.backgroundImage; s.style.backgroundImage = 'none'; });
+
+    startLoading("Menyusun PDF...");
+    let opt = { margin: 0.3, filename: `${namaFile}_${asNIPAktif}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, scrollY: 0, scrollX: 0 }, jsPDF: { unit: 'in', format: 'legal', orientation: 'portrait' } };
+    
+    html2pdf().set(opt).from(element).save().then(() => {
+      stopLoading();
+      if(navPills) navPills.style.display = origPillsDisplay; actionBtns.forEach(b => { b.style.display = b.dataset.origDisplay; }); tables.forEach(t => { t.style.overflow = ''; }); selects.forEach(s => { s.style.backgroundImage = s.dataset.origBg; });
+      setTimeout(() => { alertSukses("File PDF Perorangan berhasil diunduh!"); }, 500);
+    }).catch(err => {
+      stopLoading(); 
+      if(navPills) navPills.style.display = origPillsDisplay; actionBtns.forEach(b => { b.style.display = b.dataset.origDisplay; }); tables.forEach(t => { t.style.overflow = ''; }); selects.forEach(s => { s.style.backgroundImage = s.dataset.origBg; });
+      setTimeout(() => { alertError("Gagal memproses PDF: " + err); }, 500);
+    });
+  }
+
+  // =====================================
+  // 12. ANIMASI LOADING & ALERT
+  // =====================================
+  let loadingTimer;
+  function startLoading(text) {
+    let count = 5;
+    Swal.fire({
+      title: text, html: `Sedang memproses...<br>Tunggu: <b class="text-danger fs-4">${count}</b> detik`, allowOutsideClick: false, showConfirmButton: false,
+      didOpen: () => { Swal.showLoading(); const b = Swal.getHtmlContainer().querySelector('b'); loadingTimer = setInterval(() => { count--; if(count > 0) { if(b) b.textContent = count; } else { Swal.getHtmlContainer().innerHTML = "Menyelesaikan proses..."; clearInterval(loadingTimer); } }, 1000); }
+    });
+  }
+
+  function stopLoading() { clearInterval(loadingTimer); Swal.close(); }
+  function alertSukses(pesan) { Swal.fire({ icon: 'success', title: 'Berhasil!', text: pesan, confirmButtonColor: '#198754' }); }
+  function alertError(pesan) { Swal.fire({ icon: 'error', title: 'Oops...', text: pesan, confirmButtonColor: '#dc3545' }); }
+  function alertPeringatan(pesan) { Swal.fire({ icon: 'warning', title: 'Perhatian', text: pesan, confirmButtonColor: '#ffc107' }); }
+
+  // Mengaktifkan & mematikan tombol "Scroll to Top" serta gembok tombol Pegawai
+  window.addEventListener('scroll', function() {
+    let btnScroll = document.getElementById('btnScrollTop');
+    if (window.scrollY > 200) {
+      btnScroll.style.display = 'flex';
+    } else {
+      btnScroll.style.display = 'none';
+    }
+  });
+
+  // Fungsi tambahan untuk buka/kunci tombol tengah Pegawai di HP
+  // (Panggil fungsi ini di dalam masukAplikasi() dan logoutApp() )
+  function toggleTombolPegawaiHP(buka) {
+    let btnP = document.getElementById('mNavPegawai');
+    if(btnP) {
+      if(buka) btnP.classList.remove('disabled');
+      else btnP.classList.add('disabled');
+    }
+  }
+</script>
+
+</body>
+</html>
+  
+ 

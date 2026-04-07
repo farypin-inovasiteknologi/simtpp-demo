@@ -63,7 +63,7 @@
     /* --- BACKGROUND LANDING PAGE --- */
     .bg-landing {
       /* Ganti URL gambar di bawah ini dengan foto asli Kantor Gubernur Jambi jika ada */
-      background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Kantor_Gubernur_Jambi_2022.jpg/1200px-Kantor_Gubernur_Jambi_2022.jpg');
+      background-image: url('https://upload.wikimedia.org/wikipedia/commons/7/7c/Kantor-gubernur-2.jpg');
       background-size: cover;
       background-position: center;
       background-attachment: fixed;
@@ -511,9 +511,9 @@
           <form id="formSetting" onsubmit="submitSetting(event)">
             <h6 class="fw-bold text-primary border-bottom pb-2">Informasi Kop Laporan</h6>
             <div class="row mb-3">
-              <div class="col-md-4"><label>Nama Instansi</label><input type="text" id="sInstansi" class="form-control" required></div>
-              <div class="col-md-4"><label>Nama Dinas/Badan</label><input type="text" id="sDinas" class="form-control" required></div>
-              <div class="col-md-4"><label>Nama Sub Dinas/Badan (Opsional)</label><input type="text" id="sSubDinas" class="form-control"></div>  
+              <div class="col-md-4"><label>Nama Instansi</label><input type="text" id="sInstansi" class="form-control" placeholder="PEMERINTAH PROVINSI JAMBI" required</div>
+              <div class="col-md-4"><label>Nama Dinas/Badan</label><input type="text" id="sDinas" class="form-control" placeholder="DINAS......." required></div>
+              <div class="col-md-4"><label>Nama Sub Dinas/Badan (Opsional)</label><input type="text" id="sSubDinas" class="form-control" placeholder="kosongkan jika tidak perlu...." required></div>  
             </div>
             
             <h6 class="fw-bold text-info border-bottom pb-2 mt-4"><i class="bi bi-images"></i> Pengaturan Logo (Otomatis Crop 1:1 & Kompres)</h6>
@@ -525,7 +525,7 @@
                 <input type="hidden" id="sLogoInstansi">
               </div>
               <div class="col-md-6 text-center border-end">
-                <label class="fw-bold text-secondary d-block mb-2">Logo Dinas / Badan</label>
+                <label class="fw-bold text-secondary d-block mb-2">Logo Dinas / Badan (jika ada)</label>
                 <img id="previewLogoDinas" src="" width="100" height="100" class="rounded-circle object-fit-cover bg-light border mb-2 hidden mx-auto">
                 <input type="file" id="fileLogoDinas" class="form-control form-control-sm mx-auto" style="max-width: 250px;" accept="image/*" onchange="handleLogoUpload(this, 'sLogoDinas', 'previewLogoDinas')">
                 <input type="hidden" id="sLogoDinas">
@@ -534,7 +534,7 @@
             <div class="row">
               <div class="col-md-6 border-end">
                 <h6 class="fw-bold text-success border-bottom pb-2 mt-2">Pejabat Mengetahui (Kiri)</h6>
-                <div class="mb-2"><label>Jabatan</label><input type="text" id="sKepJab" class="form-control" placeholder="Contoh: KEPALA SMAN 3 TEBO" required></div>
+                <div class="mb-2"><label>Jabatan</label><input type="text" id="sKepJab" class="form-control" placeholder="KEPALA DINAS......." required></div>
                 <div class="mb-2"><label>Nama Lengkap</label><input type="text" id="sKepNama" class="form-control" required></div>
                 <div class="mb-2"><label>Pangkat / Golongan</label><input type="text" id="sKepPangkat" class="form-control" required></div>
                 <div class="mb-3"><label>NIP</label><input type="text" id="sKepNIP" class="form-control" required></div>

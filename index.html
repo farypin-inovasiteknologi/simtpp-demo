@@ -440,11 +440,6 @@
         <div class="col-md-4 mb-1">
           <select id="filterGol" class="form-select border-primary" onchange="terapkanFilter()">
             <option value="">Semua Golongan</option>
-            <option value="IV">Golongan IV</option>
-            <option value="III">Golongan III</option>
-            <option value="II">Golongan II</option>
-            <option value="I">Golongan I</option>
-            <option value="PPPK">PPPK</option>
           </select>
         </div>
         <div class="col-md-4 mb-1">
@@ -1541,7 +1536,7 @@
   // 1. VARIABEL GLOBAL (BERSIH & TUNGGAL)
   // =====================================
   // 👇 PASTE URL YANG KAMU DAPAT DARI LANGKAH 2 DI SINI 👇
-  const API_URL = "https://script.google.com/macros/s/AKfycbx01Z0v9hHsnwmPBumfGu8m_eu2VVh7j1yBCVmVozNz4S1TlWNNFRmnKuyDxgU6pas2/exec"; 
+  const API_URL = "https://script.google.com/macros/s/AKfycby5yAEqvJQyklZ4HZbrNeaYBuhI7Mm36HWK7oB8KUSeRcl57E9qlLCtA9w_4Qs6Mryw/exec"; 
 
   // INI ADALAH KURIR PENGGANTI google.script.run
   async function fetchAPI(actionName, payloadData) {
@@ -1623,6 +1618,9 @@
         document.getElementById('labelBulanAktif').innerText = globalBulanAktif + (globalJenisASN ? " (" + globalJenisASN + ")" : "");
         document.getElementById('labelHKAktif').innerText = globalHariKerja;
         document.getElementById('btnMenuPegawai').disabled = false;
+        
+        // 👇 PANGGIL FUNGSI UPDATE DROPDOWN SAAT HALAMAN DI-REFRESH 👇
+        updateFilterGolDropdown();
       }
       
       let savedView = sessionStorage.getItem('currentView') || 'viewPilihBulan';
@@ -1760,6 +1758,9 @@
 
     sessionStorage.setItem('globalBulanAktif', globalBulanAktif);
     sessionStorage.setItem('globalJenisASN', globalJenisASN); 
+    
+    updateFilterGolDropdown(); // <--- TAMBAHKAN BARIS INI
+
     switchView('viewDaftarPegawai'); muatDataPegawai();
   }
 
@@ -2047,16 +2048,48 @@
     }
   }
 
+  // 👇 FUNGSI BARU: MENGUBAH ISI DROPDOWN FILTER GOLONGAN OTOMATIS 👇
+  function updateFilterGolDropdown() {
+    let sel = document.getElementById('filterGol');
+    let html = '<option value="">Semua Golongan</option>';
+    
+    if (globalJenisASN === "PNS") {
+      html += '<option value="IV">Golongan IV</option><option value="III">Golongan III</option><option value="II">Golongan II</option><option value="I">Golongan I</option>';
+    } else if (globalJenisASN === "PPPK") {
+      html += '<option value="XVII - XIII">Golongan XVII - XIII</option><option value="XII - IX">Golongan XII - IX</option><option value="VIII - V">Golongan VIII - V</option><option value="IV - I">Golongan IV - I</option>';
+    }
+    sel.innerHTML = html;
+  }
+
   function terapkanFilter() {
-    let cari = document.getElementById('filterCari').value.toLowerCase(); let fGol = document.getElementById('filterGol').value; let fUnit = document.getElementById('filterUnitKerja').value;
+    let cari = document.getElementById('filterCari').value.toLowerCase(); 
+    let fGol = document.getElementById('filterGol').value; 
+    let fUnit = document.getElementById('filterUnitKerja').value;
+    
     let filtered = globalDataPegawai.filter(row => {
-      let nip = String(row[0]).toLowerCase(); let nama = String(row[1]).toLowerCase(); let gol = String(row[3]); let unit = String(row[4]);
+      let nip = String(row[0]).toLowerCase(); let nama = String(row[1]).toLowerCase(); 
+      let gol = String(row[3]); let unit = String(row[4]);
       let matchCari = nip.includes(cari) || nama.includes(cari);
-      let golDasar = gol.split("/")[0].trim(); if(golDasar.includes("IX") || golDasar.includes("X")) golDasar = "PPPK";
-      let matchGol = (fGol === "" || golDasar === fGol);
+      
+      // 👇 LOGIKA FILTER GOLONGAN YANG CERDAS 👇
+      let golDasar = gol.split("/")[0].trim().toUpperCase(); 
+      let groupName = "";
+      
+      if (globalJenisASN === "PPPK") {
+         if(["XVII", "XVI", "XV", "XIV", "XIII"].includes(golDasar)) groupName = "XVII - XIII";
+         else if(["XII", "XI", "X", "IX"].includes(golDasar)) groupName = "XII - IX";
+         else if(["VIII", "VII", "VI", "V"].includes(golDasar)) groupName = "VIII - V";
+         else groupName = "IV - I";
+      } else {
+         groupName = golDasar; // PNS langsung pakai IV, III, II, I
+      }
+      
+      let matchGol = (fGol === "" || groupName === fGol);
       let matchUnit = (fUnit === "" || unit === fUnit);
+      
       return matchCari && matchGol && matchUnit;
     });
+    
     renderTabelPegawai(filtered);
   }
 

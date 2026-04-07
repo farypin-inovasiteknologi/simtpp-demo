@@ -1544,7 +1544,7 @@
   // 1. VARIABEL GLOBAL (BERSIH & TUNGGAL)
   // =====================================
   // 👇 PASTE URL YANG KAMU DAPAT DARI LANGKAH 2 DI SINI 👇
-  const API_URL = "https://script.google.com/a/macros/admin.sma.belajar.id/s/AKfycbzVOJQYbLZPGhG55OIW9ahWtDxlrmeBCyMw4knMPjDXA3YIMpAUGrm61BDIexmZMU8B/exec"; 
+  const API_URL = "https://script.google.com/macros/s/AKfycbzVOJQYbLZPGhG55OIW9ahWtDxlrmeBCyMw4knMPjDXA3YIMpAUGrm61BDIexmZMU8B/exec"; 
 
   // INI ADALAH KURIR PENGGANTI google.script.run
   async function fetchAPI(actionName, payloadData) {
@@ -1587,25 +1587,25 @@
   let currentUser = { role: "", unitkerja: "", username: "", email: "", uuid: "" };
 
   // =====================================
-  // 2. SINKRONISASI AWAL (ONLOAD)
+  // 2. SINKRONISASI AWAL (ONLOAD) PAKE API
   // =====================================
-  window.onload = () => { 
-    google.script.run.withSuccessHandler(res => {
-      if(res) {
-        document.getElementById('loginNamaInstansi').innerText = res.Nama_Instansi || "PEMERINTAH PROVINSI JAMBI";
-        document.getElementById('loginNamaDinas').innerText = res.Nama_Dinas || "DINAS PENDIDIKAN";
-        document.getElementById('loginSubDinas').innerText = res.Nama_Sub_Dinas ? res.Nama_Sub_Dinas.toUpperCase() : (res.Nama_Instansi ? res.Nama_Instansi.toUpperCase() : "");
+  window.onload = async () => { 
+    // Ambil setting pakai fetchAPI
+    let res = await fetchAPI("getSetting", {});
+    if(res && !res.error) {
+      document.getElementById('loginNamaInstansi').innerText = res.Nama_Instansi || "PEMERINTAH PROVINSI JAMBI";
+      document.getElementById('loginNamaDinas').innerText = res.Nama_Dinas || "DINAS PENDIDIKAN";
+      document.getElementById('loginSubDinas').innerText = res.Nama_Sub_Dinas ? res.Nama_Sub_Dinas.toUpperCase() : (res.Nama_Instansi ? res.Nama_Instansi.toUpperCase() : "");
 
-        if(res.Logo_Instansi) { 
-          let pI = document.getElementById('loginLogoInstansi'); pI.src = res.Logo_Instansi; pI.classList.remove('hidden'); 
-          // TAMBAHKAN BARIS INI:
-          let mLogo = document.getElementById('mHeaderLogo'); if(mLogo) { mLogo.src = res.Logo_Instansi; mLogo.classList.remove('hidden'); }
-        }
-        if(res.Logo_Dinas) { let pD = document.getElementById('loginLogoDinas'); pD.src = res.Logo_Dinas; pD.classList.remove('hidden'); }
-        globalPotKorpri = parseFloat(res.Pot_Korpri) || 0; // Simpan nilai Korpri ke memori
+      if(res.Logo_Instansi) { 
+        let pI = document.getElementById('loginLogoInstansi'); pI.src = res.Logo_Instansi; pI.classList.remove('hidden'); 
+        let mLogo = document.getElementById('mHeaderLogo'); if(mLogo) { mLogo.src = res.Logo_Instansi; mLogo.classList.remove('hidden'); }
       }
-    }).getSetting();
+      if(res.Logo_Dinas) { let pD = document.getElementById('loginLogoDinas'); pD.src = res.Logo_Dinas; pD.classList.remove('hidden'); }
+      globalPotKorpri = parseFloat(res.Pot_Korpri) || 0; 
+    }
 
+    // Jalankan fungsi muat data lainnya
     muatDaftarPeriode();
     muatDataUnitKerja(); 
     muatDataPergub(); 
@@ -1618,12 +1618,14 @@
         document.getElementById('btnMasterAdmin').classList.add('hidden');
         document.getElementById('btnSettingAdmin').classList.add('hidden');
         document.getElementById('btnAkunAdmin').classList.add('hidden'); 
+        document.getElementById('mHeaderAdminIcons').classList.add('hidden');
         document.getElementById('btnTambahBulan').classList.add('hidden'); 
         document.getElementById('btnKelolaBulan').classList.add('hidden'); 
       } else {
         document.getElementById('btnMasterAdmin').classList.remove('hidden');
         document.getElementById('btnSettingAdmin').classList.remove('hidden');
         document.getElementById('btnAkunAdmin').classList.remove('hidden'); 
+        document.getElementById('mHeaderAdminIcons').classList.remove('hidden');
         document.getElementById('btnTambahBulan').classList.remove('hidden'); 
         document.getElementById('btnKelolaBulan').classList.remove('hidden'); 
       }
@@ -1632,12 +1634,9 @@
       
       globalBulanAktif = sessionStorage.getItem('globalBulanAktif') || "";
       globalHariKerja = parseInt(sessionStorage.getItem('globalHariKerja')) || 22;
-      
-      // 👇 TAMBAHKAN BARIS INI UNTUK MENGINGAT PNS / PPPK SAAT RELOAD 👇
       globalJenisASN = sessionStorage.getItem('globalJenisASN') || ""; 
       
       if(globalBulanAktif) {
-        // 👇 UBAH BARIS INI AGAR LABELNYA TETAP ADA TULISAN (PNS/PPPK) 👇
         document.getElementById('labelBulanAktif').innerText = globalBulanAktif + (globalJenisASN ? " (" + globalJenisASN + ")" : "");
         document.getElementById('labelHKAktif').innerText = globalHariKerja;
         document.getElementById('btnMenuPegawai').disabled = false;
@@ -1944,8 +1943,11 @@
     }).simpanPeriode(d);
   }
 
-  function muatDaftarPeriode() {
-    google.script.run.withSuccessHandler(data => { renderDropdownPeriode(data); }).getDaftarPeriode();
+  async function muatDaftarPeriode() {
+    let data = await fetchAPI("getDaftarPeriode", {});
+    if (data && !data.error) {
+       renderDropdownPeriode(data);
+    }
   }
 
   function renderDropdownPeriode(data) {
@@ -2017,26 +2019,28 @@
   // =====================================
   // 5. MASTER DATA (UNIT KERJA & PERGUB)
   // =====================================
-  function muatDataUnitKerja() {
-    google.script.run.withSuccessHandler(data => {
+  async function muatDataUnitKerja() {
+    let data = await fetchAPI("getDaftarUnitKerja", {});
+    if (data && !data.error) {
       arrayUnitKerjaValid = data; 
       let list = document.getElementById('listUnitKerjaUtama');
       if(list) {
         list.innerHTML = "";
         data.forEach(unit => { list.innerHTML += `<option value="${unit}">`; });
       }
-    }).getDaftarUnitKerja();
+    }
   }
 
   let globalDataPergub = [];
   let currentPergubPage = 1;
   let pergubRowsPerPage = 15;
 
-  function muatDataPergub() {
-    google.script.run.withSuccessHandler(data => {
+  async function muatDataPergub() {
+    let data = await fetchAPI("getDaftarPergub", {});
+    if (data && !data.error) {
       globalDataPergub = data;
       terapkanFilterPergub();
-    }).getDaftarPergub();
+    }
   }
 
   function terapkanFilterPergub() {

@@ -1638,9 +1638,24 @@
   }
   function ubahHalamanPergub(page) { currentPergubPage = page; terapkanFilterPergub(); }
 
-  async function muatDropdownJabatan(selectedValue = "") {
-    let data = await fetchAPI("getDaftarPergub", {});
-    if (data && !data.error) { let dataTerfilter = data.filter(row => String(row[9] || "PNS") === globalJenisASN); arrayJabatanValid = dataTerfilter.map(r => String(r[1]).trim()); let list = document.getElementById('listJabatanUtama'); if(list) { list.innerHTML = ""; dataTerfilter.forEach(row => { let totalTPP = parseFloat(row[8]) || 0; let tppFormat = totalTPP.toLocaleString('id-ID'); list.innerHTML += `<option value="${row[1]}">Kls: ${row[2]} - TPP: Rp ${tppFormat}</option>`; }); } if(selectedValue) document.getElementById('mJabatan').value = selectedValue; }
+ // 👇 UBAH JADI FUNGSI BIASA (BUKAN ASYNC), HAPUS FETCH API 👇
+  function muatDropdownJabatan(selectedValue = "") {
+    // Ambil data langsung dari RAM (globalDataPergub)
+    if (globalDataPergub && globalDataPergub.length > 0) { 
+        let dataTerfilter = globalDataPergub.filter(row => String(row[9] || "PNS") === globalJenisASN); 
+        arrayJabatanValid = dataTerfilter.map(r => String(r[1]).trim()); 
+        
+        let list = document.getElementById('listJabatanUtama'); 
+        if(list) { 
+            list.innerHTML = ""; 
+            dataTerfilter.forEach(row => { 
+                let totalTPP = parseFloat(row[8]) || 0; 
+                let tppFormat = totalTPP.toLocaleString('id-ID'); 
+                list.innerHTML += `<option value="${row[1]}">Kls: ${row[2]} - TPP: Rp ${tppFormat}</option>`; 
+            }); 
+        } 
+        if(selectedValue) document.getElementById('mJabatan').value = selectedValue; 
+    }
   }
 
   function bukaModalPergub(aksi, jabatan="", kelas="", bk=0, pk=0, kk=0, tb=0, kp=0, statusPegawai="PNS") {
@@ -1748,12 +1763,11 @@
     let elNip = document.getElementById('mNip'); let elNama = document.getElementById('mNama'); let elUnitKerja = document.getElementById('mUnitKerja'); let elUnorInduk = document.getElementById('mUnorInduk');
     elNip.value = nip; elNama.value = nama; elUnitKerja.value = unitkerja;
     
-    // Cari baris ini di dalam bukaModalPegawai:
-  let opdAktif = document.getElementById('loginNamaDinas').innerText;
-  elUnorInduk.value = unorInduk || opdAktif;
+    let opdAktif = document.getElementById('loginNamaDinas').innerText;
+    elUnorInduk.value = unorInduk || opdAktif;
 
-  // 👇 LOGIKA BARU: Otomatiskan Unit Kerja jika kosong
-  elUnitKerja.value = unitkerja || unorInduk || opdAktif;
+    // 👇 PERBAIKAN: Default ke OPD Aktif (Dinas), BUKAN Instansi
+    elUnitKerja.value = unitkerja || opdAktif;
 
     // Operator tidak boleh ubah NIP dan Nama
     let isOperatorEdit = (aksi === 'edit' && currentUser.role === "Operator");

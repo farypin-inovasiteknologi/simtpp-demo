@@ -1048,12 +1048,29 @@
   // =====================================
   let globalDataPegawai = []; let currentPage = 1; let rowsPerPage = 15; 
 
-  async function muatDataPegawai() {
-    startLoading("Memuat Data Pegawai..."); let data = await fetchAPI("getDaftarPegawai", { bulanAktif: globalBulanAktif, roleUser: currentUser.role, unitkerjaUser: currentUser.unitkerja, jenisASN: globalJenisASN }); stopLoading();
-    if (data && !data.error && Array.isArray(data)) { globalDataPegawai = data; let unitList = [...new Set(data.map(item => item[4]).filter(Boolean))]; let unitDropdown = document.getElementById('filterUnitKerja'); unitDropdown.innerHTML = '<option value="">Semua Unit Kerja</option>'; unitList.forEach(s => unitDropdown.innerHTML += `<option value="${s}">${s}</option>`); terapkanFilter(); } 
-    else { document.getElementById('tabelBodyPegawai').innerHTML = '<tr><td colspan="7" class="text-center text-danger fw-bold">Gagal memuat data dari server.</td></tr>'; console.error("Error muatDataPegawai:", data); }
+ async function muatDataPegawai() {
+    startLoading("Memuat Data Pegawai..."); 
+    let data = await fetchAPI("getDaftarPegawai", { bulanAktif: globalBulanAktif, roleUser: currentUser.role, unitkerjaUser: currentUser.unitkerja, jenisASN: globalJenisASN }); 
+    stopLoading();
+    
+    if (data && !data.error && Array.isArray(data)) { 
+      globalDataPegawai = data; 
+      
+      // 👇 PERBAIKAN: Ambil Unit Kerja dari row[5] (sebelumnya row[4]) 👇
+      let unitList = [...new Set(data.map(item => item[5]).filter(Boolean))]; 
+      
+      let unitDropdown = document.getElementById('filterUnitKerja'); 
+      unitDropdown.innerHTML = '<option value="">Semua Unit Kerja</option>'; 
+      unitList.forEach(s => unitDropdown.innerHTML += `<option value="${s}">${s}</option>`); 
+      
+      terapkanFilter(); 
+    } 
+    else { 
+      document.getElementById('tabelBodyPegawai').innerHTML = '<tr><td colspan="7" class="text-center text-danger fw-bold">Gagal memuat data dari server.</td></tr>'; 
+      console.error("Error muatDataPegawai:", data); 
+    }
   }
-
+  
   function terapkanFilter() {
     let cari = document.getElementById('filterCari').value.toLowerCase(); let fGol = document.getElementById('filterGol').value; let fUnit = document.getElementById('filterUnitKerja').value;
     let filtered = globalDataPegawai.filter(row => {

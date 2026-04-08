@@ -1565,8 +1565,17 @@
   let globalDataAkun = []; let currentAkunPage = 1; let akunRowsPerPage = 15;
 
   async function muatDaftarAkun() {
-    switchView('viewManajemenAkun'); startLoading("Memuat Data Akun...");
-    let data = await fetchAPI("getDaftarAkun", {}); stopLoading(); if(data && !data.error) { globalDataAkun = data; terapkanFilterAkun(); }
+    switchView('viewManajemenAkun'); 
+    startLoading("Memuat Data Akun...");
+    let data = await fetchAPI("getDaftarAkun", {}); 
+    stopLoading(); 
+    
+    if(data && !data.error) { 
+        globalDataAkun = data; 
+        terapkanFilterAkun(); 
+    } else {
+        alertError(data.pesan || "Gagal memuat daftar akun dari server!");
+    }
   }
 
   function terapkanFilterAkun() { let cari = document.getElementById('filterCariAkun').value.toLowerCase(); let filtered = globalDataAkun.filter(row => String(row[0]).toLowerCase().includes(cari) || String(row[3]).toLowerCase().includes(cari)); renderTabelAkun(filtered); }
@@ -1635,38 +1644,37 @@
   }
 
   function bukaModalAkun(aksi, user="", role="Operator", unit="", email="", uuid="") {
-      document.getElementById('uAksi').value = aksi; 
-      document.getElementById('uUser').value = user; 
-      document.getElementById('uRole').value = role; 
-      document.getElementById('uEmail').value = email; 
-      document.getElementById('uUuid').value = uuid;
-      
-      if (role === 'Admin') { 
-          document.getElementById('uUnitKerjaAdmin').value = unit || "Dinas Pendidikan"; 
-          document.getElementById('uUnitKerjaOp').value = ""; 
-      } else { 
-          document.getElementById('uUnitKerjaAdmin').value = "Dinas Pendidikan"; 
-          document.getElementById('uUnitKerjaOp').value = unit; 
-      }
-      
-      let passInp = document.getElementById('uPass'); 
-      if (aksi === 'edit') { 
-          passInp.required = false; 
-          passInp.value = ""; 
-          document.getElementById('uPassHint').innerText = "(Kosongkan jika tak ingin ganti)"; 
-          document.getElementById('akunModalTitle').innerText = "Edit Akun Pengguna"; 
-      } else { 
-          passInp.required = true; 
-          passInp.value = ""; 
-          document.getElementById('uPassHint').innerText = ""; 
-          document.getElementById('akunModalTitle').innerText = "Tambah Akun Baru"; 
-      } 
-      
-      toggleUnitKerjaAkun(); 
-      
-      // Membuka Modal secara paksa di Bootstrap 5
-      let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalKelolaAkun'));
-      modal.show();
+    document.getElementById('uAksi').value = aksi; 
+    document.getElementById('uUser').value = user; 
+    document.getElementById('uRole').value = role; 
+    document.getElementById('uEmail').value = email; 
+    document.getElementById('uUuid').value = uuid;
+
+    if(role === 'Admin') { 
+        document.getElementById('uUnitKerjaAdmin').value = unit || "Dinas Pendidikan"; 
+        document.getElementById('uUnitKerjaOp').value = ""; 
+    } else { 
+        document.getElementById('uUnitKerjaAdmin').value = "Dinas Pendidikan"; 
+        document.getElementById('uUnitKerjaOp').value = unit; 
+    }
+
+    let passInp = document.getElementById('uPass'); 
+    if(aksi === 'edit') { 
+        passInp.required = false; passInp.value = ""; 
+        document.getElementById('uPassHint').innerText = "(Kosongkan jika tak ingin ganti)"; 
+        document.getElementById('akunModalTitle').innerText = "Edit Akun Pengguna"; 
+    } else { 
+        passInp.required = true; passInp.value = ""; 
+        document.getElementById('uPassHint').innerText = ""; 
+        document.getElementById('akunModalTitle').innerText = "Tambah Akun Baru"; 
+    } 
+    
+    toggleUnitKerjaAkun(); 
+
+    // 👇 CARA TERAMAN BUKA MODAL DI BOOTSTRAP 5 👇
+    let modalEl = document.getElementById('modalKelolaAkun');
+    let modalObj = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    modalObj.show();
   }
 
   async function submitAkun(e) {
@@ -1678,13 +1686,14 @@
   async function hapusAkun(uuid, user) { if(confirm("Yakin ingin menghapus akun: " + user + "? (Akun tidak bisa dikembalikan!)")) { startLoading("Menghapus..."); let res = await fetchAPI("hapusAkun", uuid); stopLoading(); if(String(res).includes("Error")) { alertError(res.pesan || res); } else { alertSukses(res); muatDaftarAkun(); } } }
 
   function bukaModalProfil() { 
-      document.getElementById('myUser').value = currentUser.username; 
-      document.getElementById('myEmail').value = currentUser.email || ""; 
-      document.getElementById('myPass').value = ""; 
-      
-      // Membuka Modal secara paksa di Bootstrap 5
-      let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalProfil'));
-      modal.show();
+    document.getElementById('myUser').value = currentUser.username || ""; 
+    document.getElementById('myEmail').value = currentUser.email || ""; 
+    document.getElementById('myPass').value = ""; 
+    
+    // 👇 CARA TERAMAN BUKA MODAL DI BOOTSTRAP 5 👇
+    let modalEl = document.getElementById('modalProfil');
+    let modalObj = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    modalObj.show();
   }
 
   async function submitProfilSendiri(e) { e.preventDefault(); startLoading("Update Profil..."); let d = { uuid: currentUser.uuid, username: currentUser.username, role: currentUser.role, unitkerja: currentUser.unitkerja, email: document.getElementById('myEmail').value, password: document.getElementById('myPass').value }; let res = await fetchAPI("updateAkun", d); stopLoading(); if(String(res).includes("Error")) { alertError(res.pesan || res); } else { alertSukses("Profil berhasil diupdate! Jika ganti password, ingat untuk login selanjutnya."); bootstrap.Modal.getInstance(document.getElementById('modalProfil')).hide(); } }

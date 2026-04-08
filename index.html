@@ -1117,8 +1117,24 @@
   }
 
   function kembaliKeLanding() {
-      sessionStorage.clear(); API_URL = ""; document.getElementById('selectTenantOPD').value = "";
-      document.getElementById('viewLogin').classList.add('hidden'); document.getElementById('viewLanding').classList.remove('hidden'); document.body.classList.remove('bg-gradient-login');
+      sessionStorage.clear(); 
+      API_URL = ""; 
+      document.getElementById('selectTenantOPD').value = "";
+      
+      // 👇 TENDANG DAN SEMBUNYIKAN KOTAK DATA APLIKASI SECARA PAKSA 👇
+      let appCont = document.getElementById('appContainer');
+      if(appCont) appCont.classList.add('hidden');
+      
+      let mHeader = document.getElementById('mobileHeader');
+      if(mHeader) mHeader.classList.add('hidden');
+      
+      let mNav = document.getElementById('mobileBottomNav');
+      if(mNav) mNav.classList.add('hidden');
+      
+      // Matikan view login & munculkan view landing
+      document.getElementById('viewLogin').classList.add('hidden'); 
+      document.getElementById('viewLanding').classList.remove('hidden'); 
+      document.body.classList.remove('bg-gradient-login');
   }
 
   async function inisialisasiAplikasi() {
@@ -1173,27 +1189,23 @@
         showCancelButton: true, 
         confirmButtonColor: '#dc3545', 
         cancelButtonColor: '#6c757d', 
-        confirmButtonText: 'Ya, Keluar!', 
+        confirmButtonText: '<i class="bi bi-box-arrow-right"></i> Ya, Keluar!', 
         cancelButtonText: 'Batal' 
     }).then((result) => {
       if (result.isConfirmed) {
-        // Reset semua variabel ke kondisi awal
-        currentUser = { role: "", unitkerja: "", username: "", email: "", uuid: "" }; 
-        globalBulanAktif = ""; 
-        globalHariKerja = 0; 
-        globalHariKerja6 = 0; 
-        globalStatusLock = "Buka";
+        kembaliKeLanding(); 
         
-        // Bersihkan inputan form login
+        currentUser = { role: "", unitkerja: "", username: "", email: "", uuid: "" }; 
+        globalBulanAktif = ""; globalHariKerja = 0; globalHariKerja6 = 0; globalStatusLock = "Buka";
+        
+        // 👇 PERINTAH EKSTRA UNTUK MENYEMBUNYIKAN KOTAK DATA 👇
+        document.getElementById('appContainer').classList.add('hidden'); 
+        document.getElementById('mobileHeader').classList.add('hidden'); 
+        document.getElementById('mobileBottomNav').classList.add('hidden'); 
+        
         document.getElementById('logUser').value = ""; 
         document.getElementById('logPass').value = ""; 
-        
-        // Sembunyikan Navbar atas dan matikan tombol Pegawai di HP
-        document.getElementById('mainNav').classList.add('hidden'); 
         toggleTombolPegawaiHP(false); 
-        
-        // Panggil fungsi kembali ke Landing Page
-        kembaliKeLanding(); 
         
         alertSukses("Anda berhasil logout dari sistem.");
       }
@@ -1201,58 +1213,47 @@
   }
 
   function switchView(viewId) { 
-    // Sembunyikan semua view yang ada di dalam appContainer
     document.querySelectorAll('#viewLogin, #viewLanding, #viewPilihBulan, #viewDaftarPegawai, #viewMasterPergub, #viewManajemenASN, #viewSetting, #viewPanduan, #viewManajemenAkun').forEach(el => el.classList.add('hidden')); 
     
     let appContainer = document.getElementById('appContainer'); 
     let mHeader = document.getElementById('mobileHeader'); 
     let mBottomNav = document.getElementById('mobileBottomNav');
 
-    // Jika pindah ke halaman Login
     if(viewId === 'viewLogin') { 
         document.body.classList.add('bg-gradient-login'); 
-        
-        // 👇 INI KUNCINYA: Sembunyikan appContainer secara total! 👇
+        // Wajib sembunyikan kotak aplikasi
         if(appContainer) appContainer.classList.add('hidden'); 
-        
         if(mHeader) mHeader.classList.add('hidden'); 
         if(mBottomNav) mBottomNav.classList.add('hidden'); 
         
         document.getElementById('viewLogin').classList.remove('hidden'); 
     } 
-    // Jika pindah ke halaman Landing (Pilih OPD)
     else if (viewId === 'viewLanding') { 
         document.body.classList.remove('bg-gradient-login'); 
-        
-        // 👇 INI JUGA KUNCINYA: Sembunyikan appContainer secara total! 👇
+        // Wajib sembunyikan kotak aplikasi
         if(appContainer) appContainer.classList.add('hidden'); 
-        
         if(mHeader) mHeader.classList.add('hidden'); 
         if(mBottomNav) mBottomNav.classList.add('hidden'); 
         
         document.getElementById('viewLanding').classList.remove('hidden'); 
     }
-    // Jika pindah ke halaman di dalam aplikasi (Home, Pegawai, dll)
     else { 
         document.body.classList.remove('bg-gradient-login'); 
         document.body.style.backgroundColor = "#f4f6f9"; 
         
-        // 👇 Munculkan kembali appContainer 👇
+        // Munculkan kotak aplikasi jika bukan di halaman login/landing
         if(appContainer) appContainer.classList.remove('hidden'); 
-        
         if(mHeader) mHeader.classList.remove('hidden'); 
         if(mBottomNav) mBottomNav.classList.remove('hidden'); 
         
         document.getElementById(viewId).classList.remove('hidden'); 
     }
 
-    // Mengatur tombol navigasi di HP agar warna aktifnya berpindah
     document.querySelectorAll('.m-nav-item').forEach(el => el.classList.remove('active'));
     if(viewId === 'viewPilihBulan') document.getElementById('mNavHome').classList.add('active'); 
     if(viewId === 'viewPanduan') document.getElementById('mNavPanduan').classList.add('active'); 
     if(viewId === 'viewDaftarPegawai' || viewId === 'viewManajemenASN') document.getElementById('mNavPegawai').classList.add('active');
     
-    // Simpan riwayat halaman terakhir, kecuali kalau lagi di Login/Landing
     if(viewId !== 'viewLogin' && viewId !== 'viewLanding') { 
         sessionStorage.setItem('currentView', viewId); 
     }

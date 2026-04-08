@@ -1261,8 +1261,29 @@
   function togglePassword(inputId, btn) { let inp = document.getElementById(inputId); let icon = btn.querySelector('i'); if(inp.type === "password") { inp.type = "text"; icon.classList.replace('bi-eye', 'bi-eye-slash'); } else { inp.type = "password"; icon.classList.replace('bi-eye-slash', 'bi-eye'); } }
 
   async function inisialisasiAplikasi() {
-    let res = await fetchAPI("getSetting", {});
-    if(res && !res.error) {
+    // 1. Tampilkan Pop-Up Loading agar layar tidak blank putih!
+    startLoading("Memuat Data Sistem...");
+
+    let bAktif = sessionStorage.getItem('globalBulanAktif') || "";
+    let jASN = sessionStorage.getItem('globalJenisASN') || "";
+    let cUser = sessionStorage.getItem('isLoggedIn') === 'true' ? JSON.parse(sessionStorage.getItem('currentUser')) : null;
+
+    let payloadData = {};
+    if (cUser && bAktif) {
+        payloadData = { bulanAktif: bAktif, roleUser: cUser.role, unitkerjaUser: cUser.unitkerja, jenisASN: jASN };
+    }
+
+    // 2. Tarik SEMUA DATA sekaligus dalam 1 kali hit ke server (Super Cepat)
+    let dataInit = await fetchAPI("getInitialLoad", payloadData);
+    
+    if (!dataInit || dataInit.error) {
+        stopLoading();
+        return alertError("Gagal memuat data awal dari server.");
+    }
+
+    // 3. Distribusikan data Setting
+    let res = dataInit.setting;
+    if(res) {
       document.getElementById('loginNamaInstansi').innerText = res.Nama_Instansi || "PEMERINTAH PROVINSI JAMBI"; 
       document.getElementById('loginNamaDinas').innerText = res.Nama_Dinas || "DINAS PENDIDIKAN"; 
       document.getElementById('loginSubDinas').innerText = res.Nama_Sub_Dinas ? res.Nama_Sub_Dinas.toUpperCase() : "";
@@ -1272,33 +1293,68 @@
       globalPotKorpri = parseFloat(res.Pot_Korpri) || 0; 
     }
 
-    muatDaftarPeriode(); muatDataUnitKerja(); muatDataPergub(); 
+    // 4. Distribusikan Periode, Unit Kerja, dan Pergub
+    renderDropdownPeriode(dataInit.periode);
+    
+    arrayUnitKerjaValid = dataInit.unitKerja || []; 
+    let list = document.getElementById('listUnitKerjaUtama'); 
+    if(list) { list.innerHTML = ""; arrayUnitKerjaValid.forEach(unit => { list.innerHTML += `<option value="${unit}">`; }); }
+    
+    globalDataPergub = dataInit.pergub || [];
+    terapkanFilterPergub();
 
-    if(sessionStorage.getItem('isLoggedIn') === 'true') {
-      currentUser = JSON.parse(sessionStorage.getItem('currentUser')); 
+    // 5. Cek Status Login User
+    if(cUser) {
+      currentUser = cUser; 
       document.getElementById('navInfoRole').innerText = currentUser.unitkerja;
       
-      // 👇 LOGIKA 3 ROLE USER 👇
       let r = currentUser.role;
       let isSuper = (r === "Super Admin");
       let isOpd = (r === "Admin OPD");
 
-      // Super Admin Only
       if(isSuper) { document.getElementById('btnMasterAdmin').classList.remove('hidden'); document.getElementById('btnAkunAdmin').classList.remove('hidden'); } 
       else { document.getElementById('btnMasterAdmin').classList.add('hidden'); document.getElementById('btnAkunAdmin').classList.add('hidden'); }
       
-      // Super Admin & Admin OPD
       if(isSuper || isOpd) { document.getElementById('btnSettingAdmin').classList.remove('hidden'); document.getElementById('btnTambahBulan').classList.remove('hidden'); document.getElementById('btnKelolaBulan').classList.remove('hidden'); document.getElementById('mHeaderAdminIcons').classList.remove('hidden'); } 
       else { document.getElementById('btnSettingAdmin').classList.add('hidden'); document.getElementById('btnTambahBulan').classList.add('hidden'); document.getElementById('btnKelolaBulan').classList.add('hidden'); document.getElementById('mHeaderAdminIcons').classList.add('hidden'); }
 
-      document.getElementById('viewLogin').classList.add('hidden'); document.getElementById('viewLanding').classList.add('hidden'); document.getElementById('mainNav').classList.remove('hidden');
-      globalBulanAktif = sessionStorage.getItem('globalBulanAktif') || ""; globalHariKerja = parseInt(sessionStorage.getItem('globalHariKerja')) || 22; globalJenisASN = sessionStorage.getItem('globalJenisASN') || ""; 
-      if(globalBulanAktif) { document.getElementById('labelBulanAktif').innerText = globalBulanAktif + (globalJenisASN ? " (" + globalJenisASN + ")" : ""); document.getElementById('labelHKAktif').innerText = globalHariKerja; document.getElementById('btnMenuPegawai').disabled = false; updateFilterGolDropdown(); }
-      let savedView = sessionStorage.getItem('currentView') || 'viewPilihBulan'; if(savedView === 'viewManajemenASN') savedView = 'viewDaftarPegawai'; 
-      switchView(savedView); if(savedView === 'viewDaftarPegawai') muatDataPegawai();
+      document.getElementById('viewLogin').classList.add('hidden'); 
+      document.getElementById('viewLanding').classList.add('hidden'); 
+      document.getElementById('mainNav').classList.remove('hidden');
+      
+      globalBulanAktif = bAktif; 
+      globalHariKerja = parseInt(sessionStorage.getItem('globalHariKerja')) || 22; 
+      globalJenisASN = jASN; 
+      
+      if(globalBulanAktif) { 
+          document.getElementById('labelBulanAktif').innerText = globalBulanAktif + (globalJenisASN ? " (" + globalJenisASN + ")" : ""); 
+          document.getElementById('labelHKAktif').innerText = globalHariKerja; 
+          document.getElementById('btnMenuPegawai').disabled = false; 
+          updateFilterGolDropdown(); 
+      }
+      
+      let savedView = sessionStorage.getItem('currentView') || 'viewPilihBulan'; 
+      if(savedView === 'viewManajemenASN') savedView = 'viewDaftarPegawai'; 
+      switchView(savedView); 
+      
+      // Jika berada di view Pegawai, gunakan data pegawai yang ditarik bersamaan tadi
+      if(savedView === 'viewDaftarPegawai' && globalBulanAktif) { 
+          globalDataPegawai = dataInit.pegawai || [];
+          
+          let unitList = [...new Set(globalDataPegawai.map(item => item[5]).filter(Boolean))]; 
+          let unitDropdown = document.getElementById('filterUnitKerja'); 
+          unitDropdown.innerHTML = '<option value="">Semua Unit Kerja</option>'; 
+          unitList.forEach(s => unitDropdown.innerHTML += `<option value="${s}">${s}</option>`); 
+          
+          terapkanFilter();
+      }
     } else {
-      document.getElementById('viewLanding').classList.add('hidden'); document.getElementById('viewLogin').classList.remove('hidden'); document.body.classList.add('bg-gradient-login');
+      document.getElementById('viewLanding').classList.add('hidden'); 
+      document.getElementById('viewLogin').classList.remove('hidden'); 
+      document.body.classList.add('bg-gradient-login');
     }
+
+    stopLoading(); // Tutup Pop-Up Loading
   }
 
   async function doLogin(e) {
@@ -1470,10 +1526,48 @@
   function sinkronHariKerja() { let namaInduk = document.getElementById('pIndukPajak').value; if(!namaInduk) return; let dataInduk = arrayPeriode.find(p => p.namaPeriode === namaInduk); if(dataInduk) { document.getElementById('pHariKerja').value = dataInduk.hariKerja; document.getElementById('pHariKerja6').value = dataInduk.hariKerja6; } }
 
   async function simpanPeriodeLanjut(e) {
-    e.preventDefault(); let btnSubmit = e.target.querySelector('button[type="submit"]'); btnSubmit.disabled = true; let jenis = document.getElementById('pJenisPeriode').value; let namaPeriode = document.getElementById('pBulanNama').value; let refBulan = namaPeriode; let indukPajakVal = (jenis === "Reguler") ? "" : document.getElementById('pIndukPajak').value;
-    const d = { tahun: document.getElementById('pTahun').value, bulanAngka: document.getElementById('pBulanAngka').value, namaPeriode: namaPeriode, hariKerja: document.getElementById('pHariKerja').value, hariKerja6: document.getElementById('pHariKerja6').value, salinData: document.getElementById('pSalinPegawai').checked, jenisPeriode: jenis, refBulanGaji: refBulan, indukPajak: indukPajakVal };
-    let res = await fetchAPI("simpanPeriode", d); btnSubmit.disabled = false; if(res.status === "sukses") { alertSukses(res.pesan); bootstrap.Modal.getInstance(document.getElementById('modalTambahPeriode')).hide(); renderDropdownPeriode(res.dataTerbaru); } else { alertError(res.pesan); }
-  }
+    e.preventDefault(); 
+    let btnSubmit = e.target.querySelector('button[type="submit"]'); 
+    btnSubmit.disabled = true; 
+    
+    let jenis = document.getElementById('pJenisPeriode').value; 
+    let tahunInput = document.getElementById('pTahun').value;
+    let namaPeriode = document.getElementById('pBulanNama').value; 
+    let refBulan = namaPeriode; 
+    let indukPajakVal = (jenis === "Reguler") ? "" : document.getElementById('pIndukPajak').value;
+
+    // 👇 LOGIKA BARU: Cegah ganda untuk THR dan Gaji 13 di tahun yang sama
+    if (jenis === "THR" || jenis === "Gaji 13") {
+        let sudahAda = arrayPeriode.find(p => p.jenisPeriode === jenis && p.tahun == tahunInput);
+        if (sudahAda) {
+            btnSubmit.disabled = false;
+            return alertPeringatan(`Gagal! Periode ${jenis} untuk tahun ${tahunInput} sudah pernah ditambahkan.`);
+        }
+    }
+
+    const d = { 
+        tahun: tahunInput, 
+        bulanAngka: document.getElementById('pBulanAngka').value, 
+        namaPeriode: namaPeriode, 
+        hariKerja: document.getElementById('pHariKerja').value, 
+        hariKerja6: document.getElementById('pHariKerja6').value, 
+        salinData: document.getElementById('pSalinPegawai').checked, 
+        jenisPeriode: jenis, 
+        refBulanGaji: refBulan, 
+        indukPajak: indukPajakVal 
+    };
+
+    let res = await fetchAPI("simpanPeriode", d); 
+    btnSubmit.disabled = false; 
+    
+    if(res.status === "sukses") { 
+        alertSukses(res.pesan); 
+        bootstrap.Modal.getInstance(document.getElementById('modalTambahPeriode')).hide(); 
+        renderDropdownPeriode(res.dataTerbaru); 
+    } else { 
+        alertError(res.pesan); 
+    }
+}
 
   async function muatDaftarPeriode() { let data = await fetchAPI("getDaftarPeriode", {}); if (data && !data.error) { renderDropdownPeriode(data); } }
 
@@ -1654,8 +1748,12 @@
     let elNip = document.getElementById('mNip'); let elNama = document.getElementById('mNama'); let elUnitKerja = document.getElementById('mUnitKerja'); let elUnorInduk = document.getElementById('mUnorInduk');
     elNip.value = nip; elNama.value = nama; elUnitKerja.value = unitkerja;
     
-    let opdAktif = document.getElementById('loginNamaDinas').innerText;
-    elUnorInduk.value = unorInduk || opdAktif;
+    // Cari baris ini di dalam bukaModalPegawai:
+  let opdAktif = document.getElementById('loginNamaDinas').innerText;
+  elUnorInduk.value = unorInduk || opdAktif;
+
+  // 👇 LOGIKA BARU: Otomatiskan Unit Kerja jika kosong
+  elUnitKerja.value = unitkerja || unorInduk || opdAktif;
 
     // Operator tidak boleh ubah NIP dan Nama
     let isOperatorEdit = (aksi === 'edit' && currentUser.role === "Operator");

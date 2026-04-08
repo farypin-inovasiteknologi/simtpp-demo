@@ -1198,9 +1198,9 @@
 <script>
   // 👇 PASTIKAN LINK API INI BENAR (ISI DARI HASIL DEPLOY TERBARU) 👇
   const listOPD = [
-      { nama: "Badan Kepegawaian Daerah", url: "https://script.google.com/macros/s/AKfycbx-rAbkvPprwjSBzBVwUuDjbDFo1E8LJjvyBXQV-XUdH3IeUwQjoDuaINOE4PSjH4iq/exec" },
+      { nama: "Badan Kepegawaian Daerah", url: "https://script.google.com/macros/s/AKfycbw4PkelgARfgw65YLreJJ9GG7OynQDnEYtmYqz1fpoSnRLgH0cbltEBSpzciq0pPOXk9w/exec" },
       { nama: "Dinas Pendidikan", url: "https://script.google.com/macros/s/AKfycbxG5qGn5YymsG_zpV_WXsUEVYDHtMi7AAtPKdE0QzZv5ZL24GDPNYQJ1Wk0DeA4RyvX/exec" },
-      { nama: "Uji Coba", url: "https://script.google.com/macros/s/AKfycbxJ244XGuLwcC8EuT9Tdy9zU5_BMQN0M5aGw0r8q9L8z8CoKln85Q4QgTfn8S8wrzVe/exec"}
+      { nama: "Uji Coba", url: "https://script.google.com/macros/s/AKfycbyubKFEGPHIB2RiwNKwAksaOJJ_5ug9k7MH0ikKtANzSYQc7EBun5pSIAuIqxxkB_MZ/exec"}
   ];
 
   let API_URL = ""; 
@@ -1696,28 +1696,36 @@
   // =====================================
   let globalDataPegawai = []; let currentPage = 1; let rowsPerPage = 15; 
 
- async function muatDataPegawai() {
-    startLoading("Memuat Data Pegawai..."); 
-    let data = await fetchAPI("getDaftarPegawai", { bulanAktif: globalBulanAktif, roleUser: currentUser.role, unitkerjaUser: currentUser.unitkerja, jenisASN: globalJenisASN }); 
-    stopLoading();
-    
-    if (data && !data.error && Array.isArray(data)) { 
-      globalDataPegawai = data; 
-      
-      // 👇 PERBAIKAN: Ambil Unit Kerja dari row[5] (sebelumnya row[4]) 👇
-      let unitList = [...new Set(data.map(item => item[5]).filter(Boolean))]; 
-      
-      let unitDropdown = document.getElementById('filterUnitKerja'); 
-      unitDropdown.innerHTML = '<option value="">Semua Unit Kerja</option>'; 
-      unitList.forEach(s => unitDropdown.innerHTML += `<option value="${s}">${s}</option>`); 
-      
-      terapkanFilter(); 
-    } 
-    else { 
-      document.getElementById('tabelBodyPegawai').innerHTML = '<tr><td colspan="7" class="text-center text-danger fw-bold">Gagal memuat data dari server.</td></tr>'; 
-      console.error("Error muatDataPegawai:", data); 
-    }
+ // GANTI FUNGSI INI DI INDEX.HTML
+async function muatDataPegawai(forceRefresh = false) {
+  // JURUS KILAT: Jika data sudah ada di RAM lokal (Browser) dan tidak butuh refresh, tampilkan instan!
+  if (!forceRefresh && globalDataPegawai && globalDataPegawai.length > 0) {
+    let unitList = [...new Set(globalDataPegawai.map(item => item[5]).filter(Boolean))];
+    let unitDropdown = document.getElementById('filterUnitKerja');
+    let currentVal = unitDropdown.value;
+    unitDropdown.innerHTML = '<option value="">Semua Unit Kerja</option>';
+    unitList.forEach(s => unitDropdown.innerHTML += `<option value="${s}">${s}</option>`);
+    unitDropdown.value = currentVal;
+    terapkanFilter();
+    return; // Berhenti di sini, tidak perlu panggil server loading!
   }
+
+  startLoading("Memuat Data Pegawai..."); 
+  let data = await fetchAPI("getDaftarPegawai", { bulanAktif: globalBulanAktif, roleUser: currentUser.role, unitkerjaUser: currentUser.unitkerja, jenisASN: globalJenisASN }); 
+  stopLoading();
+  
+  if (data && !data.error && Array.isArray(data)) { 
+    globalDataPegawai = data; 
+    let unitList = [...new Set(data.map(item => item[5]).filter(Boolean))]; 
+    let unitDropdown = document.getElementById('filterUnitKerja'); 
+    unitDropdown.innerHTML = '<option value="">Semua Unit Kerja</option>'; 
+    unitList.forEach(s => unitDropdown.innerHTML += `<option value="${s}">${s}</option>`); 
+    terapkanFilter(); 
+  } 
+  else { 
+    document.getElementById('tabelBodyPegawai').innerHTML = '<tr><td colspan="7" class="text-center text-danger fw-bold">Gagal memuat data dari server.</td></tr>'; 
+  }
+}
 
   function terapkanFilter() {
     let cari = document.getElementById('filterCari').value.toLowerCase(); let fGol = document.getElementById('filterGol').value; let fUnit = document.getElementById('filterUnitKerja').value;
@@ -1793,7 +1801,7 @@
       skp: document.getElementById('mSkp').value, // <--- BARU
       bulan: globalBulanAktif, statusPegawai: globalJenisASN, uuid: document.getElementById('mUuid').value, roleUser: currentUser.role, unitkerjaUser: currentUser.unitkerja  
     };
-    let res = await fetchAPI(aksi === 'edit' ? "updatePegawai" : "simpanPegawai", d); stopLoading(); let pesan = String(res).toLowerCase(); if (pesan.includes("gagal") || pesan.includes("error")) { alertError(res.pesan || res); } else { alertSukses(res); bootstrap.Modal.getInstance(document.getElementById('modalKelolaPegawai')).hide(); document.getElementById('formPegawai').reset(); muatDataPegawai(); muatDataUnitKerja(); }
+    let res = await fetchAPI(aksi === 'edit' ? "updatePegawai" : "simpanPegawai", d); stopLoading(); let pesan = String(res).toLowerCase(); if (pesan.includes("gagal") || pesan.includes("error")) { alertError(res.pesan || res); } else { alertSukses(res); bootstrap.Modal.getInstance(document.getElementById('modalKelolaPegawai')).hide(); document.getElementById('formPegawai').reset(); muatDataPegawai(true); muatDataUnitKerja(); }
   }
 
   function hapusPegawai(nip, nama, uuid) { 
@@ -1812,7 +1820,7 @@
         stopLoading(); 
         let pesan = String(res).toLowerCase(); 
         if (pesan.includes("gagal") || pesan.includes("error")) { alertError(res.pesan || res); } 
-        else { alertSukses(res); muatDataPegawai(); }
+        else { alertSukses(res); muatDataPegawai(true); }
       }
     });
   }

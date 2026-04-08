@@ -38,48 +38,17 @@
     .pdf-mode { height: auto !important; overflow: visible !important; padding-bottom: 20px; }
     
     /* --- EFEK VISUAL MELAYANG --- */
-    @keyframes floatAnim {
-      0% { transform: translateY(0px); }
-      50% { transform: translateY(-12px); }
-      100% { transform: translateY(0px); }
-    }
-    .floating-logo {
-      animation: floatAnim 3s ease-in-out infinite;
-      filter: drop-shadow(0px 8px 6px rgba(0,0,0,0.2)); 
-    }
-    .floating-btn {
-      animation: floatAnim 2.5s ease-in-out infinite;
-    }
+    @keyframes floatAnim { 0% { transform: translateY(0px); } 50% { transform: translateY(-12px); } 100% { transform: translateY(0px); } }
+    .floating-logo { animation: floatAnim 3s ease-in-out infinite; filter: drop-shadow(0px 8px 6px rgba(0,0,0,0.2)); }
+    .floating-btn { animation: floatAnim 2.5s ease-in-out infinite; }
     
-    .glass-card {
-      background: rgba(255, 255, 255, 0.85) !important; 
-      backdrop-filter: blur(15px); 
-      -webkit-backdrop-filter: blur(15px);
-      border-radius: 24px;
-      border: 1px solid rgba(255, 255, 255, 0.5); 
-      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2) !important; 
-    }
+    .glass-card { background: rgba(255, 255, 255, 0.85) !important; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.5); box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2) !important; }
 
     /* --- BACKGROUND LANDING PAGE --- */
-    .bg-landing {
-      /* Ganti URL gambar di bawah ini dengan foto asli Kantor Gubernur Jambi jika ada */
-      background-image: url('https://upload.wikimedia.org/wikipedia/commons/7/7c/Kantor-gubernur-2.jpg');
-      background-size: cover;
-      background-position: center;
-      background-attachment: fixed;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+    .bg-landing { background-image: url('https://upload.wikimedia.org/wikipedia/commons/7/7c/Kantor-gubernur-2.jpg'); background-size: cover; background-position: center; background-attachment: fixed; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
 
     /* --- ANIMASI BACKGROUND LOGIN --- */
-    .bg-gradient-login {
-      background: linear-gradient(-45deg, #0d6efd, #198754, #0dcaf0, #20c997);
-      background-size: 400% 400%;
-      animation: gradientBG 10s ease infinite;
-      min-height: 100vh;
-    }
+    .bg-gradient-login { background: linear-gradient(-45deg, #0d6efd, #198754, #0dcaf0, #20c997); background-size: 400% 400%; animation: gradientBG 10s ease infinite; min-height: 100vh; }
     @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
     /* ==========================================
@@ -135,7 +104,6 @@
 <div id="viewLanding" class="bg-landing hidden">
     <div class="glass-card p-4 p-md-5 text-center shadow-lg" style="max-width: 500px; width: 90%;">
         <img src="https://upload.wikimedia.org/wikipedia/commons/c/ca/Logo_Resmi_Provinsi_Jambi.png" class="floating-logo mb-3" width="90" alt="Logo Jambi">
-        
         <h5 class="fw-bold text-dark mb-1" style="letter-spacing: 2px;">PEMERINTAH PROVINSI JAMBI</h5>
         <h1 class="fw-bold text-success mb-1 mt-3" style="font-size: 2.8rem; text-shadow: 1px 1px 2px rgba(255,255,255,0.8);">SIM TPP 2026</h1>
         <p class="text-dark mb-4 fw-bold" style="font-size: 0.95rem;">Sistem Manajemen Tambahan Penghasilan Pegawai</p>
@@ -144,9 +112,8 @@
             <label class="fw-bold text-success mb-2"><i class="bi bi-building"></i> Pilih Instansi / OPD Anda:</label>
             <select id="selectTenantOPD" class="form-select form-select-lg border-success fw-bold text-center shadow-sm" onchange="ubahNamaOPD(this)">
                 <option value="">-- PILIH OPD --</option>
-                </select>
+            </select>
         </div>
-
         <button class="btn btn-success btn-lg w-100 fw-bold rounded-pill shadow-lg floating-btn" onclick="masukKeLogin()">
             MASUK APLIKASI <i class="bi bi-arrow-right-circle ms-1"></i>
         </button>
@@ -156,13 +123,11 @@
 <div id="viewLogin" class="text-center hidden" style="padding-top: 5vh;">
   <div class="card mx-auto border-0 glass-card p-3 shadow-lg" style="max-width: 450px;">
     <div class="card-body py-4">
-      
       <div class="text-start mb-3">
         <button class="btn btn-sm btn-outline-dark fw-bold rounded-pill px-3" onclick="kembaliKeLanding()">
             <i class="bi bi-arrow-left"></i> Kembali Pilih OPD
         </button>
       </div>
-
       <div class="d-flex justify-content-center gap-4 mb-3" style="min-height: 90px;">
         <img id="loginLogoInstansi" src="" width="85" height="85" class="floating-logo hidden" style="object-fit: contain;">
         <img id="loginLogoDinas" src="" width="85" height="85" class="floating-logo hidden" style="object-fit: contain; animation-delay: 0.5s;">
@@ -175,22 +140,20 @@
       <p class="fw-bold text-secondary mb-4" style="font-size: 0.85rem;">Silakan Login</p>
       
       <form onsubmit="doLogin(event)">
-            <div class="input-group mb-3 shadow-sm rounded-pill overflow-hidden bg-light">
-              <span class="input-group-text bg-light border-0 text-secondary ps-4"><i class="bi bi-person-fill"></i></span>
-              <input type="text" id="logUser" class="form-control form-control-lg bg-light border-0" placeholder="Username" required>
-            </div>
-            
-            <div class="input-group mb-3 shadow-sm rounded-pill overflow-hidden bg-light">
-              <span class="input-group-text bg-light border-0 text-secondary ps-4"><i class="bi bi-lock-fill"></i></span>
-              <input type="password" id="logPass" class="form-control form-control-lg bg-light border-0" placeholder="Password" required>
-              <button class="btn btn-light bg-light border-0 px-4 text-secondary" type="button" onclick="togglePassword('logPass', this)"><i class="bi bi-eye"></i></button>
-            </div>
-            
-            <div class="mb-4 text-end px-2">
-              <a href="javascript:void(0)" class="small text-decoration-none text-danger fw-bold" onclick="bukaLupaPassword()">Lupa Password?</a>
-            </div>
-            <button type="submit" class="btn btn-success btn-lg w-100 fw-bold rounded-pill shadow-sm">LOGIN <i class="bi bi-arrow-right-circle ms-1"></i></button>
-          </form>
+        <div class="input-group mb-3 shadow-sm rounded-pill overflow-hidden bg-light">
+          <span class="input-group-text bg-light border-0 text-secondary ps-4"><i class="bi bi-person-fill"></i></span>
+          <input type="text" id="logUser" class="form-control form-control-lg bg-light border-0" placeholder="Username" required>
+        </div>
+        <div class="input-group mb-3 shadow-sm rounded-pill overflow-hidden bg-light">
+          <span class="input-group-text bg-light border-0 text-secondary ps-4"><i class="bi bi-lock-fill"></i></span>
+          <input type="password" id="logPass" class="form-control form-control-lg bg-light border-0" placeholder="Password" required>
+          <button class="btn btn-light bg-light border-0 px-4 text-secondary" type="button" onclick="togglePassword('logPass', this)"><i class="bi bi-eye"></i></button>
+        </div>
+        <div class="mb-4 text-end px-2">
+          <a href="javascript:void(0)" class="small text-decoration-none text-danger fw-bold" onclick="bukaLupaPassword()">Lupa Password?</a>
+        </div>
+        <button type="submit" class="btn btn-success btn-lg w-100 fw-bold rounded-pill shadow-sm">LOGIN <i class="bi bi-arrow-right-circle ms-1"></i></button>
+      </form>
     </div>
   </div>
 </div>
@@ -233,7 +196,6 @@
 </div>
 
 <div id="appContainer" class="container bg-white shadow p-0 rounded hidden" style="min-height: 90vh;">
-  
   <nav id="mainNav" class="navbar navbar-expand-lg navbar-dark bg-dark px-3 no-print">
     <a class="navbar-brand" href="#">SIM TPP <span id="navInfoRole" class="badge bg-success ms-2"></span></a>
     <div class="navbar-nav ms-auto">
@@ -255,20 +217,17 @@
         <div class="card-body py-5">
           <h4 class="fw-bold text-primary mb-2">Pilih Periode TPP</h4>
           <p class="text-muted mb-4 small">Anda hanya dapat mengelola TPP pada periode bulan yang telah ditambahkan dan diaktifkan secara berurutan.</p>
-          
           <div class="mb-3 text-start">
             <label class="fw-bold">Periode Aktif:</label>
             <select id="pilihPeriodeUtama" class="form-select form-select-lg text-center fw-bold border-primary mb-3">
               <option value="">-- Memuat Data Periode --</option>
             </select>
-
             <label class="fw-bold text-success">Kelola Jenis ASN:</label>
             <select id="pilihJenisASN" class="form-select form-select-lg text-center fw-bold border-success">
               <option value="PNS">PNS</option>
               <option value="PPPK">PPPK</option>
             </select>
           </div>
-          
           <button class="btn btn-primary btn-lg w-100 fw-bold mb-3" onclick="masukAplikasi()">MASUK KELOLA TPP ➔</button>
           <hr>
           <button id="btnTambahBulan" class="btn btn-outline-secondary w-100 fw-bold hidden" onclick="bukaModalTambahPeriode()">+ Tambah Periode Bulan Baru</button>
@@ -290,7 +249,6 @@
       </div>
       
       <div class="d-flex flex-column flex-md-row justify-content-between align-items-start mb-3 gap-3">
-        
         <div class="action-left d-flex flex-wrap gap-2">
           <button id="btnTambahPegawai" class="btn btn-primary btn-sm fw-bold shadow-sm" onclick="bukaModalPegawai('tambah')">
             <i class="bi bi-person-plus"></i> Tambah
@@ -299,7 +257,6 @@
             <i class="bi bi-file-earmark-excel"></i> Import
           </button>
         </div>
-        
         <div class="action-right d-flex flex-wrap gap-2 justify-content-md-end">
           <div class="btn-group shadow-sm">
             <button class="btn btn-success btn-sm dropdown-toggle fw-bold" data-bs-toggle="dropdown"><i class="bi bi-printer"></i> Nominatif</button>
@@ -337,7 +294,6 @@
             </ul>
           </div>
         </div>
-
       </div>
 
       <div class="row mb-3 bg-light p-2 border rounded shadow-sm mx-0">
@@ -377,20 +333,17 @@
           <button class="btn btn-success fw-bold btn-sm shadow-sm" onclick="bukaModalImport('pergub')"><i class="bi bi-file-earmark-excel"></i> Import</button>
         </div>
       </div>
-      
       <div class="row mb-3 bg-light p-2 border rounded shadow-sm mx-0">
         <div class="col-md-12 mb-1">
           <input type="text" id="filterCariPergub" class="form-control border-primary" placeholder="🔍 Cari Nama Jabatan..." oninput="terapkanFilterPergub()">
         </div>
       </div>
-
       <div class="table-responsive bg-white">
         <table class="table table-bordered table-hover align-middle">
           <thead class="table-dark"><tr><th>Nama Jabatan</th><th>Kelas</th><th>Total TPP Bruto</th><th class="text-center">Aksi</th></tr></thead>
           <tbody id="tabelBodyPergub"><tr><td colspan="4" class="text-center">Memuat...</td></tr></tbody>
         </table>
       </div>
-      
       <div class="d-flex justify-content-between align-items-center mt-2">
         <span id="infoPaginationPergub" class="text-muted fw-bold small">Menampilkan 0 data</span>
         <div id="btnPaginationPergub" class="btn-group"></div>
@@ -406,7 +359,6 @@
       <div class="alert alert-primary shadow-sm border-primary">
         <h5 class="fw-bold"><i class="bi bi-bank"></i> Dasar Hukum Pemberian TPP & Pemotongan Pajak</h5>
         <p class="mb-3 small">Berikut adalah landasan hukum yang digunakan sebagai pondasi algoritma perhitungan pada aplikasi SIM TPP ini.</p>
-        
         <div class="row g-3">
           <div class="col-md-3">
             <div class="card h-100 border-primary">
@@ -448,36 +400,21 @@
       </div>
 
       <h5 class="fw-bold mt-4 mb-3 text-success"><i class="bi bi-calculator"></i> Petunjuk & Simulasi Perhitungan Sistem</h5>
-      
       <div class="accordion shadow-sm" id="accordionSimulasi">
-        
         <div class="accordion-item">
           <h2 class="accordion-header">
-            <button class="accordion-button fw-bold text-dark bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#colGaji">
-              1. Simulasi Perhitungan Amprah Gaji Bersih
-            </button>
+            <button class="accordion-button fw-bold text-dark bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#colGaji">1. Simulasi Perhitungan Amprah Gaji Bersih</button>
           </h2>
           <div id="colGaji" class="accordion-collapse collapse show" data-bs-parent="#accordionSimulasi">
             <div class="accordion-body text-dark" style="font-size: 0.9rem;">
               <p>Perhitungan amprah gaji di SIM TPP mengikuti standar akuntansi gaji ASN baku. Semua elemen dihitung bulat ke rupiah terdekat sebelum dijumlahkan, guna mencegah selisih 1 rupiah akibat pembulatan desimal massal.</p>
-              <ul>
-                <li><b>Gaji Pokok & Tunj. Jabatan:</b> Diambil dari Master Pegawai.</li>
-                <li><b>Tunj. Istri/Suami:</b> 10% x Gaji Pokok (Hanya jika status Kawin "K").</li>
-                <li><b>Tunj. Anak:</b> 2% x Gaji Pokok x Jumlah Anak (Maks 2 Anak yang diakui).</li>
-                <li><b>Tunj. Beras:</b> Rp 72.420 x Jumlah Jiwa (Pegawai + Istri + Anak).</li>
-                <li><b>Tunj. BPJS 4%:</b> 4% x (Gapok + Tj. Istri + Tj. Anak + Tj. Jabatan).</li>
-                <li><b>IWP 8% (Pensiun Hari Tua):</b> 8% x (Gapok + Tj. Istri + Tj. Anak).</li>
-                <li><b>IWP 1% (Kesehatan):</b> 1% x (Gapok + Tj. Istri + Tj. Anak + Tj. Jabatan).</li>
-              </ul>
+              <ul><li><b>Gaji Pokok & Tunj. Jabatan:</b> Diambil dari Master Pegawai.</li><li><b>Tunj. Istri/Suami:</b> 10% x Gaji Pokok (Hanya jika status Kawin "K").</li><li><b>Tunj. Anak:</b> 2% x Gaji Pokok x Jumlah Anak (Maks 2 Anak yang diakui).</li><li><b>Tunj. Beras:</b> Rp 72.420 x Jumlah Jiwa (Pegawai + Istri + Anak).</li><li><b>Tunj. BPJS 4%:</b> 4% x (Gapok + Tj. Istri + Tj. Anak + Tj. Jabatan).</li><li><b>IWP 8% (Pensiun Hari Tua):</b> 8% x (Gapok + Tj. Istri + Tj. Anak).</li><li><b>IWP 1% (Kesehatan):</b> 1% x (Gapok + Tj. Istri + Tj. Anak + Tj. Jabatan).</li></ul>
             </div>
           </div>
         </div>
-
         <div class="accordion-item">
           <h2 class="accordion-header">
-            <button class="accordion-button collapsed fw-bold text-dark bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#colTahunan">
-              2. Simulasi Perhitungan Penghasilan Setahun & Progresif (UU HPP)
-            </button>
+            <button class="accordion-button collapsed fw-bold text-dark bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#colTahunan">2. Simulasi Perhitungan Penghasilan Setahun & Progresif (UU HPP)</button>
           </h2>
           <div id="colTahunan" class="accordion-collapse collapse" data-bs-parent="#accordionSimulasi">
             <div class="accordion-body text-dark" style="font-size: 0.9rem;">
@@ -485,20 +422,17 @@
             </div>
           </div>
         </div>
-
         <div class="accordion-item">
           <h2 class="accordion-header">
-            <button class="accordion-button collapsed fw-bold text-dark bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#colTER">
-              3. Simulasi Perhitungan Pemotongan Pajak Bulanan (TER) PMK 168/2023
-            </button>
+            <button class="accordion-button collapsed fw-bold text-dark bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#colTER">3. Simulasi Perhitungan Pemotongan Pajak Bulanan (TER) PMK 168/2023</button>
           </h2>
           <div id="colTER" class="accordion-collapse collapse" data-bs-parent="#accordionSimulasi">
             <div class="accordion-body text-dark" style="font-size: 0.9rem;">
               <p>Mulai 1 Januari 2024, pemotongan PPh 21 per bulan untuk ASN wajib menggunakan <b>Tarif Efektif Rata-rata (TER)</b> sesuai PP No.58/2023 & PMK No.168/2023.</p>
             </div>
           </div>
+        </div>
       </div>
-     </div>
     </div>
 
     <div id="viewSetting" class="hidden">
@@ -511,7 +445,10 @@
           <form id="formSetting" onsubmit="submitSetting(event)">
             <h6 class="fw-bold text-primary border-bottom pb-2">Informasi Kop Laporan</h6>
             <div class="row mb-3">
-              <div class="col-md-12"><label>Nama Instansi</label><input type="text" id="sInstansi" class="form-control" placeholder="PEMERINTAH PROVINSI JAMBI" required></div>
+              <div class="col-md-12">
+                <label>Nama Instansi</label>
+                <input type="text" id="sInstansi" class="form-control" placeholder="PEMERINTAH PROVINSI JAMBI" required>
+              </div>
               <div class="col-md-6"><label>Nama Dinas/Badan</label><input type="text" id="sDinas" class="form-control" placeholder="DINAS......." required></div>
               <div class="col-md-6"><label>Nama Sub Dinas/Badan (Opsional)</label><input type="text" id="sSubDinas" class="form-control" placeholder="kosongkan jika tidak perlu...."></div>  
             </div>
@@ -589,52 +526,6 @@
       </div>
     </div>
 
-<datalist id="listUnitKerjaUtama"></datalist>
-<datalist id="listJabatanUtama"></datalist>
-
-<div class="modal fade" id="modalKelolaAkun" tabindex="-1">
-  <div class="modal-dialog"><div class="modal-content">
-    <div class="modal-header bg-primary text-white"><h5 class="modal-title" id="akunModalTitle">Tambah Akun</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-    <div class="modal-body">
-      <form id="formAkun" onsubmit="submitAkun(event)">
-        <input type="hidden" id="uAksi"> <input type="hidden" id="uUuid">
-        <div class="mb-2"><label>Username</label><input type="text" id="uUser" class="form-control" required></div>
-        <div class="mb-2"><label>Password <small class="text-danger" id="uPassHint"></small></label><input type="text" id="uPass" class="form-control" required></div>
-        <div class="mb-2"><label>Role</label><select id="uRole" class="form-select" onchange="toggleUnitKerjaAkun()"><option value="Operator">Opt Unit Kerja</option><option value="Admin">Admin Pusat</option></select></div>
-
-        <div class="mb-2"><label>Pilih Unit Kerja</label>
-          <input type="text" id="uUnitKerjaOp" class="form-control border-primary" list="listUnitKerjaUtama" placeholder="Ketik mencari unit kerja.." autocomplete="off">
-          <select id="uUnitKerjaAdmin" class="form-select border-danger hidden">
-            <option value="Dinas Pendidikan">Dinas Pendidikan</option>
-            <option value="Admin SubDinas">Admin SubDinas</option>
-            <option value="Opt. Kab/Kota">Opt. Kab/Kota</option>
-          </select>
-        </div>
-        <div class="mb-3"><label>Email (Untuk Lupa Password)</label><input type="email" id="uEmail" class="form-control" required></div>
-        <button type="submit" class="btn btn-primary w-100 fw-bold">SIMPAN AKUN</button>
-      </form>
-    </div>
-  </div></div>
-</div>
-
-<div class="modal fade" id="modalProfil" tabindex="-1">
-  <div class="modal-dialog"> <div class="modal-content">
-    <div class="modal-header bg-dark text-white"><h5 class="modal-title">Ubah Password & Email</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-    <div class="modal-body">
-      <form onsubmit="submitProfilSendiri(event)">
-        <div class="mb-2"><label>Username</label><input type="text" id="myUser" class="form-control bg-light text-muted fw-bold" readonly></div>
-        <div class="mb-3"><label>Email Saya</label><input type="email" id="myEmail" class="form-control border-primary" required></div>
-        <div class="mb-4"><label>Password Baru</label>
-          <div class="input-group">
-            <input type="password" id="myPass" class="form-control border-danger" placeholder="Kosongkan jika tidak ingin diubah">
-            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('myPass', this)"><i class="bi bi-eye"></i></button>
-          </div>
-        </div>
-        <button type="submit" class="btn btn-success w-100 fw-bold fs-5 py-2">UPDATE PROFIL SAYA</button>
-      </form>
-    </div>
-  </div></div>
-</div>
     <div id="viewManajemenASN" class="hidden">
       <button class="btn btn-sm btn-secondary mb-3" onclick="switchView('viewDaftarPegawai')">← Kembali ke Daftar Pegawai</button>
 
@@ -832,7 +723,6 @@
                     <td class="text-start">I. TPP KOTOR</td>
                     <td id="mKotor_bk">0</td><td id="mKotor_pk">0</td><td id="mKotor_kk">0</td><td id="mKotor_tb">0</td><td id="mKotor_kp">0</td><td id="mKotor_total" class="text-primary">0</td>
                   </tr>
-                  
                   <tr class="bg-soft-blue fw-bold">
                     <td class="text-start">II. Bobot Produktivitas Kerja Dasar (60%)</td>
                     <td id="mBpk_bk">0</td><td id="mBpk_pk">0</td><td id="mBpk_kk">0</td><td id="mBpk_tb">0</td><td id="mBpk_kp">0</td><td id="mBpk_total">0</td>
@@ -876,7 +766,6 @@
           <div id="loaderTahunan" class="text-center text-danger fw-bold hidden">Memuat Logika Perhitungan...</div>
           
           <div id="hasilTahunan" class="hidden">
-            
             <h5 class="fw-bold text-primary mb-3 border-bottom border-primary pb-2"><i class="bi bi-info-circle"></i> A. PERHITUNGAN PENGHASILAN SETAHUN (METODE ATURAN LAMA)</h5>
             
             <div class="row">
@@ -908,30 +797,28 @@
                       <tr class="text-danger"><td>(-) Potongan Kinerja (PK)</td><td id="thPotPK" class="text-end">0</td></tr>
                       <tr class="text-danger border-bottom"><td>(-) Potongan Disiplin (DK)</td><td id="thPotDK" class="text-end">0</td></tr>
                       <tr class="fw-bold"><td>TPP Netto Kinerja Sebulan</td><td id="thTPPBulan" class="text-end">0</td></tr>
-                      
                       <tr class="border-bottom text-muted"><td>Bruto Sebulan (Gaji + TPP)</td><td id="thBrutoBulan" class="text-end">0</td></tr>
-                      
                       <tr class="text-primary fw-bold border-bottom"><td>Total Bruto Setahun (x12)</td><td id="thBruto" class="text-end">0</td></tr>
                       <tr class="text-danger pt-1"><td>(-) Biaya Jabatan Setahun</td><td id="thBiayaJab" class="text-end">0</td></tr>
                       <tr class="text-danger border-bottom"><td>(-) IWP Setahun</td><td id="thIWP" class="text-end">0</td></tr>
                       <tr class="text-success fw-bold"><td>Netto Total Setahun</td><td id="thNetto" class="text-end">0</td></tr>
                       <tr class="text-danger border-bottom"><td>(-) PTKP (<span id="thStatusKwnTotal"></span>)</td><td id="thPTKP" class="text-end">0</td></tr>
                       <tr class="text-primary fw-bold border-bottom"><td>PKP Total (Dibulatkan)</td><td id="thPKP" class="text-end">0</td></tr>
-                      
                       <tr class="text-muted"><td>PPh 5% (s/d 60 Jt)</td><td id="thPph5" class="text-end">0</td></tr>
                       <tr class="text-muted"><td>PPh 15% (60 Jt - 250 Jt)</td><td id="thPph15" class="text-end">0</td></tr>
                       <tr class="text-muted"><td>PPh 25% (250 Jt - 500 Jt)</td><td id="thPph25" class="text-end">0</td></tr>
                       <tr class="text-muted"><td>PPh 30% (500 Jt - 5 M)</td><td id="thPph30" class="text-end">0</td></tr>
                       <tr class="text-muted border-bottom"><td>PPh 35% (> 5 M)</td><td id="thPph35" class="text-end">0</td></tr>
                       <tr class="fw-bold text-danger"><td>Total PPh 21 Setahun</td><td id="thPajakTahun" class="text-end">0</td></tr>
-                      
                       <tr class="fw-bold text-danger border-top mt-2"><td>Rata-rata PPh 21 Sebulan</td><td id="thPajakSebulanProg" class="text-end fs-6">0</td></tr>
                       <tr class="hidden"><td id="thNettoData">0</td></tr>
                     </table>
                   </div>
                 </div>
               </div>
-            </div> <h5 class="fw-bold text-success mt-4 mb-3 border-bottom border-success pb-2"><i class="bi bi-calculator"></i> B. PERHITUNGAN PAJAK TER (PMK 168/2023)</h5>
+            </div> 
+            
+            <h5 class="fw-bold text-success mt-4 mb-3 border-bottom border-success pb-2"><i class="bi bi-calculator"></i> B. PERHITUNGAN PAJAK TER (PMK 168/2023)</h5>
 
             <div class="row">
               <div class="col-md-6 mb-3 mb-md-0">
@@ -961,21 +848,16 @@
                       <tr class="fw-bold pt-2"><td id="teksRumusTER">Total PPh 21 Terutang</td><td id="thPphTER" class="text-end text-danger">0</td></tr>
                       <tr><td>(-) PPh 21 Gaji (Lunas)</td><td id="thPphGajiLunas" class="text-end text-danger">0</td></tr>
                     </table>
-                    
                     <div class="alert alert-success p-3 mb-0 mt-3 border-success shadow-sm" style="border-width: 2px;">
                       <div class="d-flex flex-column flex-md-row justify-content-between align-items-center text-center text-md-start">
                         <strong style="font-size: 0.95rem;" class="mb-1 mb-md-0">PPh 21 TPP (PAJAK TER) :</strong> 
                         <span id="thPphTKD" class="fw-bold text-success fs-4">0</span>
                       </div>
                     </div>
-
                   </div>
                 </div>
               </div>
             </div>
-            
-          </div>
-        </div>
 
             <div class="row hidden" id="boxTerGabungan">
               <div class="col-md-12">
@@ -990,30 +872,12 @@
                         <tr><th width="50%">Uraian Penghasilan Bruto (DPP)</th><th>Nilai Pajak Terutang</th></tr>
                       </thead>
                       <tbody>
-                        <tr>
-                          <td>1. Total Bruto Induk (<span id="txtBulanInduk" class="text-primary fw-bold"></span>)</td>
-                          <td class="text-end" id="gabBrutoInduk">0</td>
-                        </tr>
-                        <tr class="border-bottom">
-                          <td>2. Total Bruto <span id="txtJenisKhusus2" class="text-danger fw-bold"></span> (Bulan Ini)</td>
-                          <td class="text-end" id="gabBrutoBulanIni">0</td>
-                        </tr>
-                        <tr class="table-warning fw-bold text-dark border-dark">
-                          <td>3. TOTAL PENGHASILAN GABUNGAN (1 + 2)</td>
-                          <td class="text-end fs-6" id="gabTotalBruto">0</td>
-                        </tr>
-                        <tr>
-                          <td>4. Tarif TER Berlaku (Kategori <span id="gabKatTer"></span>)</td>
-                          <td class="text-end fw-bold text-danger" id="gabTarifTer">0%</td>
-                        </tr>
-                        <tr class="table-primary fw-bold text-primary border-primary">
-                          <td>5. TOTAL PPh 21 TERUTANG (Baris 3 x Baris 4)</td>
-                          <td class="text-end" id="gabPajakTerutang">0</td>
-                        </tr>
-                        <tr>
-                          <td class="text-danger">6. (-) PPh 21 yang Sudah Dipotong di Bulan Induk</td>
-                          <td class="text-end text-danger fw-bold" id="gabPajakSudahDibayar">0</td>
-                        </tr>
+                        <tr><td>1. Total Bruto Induk (<span id="txtBulanInduk" class="text-primary fw-bold"></span>)</td><td class="text-end" id="gabBrutoInduk">0</td></tr>
+                        <tr class="border-bottom"><td>2. Total Bruto <span id="txtJenisKhusus2" class="text-danger fw-bold"></span> (Bulan Ini)</td><td class="text-end" id="gabBrutoBulanIni">0</td></tr>
+                        <tr class="table-warning fw-bold text-dark border-dark"><td>3. TOTAL PENGHASILAN GABUNGAN (1 + 2)</td><td class="text-end fs-6" id="gabTotalBruto">0</td></tr>
+                        <tr><td>4. Tarif TER Berlaku (Kategori <span id="gabKatTer"></span>)</td><td class="text-end fw-bold text-danger" id="gabTarifTer">0%</td></tr>
+                        <tr class="table-primary fw-bold text-primary border-primary"><td>5. TOTAL PPh 21 TERUTANG (Baris 3 x Baris 4)</td><td class="text-end" id="gabPajakTerutang">0</td></tr>
+                        <tr><td class="text-danger">6. (-) PPh 21 yang Sudah Dipotong di Bulan Induk</td><td class="text-end text-danger fw-bold" id="gabPajakSudahDibayar">0</td></tr>
                       </tbody>
                     </table>
                     <div class="alert alert-danger py-3 px-3 mb-0 mt-3 border-danger shadow-sm" style="border-width: 2px;">
@@ -1029,41 +893,26 @@
 
           </div>
             
-            <div class="mt-5 pt-4 border-top">
-               <h5 class="fw-bold"><i class="bi bi-journal-check"></i> CATATAN PEMERIKSAAN / VERIFIKASI</h5>
-               <p class="text-muted" style="font-size: 0.85rem;">Seluruh perhitungan di atas telah disesuaikan dengan regulasi Perpajakan (PMK 168/2023) dan regulasi TPP Provinsi Jambi (Pergub 2025).</p>
-               <p class="mb-1 text-dark">Perhitungan pada aplikasi ini telah diperbarui dan dikoreksi dari format Excel lama untuk memenuhi kepatuhan pajak terbaru:</p>
-              <ol class="mb-0 text-dark">
-                <li><b>UU No. 7 Tahun 2021 (Harmonisasi Peraturan Perpajakan):</b> Memperbarui rentang PKP untuk tarif progresif terendah (5%), yang sebelumnya maksimal Rp 60 Juta kini dinaikkan menjadi <b>Rp 60 Juta</b>. Hal ini mencegah pemotongan pajak yang terlalu besar <i>(over-taxing)</i> pada pegawai. Serta memperbaiki bug rumus tarif 25% pada format lama.</li>
-                <li><b>PP No. 58 Tahun 2023 & PMK No. 168 Tahun 2023:</b> Terhitung mulai 1 Januari 2024, pemotongan PPh 21 masa bulanan wajib menggunakan <b>Tarif Efektif Rata-rata (TER)</b> Kategori A/B/C yang dikalikan langsung dengan Penghasilan Bruto Sebulan.</li>
-                <li><b>Penerapan Biaya Jabatan:</b> Biaya jabatan sebesar 5% (Maksimal Rp 6.000.000 setahun) dan Iuran Pensiun diaktifkan kembali secara sistem sebagai pengurang Penghasilan Bruto demi mencerminkan nilai PKP yang sah secara hukum.</li>
-              </ol>
-            </div>
-
-
-            <div class="alert alert-info border-info mt-3 shadow-sm" style="font-size: 0.85rem;">
-              <h6 class="fw-bold text-dark mb-1"><i class="bi bi-info-circle-fill"></i> Info: Kenapa Potongan Pajak (TER) Bisa Rp 0?</h6>
-              <p class="mb-0 text-dark">Sesuai PMK No. 168/2023, Pajak PPh 21 TER memiliki <b>Batas Aman</b>. Jika total <b>Gaji Kotor + TPP Netto</b> di bulan ini belum melewati batas aman tersebut (Contoh TER A: <b>Rp 5.400.000</b>), maka tarif pemotongannya otomatis <b>0%</b>. Silakan cek menu "Dasar Hukum & Simulasi" untuk detailnya.</p>
-            </div>
+          <div class="mt-5 pt-4 border-top">
+             <h5 class="fw-bold"><i class="bi bi-journal-check"></i> CATATAN PEMERIKSAAN / VERIFIKASI</h5>
+             <p class="text-muted" style="font-size: 0.85rem;">Seluruh perhitungan di atas telah disesuaikan dengan regulasi Perpajakan (PMK 168/2023) dan regulasi TPP Provinsi Jambi (Pergub 2025).</p>
+          </div>
+          <div class="alert alert-info border-info mt-3 shadow-sm" style="font-size: 0.85rem;">
+            <h6 class="fw-bold text-dark mb-1"><i class="bi bi-info-circle-fill"></i> Info: Kenapa Potongan Pajak (TER) Bisa Rp 0?</h6>
+            <p class="mb-0 text-dark">Sesuai PMK No. 168/2023, Pajak PPh 21 TER memiliki <b>Batas Aman</b>. Jika total <b>Gaji Kotor + TPP Netto</b> di bulan ini belum melewati batas aman tersebut (Contoh TER A: <b>Rp 5.400.000</b>), maka tarif pemotongannya otomatis <b>0%</b>. Silakan cek menu "Dasar Hukum & Simulasi" untuk detailnya.</p>
           </div>
         </div>
 
        <div class="tab-pane fade" id="tabNominatif">
           <h5 class="text-center mb-1 fw-bold">RINCIAN DAFTAR NOMINATIF TPP</h5>
           <h6 class="text-center fw-bold text-primary mb-2">PERIODE: <span id="labelBulanNominatif" class="text-uppercase"></span></h6>
-
           
           <div id="loaderNominatif" class="text-center text-primary fw-bold hidden">Memuat Sinkronisasi...</div>
           
           <div id="hasilNominatif" class="hidden">
             <div class="table-responsive bg-white border rounded shadow-sm">
               <table class="table table-bordered table-sm mb-0 align-middle" style="font-size: 0.85rem;">
-                
-                <tr class="table-primary fw-bold">
-                  <td colspan="2">I. GAJI KOTOR (Dari Amprah Gaji)</td>
-                  <td id="nomGajiKotor" class="text-end text-primary fs-6">0</td>
-                </tr>
-                
+                <tr class="table-primary fw-bold"><td colspan="2">I. GAJI KOTOR (Dari Amprah Gaji)</td><td id="nomGajiKotor" class="text-end text-primary fs-6">0</td></tr>
                 <tr class="table-success fw-bold"><td colspan="3">II. PERHITUNGAN TPP</td></tr>
                 <tr class="bg-light fw-bold text-success"><td colspan="3" class="ps-3">a. Kriteria TPP (Sesuai Persentase Kehadiran & SKP)</td></tr>
                 <tr><td class="ps-4 text-center" width="5%">1.</td><td width="55%">Beban Kerja (BK)</td><td id="nomBK" class="text-end">0</td></tr>
@@ -1071,42 +920,17 @@
                 <tr><td class="ps-4 text-center">3.</td><td>Kondisi Kerja (KK)</td><td id="nomKK" class="text-end">0</td></tr>
                 <tr><td class="ps-4 text-center">4.</td><td>Tempat Bertugas (TB)</td><td id="nomTB" class="text-end">0</td></tr>
                 <tr><td class="ps-4 text-center">5.</td><td>Kelangkaan Profesi (KP)</td><td id="nomKP" class="text-end">0</td></tr>
-                
-                <tr class="fw-bold bg-light">
-                  <td colspan="2" class="text-end">Jumlah TPP Netto (1+2+3+4+5)</td>
-                  <td id="nomTppNetto" class="text-end text-success">0</td>
-                </tr>
-                
-                <tr class="fw-bold">
-                  <td colspan="2" class="ps-3">b. Tambahan Tunjangan BPJS 4%</td>
-                  <td id="nomTambahanBpjs" class="text-end">0</td>
-                </tr>
-                
-                <tr class="table-warning fw-bold fs-6">
-                  <td colspan="2" class="ps-3">c. JUMLAH TPP + BPJS 4% (a + b)</td>
-                  <td id="nomTppPlusBpjs" class="text-end">0</td>
-                </tr>
-
+                <tr class="fw-bold bg-light"><td colspan="2" class="text-end">Jumlah TPP Netto (1+2+3+4+5)</td><td id="nomTppNetto" class="text-end text-success">0</td></tr>
+                <tr class="fw-bold"><td colspan="2" class="ps-3">b. Tambahan Tunjangan BPJS 4%</td><td id="nomTambahanBpjs" class="text-end">0</td></tr>
+                <tr class="table-warning fw-bold fs-6"><td colspan="2" class="ps-3">c. JUMLAH TPP + BPJS 4% (a + b)</td><td id="nomTppPlusBpjs" class="text-end">0</td></tr>
                 <tr class="table-danger fw-bold"><td colspan="3">III. PERHITUNGAN PENGURANGAN TPP</td></tr>
                 <tr><td colspan="2" class="ps-3">a. Potongan IWP 1%</td><td id="nomPotIwp" class="text-end text-danger">0</td></tr>
                 <tr><td colspan="2" class="ps-3">b. Potongan PPh 21 (TER)</td><td id="nomPotPph" class="text-end text-danger">0</td></tr>
                 <tr><td colspan="2" class="ps-3">c. Potongan BPJS 4%</td><td id="nomPotBpjs" class="text-end text-danger">0</td></tr>
-                <tr class="fw-bold text-danger bg-light">
-                  <td colspan="2" class="text-end">d. JUMLAH POTONGAN (a + b + c)</td>
-                  <td id="nomJmlPotongan" class="text-end">0</td>
-                </tr>
-
-                <tr class="table-dark fw-bold fs-6">
-                  <td colspan="2">IV. TOTAL JUMLAH (II.c - III.d)</td>
-                  <td id="nomTotalDiterima" class="text-end">0</td>
-                </tr>
-                <tr class="table-success fw-bold text-success" style="font-size: 1.1rem;">
-                  <td colspan="2">V. JUMLAH BERSIH</td>
-                  <td id="nomBersih" class="text-end">0</td>
-                </tr>
-                
+                <tr class="fw-bold text-danger bg-light"><td colspan="2" class="text-end">d. JUMLAH POTONGAN (a + b + c)</td><td id="nomJmlPotongan" class="text-end">0</td></tr>
+                <tr class="table-dark fw-bold fs-6"><td colspan="2">IV. TOTAL JUMLAH (II.c - III.d)</td><td id="nomTotalDiterima" class="text-end">0</td></tr>
+                <tr class="table-success fw-bold text-success" style="font-size: 1.1rem;"><td colspan="2">V. JUMLAH BERSIH</td><td id="nomBersih" class="text-end">0</td></tr>
                 <tr class="border-0"><td colspan="3" class="border-0 py-2"></td></tr>
-                
                 <tr class="table-info fw-bold text-dark"><td colspan="3">VI. TRANSFER BANK</td></tr>
                 <tr><td colspan="2" class="ps-3">a. Jumlah Bersih TPP</td><td id="nomTrfBersih" class="text-end">0</td></tr>
                 <tr><td colspan="2" class="ps-3 text-danger">b. Potongan KORPRI</td><td id="nomTrfKorpri" class="text-end text-danger">0</td></tr>
@@ -1117,9 +941,7 @@
               <h5 class="mb-0 fw-bold text-dark">VII. MASUK REKENING</h5>
               <input type="text" id="nomMasukRekening" class="form-control readonly-field bg-white fw-bold fs-4 w-50 text-end text-primary" readonly>
             </div>
-
             <button type="button" class="btn btn-danger w-100 fw-bold fs-5 py-2 mt-4" onclick="cetakPDFPerorangan('tabNominatif', 'Nominatif_TPP')"><i class="bi bi-file-pdf-fill"></i> UNDUH PDF</button>
-
           </div>
         </div>
 
@@ -1129,78 +951,180 @@
 </div>
 
 <div id="printArea" class="hidden p-4 bg-white">
-  <div class="text-center mb-4">
-    <h4 id="printTitle">LAPORAN</h4>
-    <p>Periode: <span id="printPeriode"></span></p>
-  </div>
+  <div class="text-center mb-4"><h4 id="printTitle">LAPORAN</h4><p>Periode: <span id="printPeriode"></span></p></div>
   <div id="printContent"></div>
+</div>
+
+<div class="modal fade" id="modalTambahPeriode" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header bg-primary text-white"><h5 class="modal-title">Buka Periode TPP Baru</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <div class="alert alert-warning small">Periode dibuka secara berurutan. Pilih Jenis Periode dengan teliti.</div>
+      <form onsubmit="simpanPeriodeLanjut(event)">
+        <div class="mb-2"><label>Tahun</label><input type="number" id="pTahun" class="form-control readonly-field" readonly></div>
+        <div class="mb-2"><label>Nama Periode</label><input type="text" id="pBulanNama" class="form-control fw-bold text-danger" required></div>
+        <input type="hidden" id="pBulanAngka">
+        <div class="mb-2">
+          <label class="fw-bold text-primary">Jenis Periode</label>
+          <select id="pJenisPeriode" class="form-select border-primary fw-bold" onchange="toggleIndukPajak()">
+            <option value="Reguler">Bulan Reguler</option><option value="THR">Gaji 14 (THR)</option><option value="Gaji 13">Gaji 13</option>
+          </select>
+        </div>
+        <div class="mb-3 hidden" id="boxIndukPajak">
+          <label class="fw-bold text-danger">Gabung Pajak TER ke Bulan?</label>
+          <select id="pIndukPajak" class="form-select border-danger fw-bold" onchange="sinkronHariKerja()"></select>
+          <small class="text-muted d-block mt-1">Pilih bulan reguler tempat THR/Gaji 13 ini dihitung komulatif pajaknya.</small>
+        </div>
+        <div class="row">
+          <div class="col-6 mb-3"><label>HK (5 Hari Kerja)</label><input type="number" id="pHariKerja" class="form-control border-primary fw-bold" required placeholder="Cth: 22"></div>
+          <div class="col-6 mb-3"><label>HK (6 Hari Kerja)</label><input type="number" id="pHariKerja6" class="form-control border-primary fw-bold" required placeholder="Cth: 26"></div>
+        </div>
+        <div class="form-check mb-3 p-3 bg-light border rounded">
+          <input class="form-check-input" type="checkbox" id="pSalinPegawai" checked>
+          <label class="form-check-label fw-bold text-success" for="pSalinPegawai"><i class="bi bi-copy"></i> Salin data pegawai dari bulan sebelumnya</label>
+        </div>
+        <button type="submit" class="btn btn-primary w-100 fw-bold">BUKA PERIODE BARU</button>
+      </form>
+    </div>
+  </div></div>
+</div>
+
+<div class="modal fade" id="modalEditPeriode" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header bg-warning text-dark"><h5 class="modal-title fw-bold">Kelola Periode</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <div class="alert alert-danger small p-2">Hati-hati! Menghapus periode akan memusnahkan <b>seluruh data gaji dan TPP</b> di bulan ini secara permanen.</div>
+      <form onsubmit="submitEditPeriode(event)">
+        <div class="mb-3"><label>Periode Terpilih</label><input type="text" id="eBulanNama" class="form-control readonly-field fw-bold text-danger" readonly></div>
+        <input type="hidden" id="eHk5Lama"><input type="hidden" id="eHk6Lama">
+        <div class="row">
+          <div class="col-6 mb-2"><label>HK (5 Hari Kerja)</label><input type="number" id="eHariKerja" class="form-control border-primary fw-bold" required></div>
+          <div class="col-6 mb-2"><label>HK (6 Hari Kerja)</label><input type="number" id="eHariKerja6" class="form-control border-primary fw-bold" required></div>
+        </div>
+        <div class="mb-3">
+          <label class="fw-bold text-primary">Referensi Gaji Lintas Bulan (Pajak TER)</label>
+          <select id="editRefBulanGaji" class="form-select border-primary fw-bold"></select>
+          <small class="text-muted mt-1 d-block">Pilih bulan mana yang Gaji Kotor-nya akan dijadikan acuan potong Pajak TER.</small>
+        </div>
+        <div class="mb-3">
+          <label>Status Periode</label>
+          <select id="eStatusLock" class="form-select border-danger fw-bold">
+            <option value="Buka">🟢 Buka (Bisa Diedit)</option>
+            <option value="Kunci">🔒 KUNCI (Read-Only)</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary w-100 fw-bold mb-2">SIMPAN PENGATURAN</button>
+        <button type="button" class="btn btn-danger w-100 fw-bold" onclick="konfirmasiHapusPeriode()">🗑️ HAPUS PERIODE INI</button>
+      </form>
+    </div>
+  </div></div>
+</div>
+
+<div class="modal fade" id="modalImportExcel" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header bg-success text-white">
+      <h5 class="modal-title fw-bold" id="importModalTitle">Import Data Excel</h5>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    </div>
+    <div class="modal-body text-center">
+      <input type="hidden" id="importJenis">
+      <div class="alert alert-warning small text-start"><b>PENTING:</b> Data yang diupload harus sesuai dengan format template (Urutan kolom dilarang diubah). Jika NIP atau Jabatan sudah ada, data lama otomatis di-update!</div>
+      <button class="btn btn-outline-success fw-bold mb-4 w-100" onclick="unduhTemplateExcel()"><i class="bi bi-download"></i> Unduh Format Template Excel</button>
+      <h6 class="fw-bold text-dark border-bottom pb-2 text-start">Upload File Anda (.xlsx / .xls)</h6>
+      <input type="file" id="fileImport" class="form-control form-control-lg border-success mb-3" accept=".xlsx, .xls, .csv">
+      <button class="btn btn-success w-100 fw-bold py-2 fs-5" onclick="prosesImportExcel()"><i class="bi bi-upload"></i> MULAI IMPORT SEKARANG</button>
+    </div>
+  </div></div>
+</div>
+
+<div class="modal fade" id="modalKelolaPegawai" tabindex="-1">
+  <div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header bg-primary text-white"><h5 class="modal-title" id="pegawaiModalTitle">Tambah Pegawai Baru</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <form id="formPegawai" onsubmit="submitPegawai(event)">
+        <input type="hidden" id="mAksi"> <input type="hidden" id="mNipLama"> <input type="hidden" id="mUuid">
+        <div class="row">
+          <div class="col-md-6 border-end">
+            <h6 class="fw-bold text-primary border-bottom pb-2 mb-3"><i class="bi bi-person-badge"></i> Data ASN</h6>
+            <div class="mb-2"><label>NIP</label><input type="text" id="mNip" class="form-control border-primary" onblur="validasiNIP(this)" placeholder="Masukkan 18 digit angka" required></div>
+            <div class="mb-2"><label>Nama Lengkap</label><input type="text" id="mNama" class="form-control" required></div>
+            <div class="mb-2"><label>Tanggal Lahir</label><input type="date" id="mTglLahir" class="form-control" required></div>
+            <div class="mb-2"><label>Pangkat / Golongan</label><select id="mGolongan" class="form-select" required> </select></div>
+            <div class="mb-3"><label>Unit Kerja</label><input type="text" id="mUnitKerja" class="form-control border-primary" list="listUnitKerjaUtama" placeholder="Ketik mencari unit kerja..." autocomplete="off" required></div>
+          </div>
+          <div class="col-md-6">
+            <h6 class="fw-bold text-success border-bottom pb-2 mb-3"><i class="bi bi-briefcase"></i> Data Jabatan & Gaji Pokok</h6>
+            <div class="mb-2"><label>Jabatan (Master TPP)</label><input type="text" id="mJabatan" class="form-control border-success" list="listJabatanUtama" placeholder="Ketik mencari jabatan..." autocomplete="off" required></div>
+            <div class="mb-2"><label>Jenis Jabatan</label><select id="mJenis" class="form-select"><option value="Struktural">Struktural</option><option value="Fungsional Tertentu">Fungsional Tertentu</option><option value="Fungsional Umum">Fungsional Umum</option></select></div>
+            <div class="mb-2"><label>Status Kawin / Jiwa</label><select id="mStatus" class="form-select"><option value="TK/0 = 1">TK/0 = 1 Jiwa (Sendiri)</option><option value="TK/1 = 2">TK/1 = 2 Jiwa</option><option value="TK/2 = 3">TK/2 = 3 Jiwa</option><option value="TK/3 = 4">TK/3 = 4 Jiwa</option><option value="K/0 = 2">K/0 = 2 Jiwa (Suami+Istri)</option><option value="K/1 = 3">K/1 = 3 Jiwa</option><option value="K/2 = 4">K/2 = 4 Jiwa</option><option value="K/3 = 5">K/3 = 5 Jiwa</option></select></div>
+            <div class="row g-2 mb-2"><div class="col-6"><label>Gaji Pokok</label><input type="number" id="mGapok" class="form-control fw-bold" value="0" required></div><div class="col-6"><label>Tunj. Jabatan</label><input type="number" id="mTjJab" class="form-control fw-bold" value="0" required></div></div>
+            <div class="mb-3"><label>No. Rekening Bank Jambi</label><input type="text" id="mRekening" class="form-control" required></div>
+          </div>
+        </div>
+        <hr><button type="submit" class="btn btn-primary w-100 fw-bold py-2"><i class="bi bi-save"></i> SIMPAN DATA PEGAWAI</button>
+      </form>
+    </div>
+  </div></div>
+</div>
+
+<div class="modal fade" id="modalKelolaPergub" tabindex="-1">
+  <div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header bg-warning"><h5 class="modal-title fw-bold" id="pergubModalTitle">Kelola Master TPP</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+     <form id="formPergub" onsubmit="submitPergub(event)">
+        <input type="hidden" id="pAksi"><input type="hidden" id="pJabatanLama">
+        <div class="mb-2"><label class="fw-bold text-success">Peruntukan Jabatan</label><select id="pStatusPegawai" class="form-select border-success fw-bold" required><option value="PNS">Pegawai Negeri Sipil (PNS)</option><option value="PPPK">Pegawai Pemerintah dengan Perjanjian Kerja (PPPK)</option></select></div>
+        <div class="row"><div class="col-md-8 mb-2"><label>Nama Jabatan</label><input type="text" id="pJabatan" class="form-control" required></div><div class="col-md-4 mb-2"><label>Kelas Jabatan</label><input type="number" id="pKelas" class="form-control" required></div></div><hr>
+        <div class="row">
+          <div class="col-md-4 mb-2"><label>Beban Kerja (BK)</label><input type="number" class="form-control" id="pBK" value="0" oninput="hitungTotalPergub()"></div>
+          <div class="col-md-4 mb-2"><label>Prestasi Kerja (PK)</label><input type="number" class="form-control" id="pPK" value="0" oninput="hitungTotalPergub()"></div>
+          <div class="col-md-4 mb-2"><label>Kondisi Kerja (KK)</label><input type="number" class="form-control" id="pKK" value="0" oninput="hitungTotalPergub()"></div>
+          <div class="col-md-6 mb-2"><label>Tempat Bertugas (TB)</label><input type="number" class="form-control" id="pTB" value="0" oninput="hitungTotalPergub()"></div>
+          <div class="col-md-6 mb-2"><label>Kelangkaan Profesi (KP)</label><input type="number" class="form-control" id="pKP" value="0" oninput="hitungTotalPergub()"></div>
+        </div>
+        <div class="mb-3"><label>Total TPP Bruto</label><input type="number" class="form-control bg-success text-white fw-bold readonly-field" id="pTotal" value="0" readonly></div>
+        <button type="submit" class="btn btn-warning w-100 fw-bold" id="btnSimpanPergub">Simpan Master TPP Kepgub</button>
+      </form>
+    </div>
+  </div></div>
 </div>
 
 <div class="modal fade" id="modalDownloadReady" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-md modal-dialog-centered">
     <div class="modal-content text-center shadow-lg border-0 rounded-4">
-      <div class="modal-header bg-success text-white border-0">
-        <h5 class="modal-title fw-bold"><i class="bi bi-check-circle-fill"></i> File Laporan Siap!</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
+      <div class="modal-header bg-success text-white border-0"><h5 class="modal-title fw-bold"><i class="bi bi-check-circle-fill"></i> File Laporan Siap!</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
       <div class="modal-body py-4 px-4">
         <div class="alert alert-danger border-danger shadow-sm mb-4 text-start" style="border-width: 2px;">
-          <h6 class="fw-bold text-danger mb-2" style="font-size: 1.05rem;">
-            <i class="bi bi-exclamation-triangle-fill fs-4 me-1"></i> PENGUMUMAN PENTING!
-          </h6>
-          <p class="mb-0 text-dark" style="font-size: 0.9rem; line-height: 1.5;">
-            Pastikan Anda telah mengeklik tombol <b>SIMPAN AMPRAH GAJI</b> dan <b>SIMPAN PERHITUNGAN TPP</b> untuk pegawai yang Anda kelola bulan ini.<br><br>
-            <span class="bg-warning text-dark px-2 py-1 fw-bold rounded d-inline-block border border-dark">
-              🔥 DATA YANG BELUM DISIMPAN TIDAK AKAN MUNCUL DI HASIL CETAKAN INI!
-            </span>
-          </p>
+          <h6 class="fw-bold text-danger mb-2" style="font-size: 1.05rem;"><i class="bi bi-exclamation-triangle-fill fs-4 me-1"></i> PENGUMUMAN PENTING!</h6>
+          <p class="mb-0 text-dark" style="font-size: 0.9rem; line-height: 1.5;">Pastikan Anda telah mengeklik tombol <b>SIMPAN AMPRAH GAJI</b> dan <b>SIMPAN PERHITUNGAN TPP</b> untuk pegawai yang Anda kelola bulan ini.<br><br><span class="bg-warning text-dark px-2 py-1 fw-bold rounded d-inline-block border border-dark">🔥 DATA YANG BELUM DISIMPAN TIDAK AKAN MUNCUL DI HASIL CETAKAN INI!</span></p>
         </div>
-        <a id="btnRealDownload" href="#" target="_blank" class="btn btn-success fw-bold w-100 py-3 fs-5 rounded-pill shadow-sm" onclick="tutupModalDownload()">
-          <i class="bi bi-cloud-arrow-down-fill me-2"></i> UNDUH SEKARANG
-        </a>
+        <a id="btnRealDownload" href="#" target="_blank" class="btn btn-success fw-bold w-100 py-3 fs-5 rounded-pill shadow-sm" onclick="tutupModalDownload()"><i class="bi bi-cloud-arrow-down-fill me-2"></i> UNDUH SEKARANG</a>
       </div>
     </div>
   </div>
 </div>
 
-
-    <div class="custom-footer text-center no-print">
-      <p class="mb-1 fw-bold">SIM TPP ONLINE &copy; 2026 Pemerintah Provinsi Jambi</p>
-      <p class="mb-0 small text-muted">Created with ❤️ by : Fary | <a href="#" class="text-decoration-none text-primary fw-bold" data-bs-toggle="modal" data-bs-target="#modalPrivasi"><i class="bi bi-shield-check"></i> Kebijakan Privasi & Keamanan</a></p>
-    </div>
+<div class="custom-footer text-center no-print">
+  <p class="mb-1 fw-bold">SIM TPP ONLINE &copy; 2026 Pemerintah Provinsi Jambi</p>
+  <p class="mb-0 small text-muted">Created with ❤️ by : Fary | <a href="#" class="text-decoration-none text-primary fw-bold" data-bs-toggle="modal" data-bs-target="#modalPrivasi"><i class="bi bi-shield-check"></i> Kebijakan Privasi & Keamanan</a></p>
+</div>
 
 <div class="modal fade" id="modalPrivasi" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content shadow-lg border-0">
-      <div class="modal-header bg-dark text-white">
-        <h5 class="modal-title fw-bold"><i class="bi bi-shield-lock-fill text-success"></i> KEBIJAKAN PRIVASI & KEAMANAN DATA</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
+      <div class="modal-header bg-dark text-white"><h5 class="modal-title fw-bold"><i class="bi bi-shield-lock-fill text-success"></i> KEBIJAKAN PRIVASI & KEAMANAN DATA</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
       <div class="modal-body text-dark" style="font-size: 0.9rem; text-align: justify;">
         <p>Sistem Informasi Manajemen Tambahan Penghasilan Pegawai (SIM TPP) Pemerintah Provinsi Jambi berkomitmen penuh untuk melindungi kerahasiaan dan keamanan data aparatur sipil negara (ASN) yang dikelola di dalam sistem ini.</p>
-        
         <h6 class="fw-bold text-primary mt-4 border-bottom pb-1">1. Dasar Hukum Pengelolaan Data</h6>
         <p>Pengumpulan, penyimpanan, dan pemrosesan data di dalam sistem ini tunduk pada peraturan perundang-undangan yang berlaku di Negara Kesatuan Republik Indonesia, meliputi:</p>
-        <ul>
-          <li><b>Undang-Undang Nomor 27 Tahun 2022</b> tentang Pelindungan Data Pribadi (UU PDP).</li>
-          <li><b>Undang-Undang Nomor 11 Tahun 2008</b> jo. <b>UU Nomor 1 Tahun 2024</b> tentang Informasi dan Transaksi Elektronik (UU ITE).</li>
-          <li>Peraturan dan regulasi turunan terkait sistem pemerintahan berbasis elektronik (SPBE) yang berlaku di lingkungan Pemerintah Provinsi Jambi.</li>
-        </ul>
-
+        <ul><li><b>Undang-Undang Nomor 27 Tahun 2022</b> tentang Pelindungan Data Pribadi (UU PDP).</li><li><b>Undang-Undang Nomor 11 Tahun 2008</b> jo. <b>UU Nomor 1 Tahun 2024</b> tentang Informasi dan Transaksi Elektronik (UU ITE).</li><li>Peraturan dan regulasi turunan terkait sistem pemerintahan berbasis elektronik (SPBE) yang berlaku di lingkungan Pemerintah Provinsi Jambi.</li></ul>
         <h6 class="fw-bold text-primary mt-4 border-bottom pb-1">2. Enkripsi dan Infrastruktur Keamanan</h6>
         <p>Sistem ini beroperasi di atas infrastruktur *Cloud* yang dilengkapi dengan standar keamanan global. Akses pengguna dibatasi menggunakan sistem otentikasi (Username, Password, dan UUID terenkripsi). Seluruh lalu lintas data dilindungi oleh enkripsi yang mencegah pencegatan atau pencurian data oleh pihak yang tidak berwenang.</p>
-
         <h6 class="fw-bold text-primary mt-4 border-bottom pb-1">3. Larangan dan Sanksi Hukum</h6>
         <p>Peringatan keras kepada seluruh Admin dan Operator sistem:</p>
-        <ul>
-          <li><b>Dilarang Keras</b> menyalin, mengunduh, atau membagikan data identitas, Nomor Rekening, dan rincian gaji/TPP ASN ke pihak eksternal yang tidak memiliki wewenang.</li>
-          <li><b>Dilarang</b> memanipulasi, meretas, atau menggunakan akun milik pengguna lain.</li>
-          <li>Setiap aktivitas di dalam sistem ini dicatat oleh <i>Audit Trail / Timestamp</i>. Pelanggaran terhadap penyalahgunaan data akan ditindak tegas dan dapat diproses secara hukum pidana maupun perdata sesuai dengan <b>Pasal 65 UU Pelindungan Data Pribadi</b> dan <b>Pasal 32 UU ITE</b>.</li>
-        </ul>
+        <ul><li><b>Dilarang Keras</b> menyalin, mengunduh, atau membagikan data identitas, Nomor Rekening, dan rincian gaji/TPP ASN ke pihak eksternal yang tidak memiliki wewenang.</li><li><b>Dilarang</b> memanipulasi, meretas, atau menggunakan akun milik pengguna lain.</li><li>Setiap aktivitas di dalam sistem ini dicatat oleh <i>Audit Trail / Timestamp</i>. Pelanggaran terhadap penyalahgunaan data akan ditindak tegas dan dapat diproses secara hukum pidana maupun perdata sesuai dengan <b>Pasal 65 UU Pelindungan Data Pribadi</b> dan <b>Pasal 32 UU ITE</b>.</li></ul>
       </div>
-      <div class="modal-footer bg-light">
-        <button type="button" class="btn btn-secondary fw-bold px-4" data-bs-dismiss="modal">SAYA MENGERTI</button>
-      </div>
+      <div class="modal-footer bg-light"><button type="button" class="btn btn-secondary fw-bold px-4" data-bs-dismiss="modal">SAYA MENGERTI</button></div>
     </div>
   </div>
 </div>
@@ -1208,11 +1132,9 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-
   // =====================================
   // 1. DAFTAR URL MULTI-TENANT (DATABASE OPD)
   // =====================================
-  // TAMBAHKAN URL WEB APP UNTUK MASING-MASING OPD DI SINI
   const listOPD = [
       { nama: "Badan Kepegawaian Daerah", url: "https://script.google.com/macros/s/AKfycbzrqlBDqjd595SkUv6_YofTbI3qky9GEo28r33sp6NEjUz9wmCKYNGOEdOi7CGcgJNPLg/exec" },
       { nama: "Dinas Pendidikan", url: "https://script.google.com/macros/s/AKfycbxarRYHu0X1EIULWec2ahTyOQEtnCMRnO1b1fOcvVnPTmTEv3ekJsdFZWXFxTvP8VgJIQ/exec" },
@@ -1255,21 +1177,11 @@
 
   async function masukKeLogin() {
       if(!API_URL) return alertPeringatan("Silakan pilih Instansi / OPD Anda terlebih dahulu!");
-      
       sessionStorage.setItem('tenantUrl', API_URL);
-      
-      // Munculkan loading agar user tahu sistem sedang bekerja menyedot data
       startLoading("Menghubungkan ke Database OPD...");
-      
-      // 👇 INI KUNCINYA: Tarik logo & nama dinas dari server OPD yang dipilih 👇
       await inisialisasiAplikasi();
-      
       stopLoading();
-      
-      // Pindah ke halaman login
-      document.getElementById('viewLanding').classList.add('hidden');
-      document.getElementById('viewLogin').classList.remove('hidden');
-      document.body.classList.add('bg-gradient-login');
+      document.getElementById('viewLanding').classList.add('hidden'); document.getElementById('viewLogin').classList.remove('hidden'); document.body.classList.add('bg-gradient-login');
   }
 
   function kembaliKeLanding() {
@@ -1282,10 +1194,7 @@
     if(res && !res.error) {
       document.getElementById('loginNamaInstansi').innerText = res.Nama_Instansi || "PEMERINTAH PROVINSI JAMBI"; 
       document.getElementById('loginNamaDinas').innerText = res.Nama_Dinas || "DINAS PENDIDIKAN"; 
-      
-      // 👇 INI PERBAIKANNYA: Kalau kosong, ya biarkan kosong ("") 👇
       document.getElementById('loginSubDinas').innerText = res.Nama_Sub_Dinas ? res.Nama_Sub_Dinas.toUpperCase() : "";
-      
       if(res.Logo_Instansi) { let pI = document.getElementById('loginLogoInstansi'); pI.src = res.Logo_Instansi; pI.classList.remove('hidden'); let mLogo = document.getElementById('mHeaderLogo'); if(mLogo) { mLogo.src = res.Logo_Instansi; mLogo.classList.remove('hidden'); } }
       if(res.Logo_Dinas) { let pD = document.getElementById('loginLogoDinas'); pD.src = res.Logo_Dinas; pD.classList.remove('hidden'); }
       globalPotKorpri = parseFloat(res.Pot_Korpri) || 0; 
@@ -1305,10 +1214,7 @@
       let savedView = sessionStorage.getItem('currentView') || 'viewPilihBulan'; if(savedView === 'viewManajemenASN') savedView = 'viewDaftarPegawai'; 
       switchView(savedView); if(savedView === 'viewDaftarPegawai') muatDataPegawai();
     } else {
-      // Jika belum login tapi punya API URL, tetap di halaman Login
-      document.getElementById('viewLanding').classList.add('hidden');
-      document.getElementById('viewLogin').classList.remove('hidden');
-      document.body.classList.add('bg-gradient-login');
+      document.getElementById('viewLanding').classList.add('hidden'); document.getElementById('viewLogin').classList.remove('hidden'); document.body.classList.add('bg-gradient-login');
     }
   }
 
@@ -1385,6 +1291,7 @@
 
   function toggleIndukPajak() {
     let jenis = document.getElementById('pJenisPeriode').value; let inputNama = document.getElementById('pBulanNama'); let inputAngka = document.getElementById('pBulanAngka'); let tahun = document.getElementById('pTahun').value; let nextBulanAngka = 1;
+    let boxInduk = document.getElementById('boxIndukPajak'); if (jenis === "Reguler") { boxInduk.classList.add("hidden"); } else { boxInduk.classList.remove("hidden"); }
     if(arrayPeriode.length > 0) { let lastReguler = [...arrayPeriode].reverse().find(p => p.jenisPeriode === "Reguler" || !p.jenisPeriode); if(lastReguler) { nextBulanAngka = lastReguler.bulanAngka == 12 ? 1 : parseInt(lastReguler.bulanAngka) + 1; } }
     const namaBulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
     if(jenis === "Reguler") { inputNama.value = namaBulan[nextBulanAngka] + " " + tahun; inputAngka.value = nextBulanAngka; document.getElementById('pHariKerja').value = ""; document.getElementById('pHariKerja6').value = ""; } 
@@ -1446,9 +1353,9 @@
   }
   function ubahHalamanPergub(page) { currentPergubPage = page; terapkanFilterPergub(); }
 
-  async function muatDropdownJabatan(selectedValue = "") {
-    let data = await fetchAPI("getDaftarPergub", {});
-    if (data && !data.error) { let dataTerfilter = data.filter(row => String(row[9] || "PNS") === globalJenisASN); arrayJabatanValid = dataTerfilter.map(r => String(r[1]).trim()); let list = document.getElementById('listJabatanUtama'); if(list) { list.innerHTML = ""; dataTerfilter.forEach(row => { let totalTPP = parseFloat(row[8]) || 0; let tppFormat = totalTPP.toLocaleString('id-ID'); list.innerHTML += `<option value="${row[1]}">Kls: ${row[2]} - TPP: Rp ${tppFormat}</option>`; }); } if(selectedValue) document.getElementById('mJabatan').value = selectedValue; }
+  // 👇 INI JUGA BUG LAMAMU YANG BIKIN ERROR "JABATAN TIDAK VALID", SUDAH SAYA BERESKAN 👇
+  function muatDropdownJabatan(selectedValue = "") {
+    let dataTerfilter = globalDataPergub.filter(row => String(row[9] || "PNS") === globalJenisASN); arrayJabatanValid = dataTerfilter.map(r => String(r[1]).trim()); let list = document.getElementById('listJabatanUtama'); if(list) { list.innerHTML = ""; dataTerfilter.forEach(row => { let totalTPP = parseFloat(row[8]) || 0; let tppFormat = totalTPP.toLocaleString('id-ID'); list.innerHTML += `<option value="${row[1]}">Kls: ${row[2]} - TPP: Rp ${tppFormat}</option>`; }); } if(selectedValue) document.getElementById('mJabatan').value = selectedValue;
   }
 
   function bukaModalPergub(aksi, jabatan="", kelas="", bk=0, pk=0, kk=0, tb=0, kp=0, statusPegawai="PNS") {
@@ -1516,10 +1423,10 @@
   async function submitPegawai(e) {
     e.preventDefault(); let aksi = document.getElementById('mAksi').value; let nipCek = document.getElementById('mNip').value.trim(); if (!/^\d{18}$/.test(nipCek)) { return alertPeringatan("Gagal menyimpan! NIP belum valid (Wajib 18 digit angka). Silakan perbaiki NIP terlebih dahulu."); } let s = document.getElementById('mUnitKerja').value.trim(); if(currentUser.role === 'Admin' && !arrayUnitKerjaValid.includes(s)) { return alertPeringatan("Unit Kerja tidak valid! Silakan hapus dan pilih dari daftar dropdown."); } let j = document.getElementById('mJabatan').value.trim(); if(!arrayJabatanValid.includes(j)) { return alertPeringatan("Jabatan tidak valid! Silakan ketik dan pilih dari daftar dropdown jabatan."); }
     startLoading("Menyimpan Pegawai..."); const d = { nipLama: document.getElementById('mNipLama').value, nip: document.getElementById('mNip').value, nama: document.getElementById('mNama').value, tglLahir: document.getElementById('mTglLahir').value, golongan: document.getElementById('mGolongan').value, unitkerja: document.getElementById('mUnitKerja').value, namaJabatan: document.getElementById('mJabatan').value, jenisJab: document.getElementById('mJenis').value, statusKawin: document.getElementById('mStatus').value, gapok: document.getElementById('mGapok').value, tjJab: document.getElementById('mTjJab').value, rekening: document.getElementById('mRekening').value, bulan: globalBulanAktif, statusPegawai: globalJenisASN, uuid: document.getElementById('mUuid').value, roleUser: currentUser.role, unitkerjaUser: currentUser.unitkerja  };
-    let res = await fetchAPI(aksi === 'edit' ? "updatePegawai" : "simpanPegawai", d); stopLoading(); let pesan = String(res).toLowerCase(); if (pesan.includes("gagal") || pesan.includes("error")) { alertError(res); } else { alertSukses(res); bootstrap.Modal.getInstance(document.getElementById('modalKelolaPegawai')).hide(); document.getElementById('formPegawai').reset(); muatDataPegawai(); muatDataUnitKerja(); }
+    let res = await fetchAPI(aksi === 'edit' ? "updatePegawai" : "simpanPegawai", d); stopLoading(); let pesan = String(res).toLowerCase(); if (pesan.includes("gagal") || pesan.includes("error")) { alertError(res.pesan || res); } else { alertSukses(res); bootstrap.Modal.getInstance(document.getElementById('modalKelolaPegawai')).hide(); document.getElementById('formPegawai').reset(); muatDataPegawai(); muatDataUnitKerja(); }
   }
 
-  async function hapusPegawai(nip, nama, uuid) { if(confirm("Hapus pegawai " + nama + " dari bulan ini saja?")) { startLoading("Menghapus Pegawai..."); let res = await fetchAPI("hapusPegawai", {nip: nip, bulan: globalBulanAktif, uuid: uuid}); stopLoading(); let pesan = String(res).toLowerCase(); if (pesan.includes("gagal") || pesan.includes("error")) { alertError(res); } else { alertSukses(res); muatDataPegawai(); } } }
+  async function hapusPegawai(nip, nama, uuid) { if(confirm("Hapus pegawai " + nama + " dari bulan ini saja?")) { startLoading("Menghapus Pegawai..."); let res = await fetchAPI("hapusPegawai", {nip: nip, bulan: globalBulanAktif, uuid: uuid}); stopLoading(); let pesan = String(res).toLowerCase(); if (pesan.includes("gagal") || pesan.includes("error")) { alertError(res.pesan || res); } else { alertSukses(res); muatDataPegawai(); } } }
 
   function validasiNIP(input) { let nilaiBersih = input.value.replace(/[\s-]/g, ''); input.value = nilaiBersih; if (nilaiBersih !== "") { let isAngka = /^\d+$/.test(nilaiBersih); if (!isAngka || nilaiBersih.length !== 18) { alertPeringatan("Perhatian! NIP wajib terdiri dari tepat 18 digit angka murni."); input.classList.add('border-danger'); } else { input.classList.remove('border-danger'); } } }
 
@@ -1563,7 +1470,7 @@
     e.preventDefault(); startLoading("Menyimpan Amprah..."); 
     const d = { nip: asNIPAktif, bulan: globalBulanAktif, gapok: document.getElementById('aGapok').value, tjIstri: document.getElementById('aTjIstri').value, tjAnak: document.getElementById('aTjAnak').value, jumlahKeluarga: document.getElementById('aJmlKeluarga').value, tjJabatan: document.getElementById('aTjJab').value, tjTerpencil: 0, tkd: 0, tjBeras: document.getElementById('aTjBeras').value, tjPajak: document.getElementById('aTjPajak').value, tjBPJS4: document.getElementById('aTjBPJS4').value, tjJKK: document.getElementById('aTjJKK').value, tjJKM: document.getElementById('aTjJKM').value, taperaPK: 0, pembulatan: document.getElementById('aBulat').value, jmlKotor: document.getElementById('aJmlKotor').value, potPajak: document.getElementById('aPotPajak').value, potBPJS: document.getElementById('aPotBPJS4').value, potIWP1: document.getElementById('aPotIWP1').value, potIWP8: document.getElementById('aPotIWP8').value, potTaperum: 0, potJKK: document.getElementById('aPotJKK').value, potJKM: document.getElementById('aPotJKM').value, jmlPotongan: document.getElementById('aJmlPotongan').value, jmlBersih: document.getElementById('aJmlBersih').value };
     let res = await fetchAPI("simpanGajiOtomatis", d); stopLoading(); let pesan = String(res).toLowerCase();
-    if (pesan.includes("gagal") || pesan.includes("error") || pesan.includes("peringatan") || pesan.includes("ditolak")) { alertError(res); isGajiTersimpan = false; } else { alertSukses(res); isGajiTersimpan = true; }
+    if (pesan.includes("gagal") || pesan.includes("error") || pesan.includes("peringatan") || pesan.includes("ditolak")) { alertError(res.pesan || res); isGajiTersimpan = false; } else { alertSukses(res); isGajiTersimpan = true; }
   }
 
   function ubahPolaHK() { let pola = document.getElementById('inpPolaHK').value; document.getElementById('inpHariKerja').value = (pola === "5") ? globalHariKerja : globalHariKerja6; hitungMatriksTPP(); }
@@ -1580,7 +1487,8 @@
 
   async function submitPerhitunganTPP(e) {
     e.preventDefault(); const getV = (id) => document.getElementById(id).value; startLoading("Menyimpan Kehadiran..."); let statusMenilai = document.getElementById('chkTidakMenilai').checked ? "Tidak Menilai" : "Menilai"; let gabunganSKP = getV('inpSKP') + "|" + statusMenilai; let hkDB = document.getElementById('inpHariKerja').value; const d = { nip: asNIPAktif, bulan: globalBulanAktif, hariKerja: hkDB, skp: gabunganSKP, dl: getV('vDL'), s: getV('vS'), c: getV('vC'), kp: getV('vKP'), tk: getV('vTK'), asub: getV('vASUB'), tl1: getV('vTL1'), tl2: getV('vTL2'), tl3: getV('vTL3'), tl4: getV('vTL4'), cp1: getV('vCP1'), cp2: getV('vCP2'), cp3: getV('vCP3'), cp4: getV('vCP4') };
-    let res = await fetchAPI("simpanPerhitunganTPP", d); stopLoading(); alertSukses(res); isAbsenTersimpan = true; hitungPajakTahunan(); muatNominatif(); 
+    let res = await fetchAPI("simpanPerhitunganTPP", d); stopLoading(); 
+    if(String(res).includes("Error")) { alertError(res.pesan || res); } else { alertSukses(res); isAbsenTersimpan = true; hitungPajakTahunan(); muatNominatif(); }
   }
 
   async function hitungPajakTahunan() {
@@ -1633,13 +1541,16 @@
       if(jenis === 'pegawai') {
         if(!globalBulanAktif) { stopLoading(); return alertError("Pilih Periode Bulan terlebih dahulu!"); }
         json.forEach(row => { let keys = Object.keys(row); if(keys.length < 10) return; payload.push({ nip: row[keys[0]], nama: row[keys[1]], tglLahir: formatTanggalExcel(row[keys[2]]), golongan: row[keys[3]], unitkerja: row[keys[4]], namaJabatan: row[keys[5]], jenisJab: row[keys[6]], statusKawin: row[keys[7]], gapok: parseFloat(row[keys[8]])||0, tjJab: parseFloat(row[keys[9]])||0, rekening: String(row[keys[10]]||"") }); });
-        let res = await fetchAPI("importPegawaiMassal", {payload: payload, bulanAktif: globalBulanAktif}); stopLoading(); if(res.includes("Error")) { alertError(res); } else if(res.includes("PERHATIAN")) { Swal.fire({ icon: 'warning', title: 'Import Selesai dengan Catatan', text: res, confirmButtonColor: '#ffc107' }); } else { alertSukses(res); } bootstrap.Modal.getInstance(document.getElementById('modalImportExcel')).hide(); muatDataPegawai(); 
+        let res = await fetchAPI("importPegawaiMassal", {payload: payload, bulanAktif: globalBulanAktif}); stopLoading(); 
+        if(String(res).includes("Error")) { alertError(res.pesan || res); } else if(String(res).includes("PERHATIAN")) { Swal.fire({ icon: 'warning', title: 'Import Selesai dengan Catatan', text: res, confirmButtonColor: '#ffc107' }); } else { alertSukses(res); } bootstrap.Modal.getInstance(document.getElementById('modalImportExcel')).hide(); muatDataPegawai(); 
       } else if(jenis === 'pergub') {
         json.forEach(row => { let keys = Object.keys(row); if(keys.length < 7) return; payload.push({ namaJabatan: row[keys[0]], kelasJabatan: row[keys[1]], bk: parseFloat(row[keys[2]])||0, pk: parseFloat(row[keys[3]])||0, kk: parseFloat(row[keys[4]])||0, tb: parseFloat(row[keys[5]])||0, kp: parseFloat(row[keys[6]])||0 }); });
-        let res = await fetchAPI("importPergubMassal", payload); stopLoading(); alertSukses(res); bootstrap.Modal.getInstance(document.getElementById('modalImportExcel')).hide(); muatDataPergub(); 
+        let res = await fetchAPI("importPergubMassal", payload); stopLoading(); 
+        if(String(res).includes("Error")) { alertError(res.pesan || res); } else { alertSukses(res); bootstrap.Modal.getInstance(document.getElementById('modalImportExcel')).hide(); muatDataPergub(); }
       } else if(jenis === 'akun') {
         json.forEach(row => { let keys = Object.keys(row); if(keys.length < 2) return; payload.push({ username: row[keys[0]], password: row[keys[1]], role: row[keys[2]], unitkerja: row[keys[3]], email: row[keys[4]] }); });
-        let res = await fetchAPI("importAkunMassal", payload); stopLoading(); if(res.includes("Error") || res.includes("Gagal")) alertError(res); else alertSukses(res); bootstrap.Modal.getInstance(document.getElementById('modalImportExcel')).hide(); muatDaftarAkun(); 
+        let res = await fetchAPI("importAkunMassal", payload); stopLoading(); 
+        if(String(res).includes("Error") || String(res).includes("Gagal")) alertError(res.pesan || res); else alertSukses(res); bootstrap.Modal.getInstance(document.getElementById('modalImportExcel')).hide(); muatDaftarAkun(); 
       }
     };
     reader.readAsArrayBuffer(file);
@@ -1666,7 +1577,7 @@
   }
   function ubahHalamanAkun(page) { currentAkunPage = page; terapkanFilterAkun(); }
 
-  async function resetPasswordAkun(uuid, user) { if(confirm(`Yakin ingin mereset password akun "${user}" menjadi standar "123456" ?`)) { startLoading("Mereset Password..."); let res = await fetchAPI("resetPasswordAdmin", uuid); stopLoading(); if(res.includes("SUKSES")) alertSukses(res); else alertError(res); } }
+  async function resetPasswordAkun(uuid, user) { if(confirm(`Yakin ingin mereset password akun "${user}" menjadi standar "123456" ?`)) { startLoading("Mereset Password..."); let res = await fetchAPI("resetPasswordAdmin", uuid); stopLoading(); if(String(res).includes("SUKSES")) alertSukses(res); else alertError(res.pesan || res); } }
 
   function toggleUnitKerjaAkun() { let r = document.getElementById('uRole').value; let op = document.getElementById('uUnitKerjaOp'); let adm = document.getElementById('uUnitKerjaAdmin'); if(r === 'Admin') { op.classList.add('hidden'); op.required = false; adm.classList.remove('hidden'); adm.required = true; } else { adm.classList.add('hidden'); adm.required = false; op.classList.remove('hidden'); op.required = true; } }
 
@@ -1677,18 +1588,18 @@
   }
 
   async function submitAkun(e) {
-    e.preventDefault(); let aksi = document.getElementById('uAksi').value; let r = document.getElementById('uRole').value; let s = r === 'Admin' ? document.getElementById('uUnitKerjaAdmin').value : document.getElementById('uUnitKerjaOp').value.trim(); if(r !== 'Admin' && !arrayUnitKerjaValid.includes(s)) { return alertPeringatan("Unit Kerja tidak valid! Silakan hapus dan pilih dari daftar dropdown."); }
+    e.preventDefault(); let aksi = document.getElementById('uAksi').value; let r = document.getElementById('uRole').value; let s = r === 'Admin' ? document.getElementById('uUnitKerjaAdmin').value : document.getElementById('uUnitKerjaOp').value.trim(); if(r !== 'Admin' && !arrayUnitKerjaValid.includes(s)) { return alertPeringatan("Unit Kerja tidak valid! Silakan hapus dan pilih dari daftar dropdown yang muncul saat Anda mengetik."); }
     startLoading("Menyimpan Akun..."); let d = { username: document.getElementById('uUser').value, password: document.getElementById('uPass').value, role: r, unitkerja: s, email: document.getElementById('uEmail').value, uuid: document.getElementById('uUuid').value };
-    let res = await fetchAPI(aksi === 'edit' ? "updateAkun" : "simpanAkun", d); stopLoading(); if(res.includes("Error")) { alertError(res); } else { alertSukses(res); bootstrap.Modal.getInstance(document.getElementById('modalKelolaAkun')).hide(); muatDaftarAkun(); }
+    let res = await fetchAPI(aksi === 'edit' ? "updateAkun" : "simpanAkun", d); stopLoading(); if(String(res).includes("Error")) { alertError(res.pesan || res); } else { alertSukses(res); bootstrap.Modal.getInstance(document.getElementById('modalKelolaAkun')).hide(); muatDaftarAkun(); }
   }
 
-  async function hapusAkun(uuid, user) { if(confirm("Yakin ingin menghapus akun: " + user + "? (Akun tidak bisa dikembalikan!)")) { startLoading("Menghapus..."); let res = await fetchAPI("hapusAkun", uuid); stopLoading(); alertSukses(res); muatDaftarAkun(); } }
+  async function hapusAkun(uuid, user) { if(confirm("Yakin ingin menghapus akun: " + user + "? (Akun tidak bisa dikembalikan!)")) { startLoading("Menghapus..."); let res = await fetchAPI("hapusAkun", uuid); stopLoading(); if(String(res).includes("Error")) { alertError(res.pesan || res); } else { alertSukses(res); muatDaftarAkun(); } } }
 
   function bukaModalProfil() { document.getElementById('myUser').value = currentUser.username; document.getElementById('myEmail').value = currentUser.email || ""; document.getElementById('myPass').value = ""; new bootstrap.Modal(document.getElementById('modalProfil')).show(); }
 
-  async function submitProfilSendiri(e) { e.preventDefault(); startLoading("Update Profil..."); let d = { uuid: currentUser.uuid, username: currentUser.username, role: currentUser.role, unitkerja: currentUser.unitkerja, email: document.getElementById('myEmail').value, password: document.getElementById('myPass').value }; let res = await fetchAPI("updateAkun", d); stopLoading(); alertSukses("Profil berhasil diupdate! Jika ganti password, ingat untuk login selanjutnya."); bootstrap.Modal.getInstance(document.getElementById('modalProfil')).hide(); }
+  async function submitProfilSendiri(e) { e.preventDefault(); startLoading("Update Profil..."); let d = { uuid: currentUser.uuid, username: currentUser.username, role: currentUser.role, unitkerja: currentUser.unitkerja, email: document.getElementById('myEmail').value, password: document.getElementById('myPass').value }; let res = await fetchAPI("updateAkun", d); stopLoading(); if(String(res).includes("Error")) { alertError(res.pesan || res); } else { alertSukses("Profil berhasil diupdate! Jika ganti password, ingat untuk login selanjutnya."); bootstrap.Modal.getInstance(document.getElementById('modalProfil')).hide(); } }
 
-  function bukaLupaPassword() { Swal.fire({ title: 'Lupa Password?', text: "Masukkan alamat email yang terdaftar pada akun Anda.", input: 'email', showCancelButton: true, confirmButtonText: 'Kirim', cancelButtonText: 'Batal', showLoaderOnConfirm: true, preConfirm: async (email) => { let res = await fetchAPI("prosesLupaPassword", email); return res; } }).then((result) => { if (result.isConfirmed) { if(result.value.includes("SUKSES")) alertSukses(result.value); else alertError(result.value); } }); }
+  function bukaLupaPassword() { Swal.fire({ title: 'Lupa Password?', text: "Masukkan alamat email yang terdaftar pada akun Anda.", input: 'email', showCancelButton: true, confirmButtonText: 'Kirim', cancelButtonText: 'Batal', showLoaderOnConfirm: true, preConfirm: async (email) => { let res = await fetchAPI("prosesLupaPassword", email); return res; } }).then((result) => { if (result.isConfirmed) { if(String(result.value).includes("SUKSES")) alertSukses(result.value); else alertError(result.value.pesan || result.value); } }); }
 
   // =====================================
   // 10. PENGATURAN KOP (SETTINGS)
@@ -1699,34 +1610,10 @@
   }
 
   async function submitSetting(e) {
-    e.preventDefault(); 
-    startLoading("Menyimpan Pengaturan..."); 
-    
-    let d = { 
-      usernameAksi: currentUser.username, 
-      Nama_Dinas: document.getElementById('sDinas').value, 
-      Nama_Sub_Dinas: document.getElementById('sSubDinas').value || "", // <-- Aman jika dikosongkan
-      Nama_Instansi: document.getElementById('sInstansi').value, 
-      Kepala_Jabatan: document.getElementById('sKepJab').value, 
-      Kepala_Nama: document.getElementById('sKepNama').value, 
-      Kepala_Pangkat: document.getElementById('sKepPangkat').value, 
-      Kepala_NIP: document.getElementById('sKepNIP').value, 
-      Bendahara_Nama: document.getElementById('sBenNama').value, 
-      Bendahara_Pangkat: document.getElementById('sBenPangkat').value, 
-      Bendahara_NIP: document.getElementById('sBenNIP').value, 
-      Rek_Korpri: document.getElementById('sRekKorpri').value, 
-      Pot_Korpri: document.getElementById('sPotKorpri').value || 0, 
-      Logo_Dinas: document.getElementById('sLogoDinas').value || "", 
-      Logo_Instansi: document.getElementById('sLogoInstansi').value || "" 
-    };
-    
-    let res = await fetchAPI("simpanSetting", d); 
-    stopLoading(); 
-    if(res.includes("Akses Ditolak") || res.includes("Error")) { 
-      alertError(res); 
-    } else { 
-      alertSukses(res); 
-    }
+    e.preventDefault(); startLoading("Menyimpan Pengaturan..."); 
+    let d = { usernameAksi: currentUser.username, Nama_Dinas: document.getElementById('sDinas').value, Nama_Sub_Dinas: document.getElementById('sSubDinas').value || "", Nama_Instansi: document.getElementById('sInstansi').value, Kepala_Jabatan: document.getElementById('sKepJab').value, Kepala_Nama: document.getElementById('sKepNama').value, Kepala_Pangkat: document.getElementById('sKepPangkat').value, Kepala_NIP: document.getElementById('sKepNIP').value, Bendahara_Nama: document.getElementById('sBenNama').value, Bendahara_Pangkat: document.getElementById('sBenPangkat').value, Bendahara_NIP: document.getElementById('sBenNIP').value, Rek_Korpri: document.getElementById('sRekKorpri').value, Pot_Korpri: document.getElementById('sPotKorpri').value || 0, Logo_Dinas: document.getElementById('sLogoDinas').value || "", Logo_Instansi: document.getElementById('sLogoInstansi').value || "" };
+    let res = await fetchAPI("simpanSetting", d); stopLoading(); 
+    if(String(res).includes("Akses Ditolak") || String(res).includes("Error")) { alertError(res.pesan || res); } else { alertSukses(res); }
   }
 
   function handleLogoUpload(input, hiddenId, previewId) { const file = input.files[0]; if(!file) return; const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = (e) => { const img = new Image(); img.src = e.target.result; img.onload = () => { const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const size = Math.min(img.width, img.height); const startX = (img.width - size) / 2; const startY = (img.height - size) / 2; canvas.width = 150; canvas.height = 150; ctx.clearRect(0, 0, 150, 150); ctx.drawImage(img, startX, startY, size, size, 0, 0, 150, 150); const base64Str = canvas.toDataURL('image/png'); document.getElementById(hiddenId).value = base64Str; let preview = document.getElementById(previewId); preview.src = base64Str; preview.classList.remove('hidden'); }; }; }
@@ -1742,6 +1629,7 @@
   async function unduhPerhitunganKolektif(format, e) { if(e) e.preventDefault(); if(!globalBulanAktif) return alertPeringatan("Pilih bulan dulu!"); let fUnit = document.getElementById('filterUnitKerja').value; startLoading("Merangkum Data..."); let res = await fetchAPI("cetakPerhitunganKolektif", {bulanAktif: globalBulanAktif, jenisASN: globalJenisASN, roleUser: currentUser.role, unitkerjaUser: currentUser.unitkerja, filterUnit: fUnit}); stopLoading(); if(res && res.error) { alertError("❌ " + res.error); } else if(res && res[format.toLowerCase()]) { showDownloadModal(res[format.toLowerCase()]); } else { alertError("❌ Gagal."); } }
   async function unduhRekapGolongan(format, e) { if(e) e.preventDefault(); if(!globalBulanAktif) return alertPeringatan("Pilih bulan dulu!"); let fUnit = document.getElementById('filterUnitKerja').value; startLoading("Merekap Golongan..."); let res = await fetchAPI("cetakRekapGolonganSheet", {bulanAktif: globalBulanAktif, jenisASN: globalJenisASN, roleUser: currentUser.role, unitkerjaUser: currentUser.unitkerja, filterUnit: fUnit}); stopLoading(); if(res && res.error) { alertError("❌ " + res.error); } else if(res && res[format.toLowerCase()]) { showDownloadModal(res[format.toLowerCase()]); } else { alertError("❌ Gagal."); } }
   async function unduhRekening(format, e) { if(e) e.preventDefault(); if(!globalBulanAktif) return alertPeringatan("Pilih bulan dulu!"); let fUnit = document.getElementById('filterUnitKerja').value; startLoading("Menyusun Rekening..."); let res = await fetchAPI("cetakRekeningSheet", {bulanAktif: globalBulanAktif, jenisASN: globalJenisASN, roleUser: currentUser.role, unitkerjaUser: currentUser.unitkerja, filterUnit: fUnit}); stopLoading(); if(res && res.error) { alertError("❌ " + res.error); } else if(res && res[format.toLowerCase()]) { showDownloadModal(res[format.toLowerCase()]); } else { alertError("❌ Gagal."); } }
+
   async function unduhRekapPajak(format, e) { if(e) e.preventDefault(); if(!globalBulanAktif) return alertPeringatan("Pilih bulan dulu!"); startLoading("Menyusun Rekap Pajak..."); let res = await fetchAPI("cetakRekapPajakTER", {bulanAktif: globalBulanAktif, roleUser: currentUser.role, unitkerjaUser: currentUser.unitkerja, jenisASN: globalJenisASN}); stopLoading(); if(res && res.error) { alertError("❌ " + res.error); } else if(res && res[format.toLowerCase()]) { showDownloadModal(res[format.toLowerCase()]); } else { alertError("❌ Gagal."); } }
 
   function cetakPDFPerorangan(tabId, namaFile) { window.scrollTo(0, 0); let element = document.getElementById('viewManajemenASN'); let navPills = element.querySelector('.nav-pills'); let actionBtns = element.querySelectorAll('button'); let origPillsDisplay = navPills ? navPills.style.display : ''; if(navPills) navPills.style.display = 'none'; actionBtns.forEach(b => { b.dataset.origDisplay = b.style.display; b.style.display = 'none'; }); let tables = element.querySelectorAll('.table-responsive'); tables.forEach(t => { t.style.overflow = 'visible'; }); let selects = element.querySelectorAll('.form-select'); selects.forEach(s => { s.dataset.origBg = s.style.backgroundImage; s.style.backgroundImage = 'none'; }); startLoading("Menyusun PDF..."); let opt = { margin: 0.3, filename: `${namaFile}_${asNIPAktif}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, scrollY: 0, scrollX: 0 }, jsPDF: { unit: 'in', format: 'legal', orientation: 'portrait' } }; html2pdf().set(opt).from(element).save().then(() => { stopLoading(); if(navPills) navPills.style.display = origPillsDisplay; actionBtns.forEach(b => { b.style.display = b.dataset.origDisplay; }); tables.forEach(t => { t.style.overflow = ''; }); selects.forEach(s => { s.style.backgroundImage = s.dataset.origBg; }); setTimeout(() => { alertSukses("File PDF Perorangan berhasil diunduh!"); }, 500); }).catch(err => { stopLoading(); if(navPills) navPills.style.display = origPillsDisplay; actionBtns.forEach(b => { b.style.display = b.dataset.origDisplay; }); tables.forEach(t => { t.style.overflow = ''; }); selects.forEach(s => { s.style.backgroundImage = s.dataset.origBg; }); setTimeout(() => { alertError("Gagal memproses PDF: " + err); }, 500); }); }

@@ -648,11 +648,103 @@
                         </div>
 
                         <div class="row g-2 mb-4">
-                            <div class="col-md-6"><div class="card border-info h-100 shadow-sm"><div class="card-header bg-info text-white fw-bold py-1">Kehadiran Umum (0% / 3%)</div><div class="card-body p-2 bg-light"><div class="d-flex justify-content-between text-center"><div><label class="small fw-bold">DL</label><input type="number" id="vDL" min="0" class="form-control input-absen mx-auto border-info" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div><div><label class="small fw-bold">Tugas</label><input type="number" id="vKP" min="0" class="form-control input-absen mx-auto border-info" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div><div><label class="small fw-bold">Sakit</label><input type="number" id="vS" min="0" class="form-control input-absen mx-auto border-info" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div><div><label class="small fw-bold">Cuti</label><input type="number" id="vC" min="0" class="form-control input-absen mx-auto border-info" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div></div></div></div></div>
-                            <div class="col-md-6"><div class="card border-danger h-100 shadow-sm"><div class="card-header bg-danger text-white fw-bold py-1">Alpa/Tidak Hadir</div><div class="card-body p-2 bg-light"><div class="d-flex justify-content-around text-center"><div><label class="small fw-bold">TK (3%)</label><input type="number" id="vTK" min="0" class="form-control input-absen mx-auto border-danger" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div><div><label class="small fw-bold text-danger">AS/UB (Memotong DK)</label><input type="number" id="vASUB" min="0" class="form-control input-absen mx-auto border-danger" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div></div></div></div></div>
-                            <div class="col-md-6"><div class="card border-warning h-100 shadow-sm"><div class="card-header bg-warning text-dark fw-bold py-1">Terlambat Datang (TL)</div><div class="card-body p-2 bg-light"><div class="d-flex justify-content-between text-center"><div><label class="small fw-bold">TL1</label><input type="number" id="vTL1" min="0" class="form-control input-absen border-warning" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div><div><label class="small fw-bold">TL2</label><input type="number" id="vTL2" min="0" class="form-control input-absen border-warning" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div><div><label class="small fw-bold">TL3</label><input type="number" id="vTL3" min="0" class="form-control input-absen border-warning" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div><div><label class="small fw-bold">TL4</label><input type="number" id="vTL4" min="0" class="form-control input-absen border-warning" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div></div></div></div></div>
-                            <div class="col-md-6"><div class="card border-success h-100 shadow-sm"><div class="card-header bg-success text-white fw-bold py-1">Cepat Pulang (CP)</div><div class="card-body p-2 bg-light"><div class="d-flex justify-content-between text-center"><div><label class="small fw-bold">CP1</label><input type="number" id="vCP1" min="0" class="form-control input-absen border-success" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div><div><label class="small fw-bold">CP2</label><input type="number" id="vCP2" min="0" class="form-control input-absen border-success" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div><div><label class="small fw-bold">CP3</label><input type="number" id="vCP3" min="0" class="form-control input-absen border-success" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div><div><label class="small fw-bold">CP4</label><input type="number" id="vCP4" min="0" class="form-control input-absen border-success" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div></div></div></div></div>
+                            <div class="col-md-6">
+                                <div class="card border-info h-100 shadow-sm">
+                                    <div class="card-header bg-info text-white fw-bold py-1"><i class="bi bi-info-circle"></i> Kehadiran Umum (Pot. 0% / 3%)</div>
+                                    <div class="card-body p-2 bg-light">
+                                        <div class="d-flex justify-content-between text-center">
+                                            <div>
+                                                <label class="small fw-bold">DL (0%)</label>
+                                                <input type="number" id="vDL" min="0" class="form-control input-absen mx-auto border-info" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()">
+                                            </div>
+                                            <div>
+                                                <label class="small fw-bold">Tugas (0%)</label>
+                                                <input type="number" id="vKP" min="0" class="form-control input-absen mx-auto border-info" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()">
+                                            </div>
+                                            <div>
+                                                <label class="small fw-bold">Sakit (3%)</label>
+                                                <input type="number" id="vS" min="0" class="form-control input-absen mx-auto border-info" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()">
+                                            </div>
+                                            <div>
+                                                <label class="small fw-bold">Cuti (3%)</label>
+                                                <input type="number" id="vC" min="0" class="form-control input-absen mx-auto border-info" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card border-danger h-100 shadow-sm">
+                                    <div class="card-header bg-danger text-white fw-bold py-1"><i class="bi bi-exclamation-triangle"></i> Alpa / Tidak Hadir</div>
+                                    <div class="card-body p-2 bg-light">
+                                        <div class="d-flex justify-content-around text-center">
+                                            <div>
+                                                <label class="small fw-bold">TK (3%)</label>
+                                                <input type="number" id="vTK" min="0" class="form-control input-absen mx-auto border-danger" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()">
+                                            </div>
+                                            <div>
+                                                <label class="small fw-bold text-danger">AS/UB (Memotong DK)</label>
+                                                <input type="number" id="vASUB" min="0" class="form-control input-absen mx-auto border-danger" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="card border-warning h-100 shadow-sm">
+                                    <div class="card-header bg-warning text-dark fw-bold py-1"><i class="bi bi-clock"></i> Terlambat Datang (TL)</div>
+                                    <div class="card-body p-2 bg-light">
+                                        <div class="d-flex justify-content-between text-center">
+                                            <div>
+                                                <label class="small fw-bold">TL1 (0.5%)</label>
+                                                <input type="number" id="vTL1" min="0" class="form-control input-absen mx-auto border-warning" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()">
+                                            </div>
+                                            <div>
+                                                <label class="small fw-bold">TL2 (1%)</label>
+                                                <input type="number" id="vTL2" min="0" class="form-control input-absen mx-auto border-warning" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()">
+                                            </div>
+                                            <div>
+                                                <label class="small fw-bold">TL3 (1.25%)</label>
+                                                <input type="number" id="vTL3" min="0" class="form-control input-absen mx-auto border-warning" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()">
+                                            </div>
+                                            <div>
+                                                <label class="small fw-bold">TL4 (1.5%)</label>
+                                                <input type="number" id="vTL4" min="0" class="form-control input-absen mx-auto border-warning" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="card border-success h-100 shadow-sm">
+                                    <div class="card-header bg-success text-white fw-bold py-1"><i class="bi bi-box-arrow-right"></i> Cepat Pulang (CP)</div>
+                                    <div class="card-body p-2 bg-light">
+                                        <div class="d-flex justify-content-between text-center">
+                                            <div>
+                                                <label class="small fw-bold">CP1 (0.5%)</label>
+                                                <input type="number" id="vCP1" min="0" class="form-control input-absen mx-auto border-success" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()">
+                                            </div>
+                                            <div>
+                                                <label class="small fw-bold">CP2 (1%)</label>
+                                                <input type="number" id="vCP2" min="0" class="form-control input-absen mx-auto border-success" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()">
+                                            </div>
+                                            <div>
+                                                <label class="small fw-bold">CP3 (1.25%)</label>
+                                                <input type="number" id="vCP3" min="0" class="form-control input-absen mx-auto border-success" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()">
+                                            </div>
+                                            <div>
+                                                <label class="small fw-bold">CP4 (1.5%)</label>
+                                                <input type="number" id="vCP4" min="0" class="form-control input-absen mx-auto border-success" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+
 
                         <h5 class="fw-bold text-center border-bottom pb-2 mt-4">MATRIKS PENGURANGAN TPP (Real-Time)</h5>
                         <div class="table-responsive bg-white">
@@ -903,23 +995,51 @@
 <datalist id="listJabatanUtama"></datalist>
 
 <div class="modal fade" id="modalKelolaAkun" tabindex="-1">
-  <div class="modal-dialog"><div class="modal-content">
-    <div class="modal-header bg-primary text-white"><h5 class="modal-title" id="akunModalTitle">Tambah Akun</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-    <div class="modal-body">
-      <form id="formAkun" onsubmit="submitAkun(event)">
-        <input type="hidden" id="uAksi"> <input type="hidden" id="uUuid">
-        <div class="mb-2"><label>Username</label><input type="text" id="uUser" class="form-control" required></div>
-        <div class="mb-2"><label>Password <small class="text-danger" id="uPassHint"></small></label><input type="text" id="uPass" class="form-control" required></div>
-        <div class="mb-2"><label>Role</label><select id="uRole" class="form-select" onchange="toggleUnitKerjaAkun()"><option value="Operator">Opt Unit Kerja</option><option value="Admin">Admin Pusat</option></select></div>
-        <div class="mb-2"><label>Pilih Unit Kerja</label>
-          <input type="text" id="uUnitKerjaOp" class="form-control border-primary" list="listUnitKerjaUtama" placeholder="Ketik mencari unit kerja.." autocomplete="off">
-          <select id="uUnitKerjaAdmin" class="form-select border-danger hidden"><option value="Dinas Pendidikan">Dinas Pendidikan</option><option value="Admin SubDinas">Admin SubDinas</option><option value="Opt. Kab/Kota">Opt. Kab/Kota</option></select>
-        </div>
-        <div class="mb-3"><label>Email</label><input type="email" id="uEmail" class="form-control" required></div>
-        <button type="submit" class="btn btn-primary w-100 fw-bold">SIMPAN AKUN</button>
-      </form>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="akunModalTitle">Tambah Akun</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formAkun" onsubmit="submitAkun(event)">
+          <input type="hidden" id="uAksi"> 
+          <input type="hidden" id="uUuid">
+          
+          <div class="mb-2">
+            <label>Username</label>
+            <input type="text" id="uUser" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label>Password <small class="text-danger" id="uPassHint"></small></label>
+            <input type="text" id="uPass" class="form-control" required>
+          </div>
+          
+          <div class="mb-2">
+            <label>Role / Hak Akses</label>
+            <select id="uRole" class="form-select border-primary fw-bold" onchange="toggleUnitKerjaAkun()">
+              <option value="Operator">User Unit Kerja (Operator)</option>
+              <option value="Admin OPD">Admin OPD</option>
+              <option value="Super Admin">Super Admin</option>
+            </select>
+          </div>
+          
+          <div class="mb-2">
+            <label>Pilih Unit Kerja</label>
+            <input type="text" id="uUnitKerjaOp" class="form-control border-primary" list="listUnitKerjaUtama" placeholder="Ketik mencari unit kerja.." autocomplete="off">
+            <input type="text" id="uUnitKerjaAdmin" class="form-control border-danger fw-bold text-danger hidden" readonly>
+          </div>
+          
+          <div class="mb-3">
+            <label>Email (Untuk Reset Password)</label>
+            <input type="email" id="uEmail" class="form-control" required>
+          </div>
+          
+          <button type="submit" id="btnSimpanAkun" class="btn btn-primary w-100 fw-bold">SIMPAN AKUN</button>
+        </form>
+      </div>
     </div>
-  </div></div>
+  </div>
 </div>
 
 <div class="modal fade" id="modalProfil" tabindex="-1">
@@ -1137,12 +1257,16 @@
       document.body.classList.remove('bg-gradient-login');
   }
 
+
+  function togglePassword(inputId, btn) { let inp = document.getElementById(inputId); let icon = btn.querySelector('i'); if(inp.type === "password") { inp.type = "text"; icon.classList.replace('bi-eye', 'bi-eye-slash'); } else { inp.type = "password"; icon.classList.replace('bi-eye-slash', 'bi-eye'); } }
+
   async function inisialisasiAplikasi() {
     let res = await fetchAPI("getSetting", {});
     if(res && !res.error) {
       document.getElementById('loginNamaInstansi').innerText = res.Nama_Instansi || "PEMERINTAH PROVINSI JAMBI"; 
       document.getElementById('loginNamaDinas').innerText = res.Nama_Dinas || "DINAS PENDIDIKAN"; 
       document.getElementById('loginSubDinas').innerText = res.Nama_Sub_Dinas ? res.Nama_Sub_Dinas.toUpperCase() : "";
+      if(document.getElementById('mOpdInduk')) document.getElementById('mOpdInduk').value = res.Nama_Dinas || "";
       if(res.Logo_Instansi) { let pI = document.getElementById('loginLogoInstansi'); pI.src = res.Logo_Instansi; pI.classList.remove('hidden'); let mLogo = document.getElementById('mHeaderLogo'); if(mLogo) { mLogo.src = res.Logo_Instansi; mLogo.classList.remove('hidden'); } }
       if(res.Logo_Dinas) { let pD = document.getElementById('loginLogoDinas'); pD.src = res.Logo_Dinas; pD.classList.remove('hidden'); }
       globalPotKorpri = parseFloat(res.Pot_Korpri) || 0; 
@@ -1151,9 +1275,22 @@
     muatDaftarPeriode(); muatDataUnitKerja(); muatDataPergub(); 
 
     if(sessionStorage.getItem('isLoggedIn') === 'true') {
-      currentUser = JSON.parse(sessionStorage.getItem('currentUser')); document.getElementById('navInfoRole').innerText = currentUser.unitkerja;
-      if(currentUser.role !== "Admin") { document.getElementById('btnMasterAdmin').classList.add('hidden'); document.getElementById('btnSettingAdmin').classList.add('hidden'); document.getElementById('btnAkunAdmin').classList.add('hidden'); document.getElementById('mHeaderAdminIcons').classList.add('hidden'); document.getElementById('btnTambahBulan').classList.add('hidden'); document.getElementById('btnKelolaBulan').classList.add('hidden'); } 
-      else { document.getElementById('btnMasterAdmin').classList.remove('hidden'); document.getElementById('btnSettingAdmin').classList.remove('hidden'); document.getElementById('btnAkunAdmin').classList.remove('hidden'); document.getElementById('mHeaderAdminIcons').classList.remove('hidden'); document.getElementById('btnTambahBulan').classList.remove('hidden'); document.getElementById('btnKelolaBulan').classList.remove('hidden'); }
+      currentUser = JSON.parse(sessionStorage.getItem('currentUser')); 
+      document.getElementById('navInfoRole').innerText = currentUser.unitkerja;
+      
+      // 👇 LOGIKA 3 ROLE USER 👇
+      let r = currentUser.role;
+      let isSuper = (r === "Super Admin");
+      let isOpd = (r === "Admin OPD");
+
+      // Super Admin Only
+      if(isSuper) { document.getElementById('btnMasterAdmin').classList.remove('hidden'); document.getElementById('btnAkunAdmin').classList.remove('hidden'); } 
+      else { document.getElementById('btnMasterAdmin').classList.add('hidden'); document.getElementById('btnAkunAdmin').classList.add('hidden'); }
+      
+      // Super Admin & Admin OPD
+      if(isSuper || isOpd) { document.getElementById('btnSettingAdmin').classList.remove('hidden'); document.getElementById('btnTambahBulan').classList.remove('hidden'); document.getElementById('btnKelolaBulan').classList.remove('hidden'); document.getElementById('mHeaderAdminIcons').classList.remove('hidden'); } 
+      else { document.getElementById('btnSettingAdmin').classList.add('hidden'); document.getElementById('btnTambahBulan').classList.add('hidden'); document.getElementById('btnKelolaBulan').classList.add('hidden'); document.getElementById('mHeaderAdminIcons').classList.add('hidden'); }
+
       document.getElementById('viewLogin').classList.add('hidden'); document.getElementById('viewLanding').classList.add('hidden'); document.getElementById('mainNav').classList.remove('hidden');
       globalBulanAktif = sessionStorage.getItem('globalBulanAktif') || ""; globalHariKerja = parseInt(sessionStorage.getItem('globalHariKerja')) || 22; globalJenisASN = sessionStorage.getItem('globalJenisASN') || ""; 
       if(globalBulanAktif) { document.getElementById('labelBulanAktif').innerText = globalBulanAktif + (globalJenisASN ? " (" + globalJenisASN + ")" : ""); document.getElementById('labelHKAktif').innerText = globalHariKerja; document.getElementById('btnMenuPegawai').disabled = false; updateFilterGolDropdown(); }
@@ -1164,17 +1301,27 @@
     }
   }
 
-  function togglePassword(inputId, btn) { let inp = document.getElementById(inputId); let icon = btn.querySelector('i'); if(inp.type === "password") { inp.type = "text"; icon.classList.replace('bi-eye', 'bi-eye-slash'); } else { inp.type = "password"; icon.classList.replace('bi-eye-slash', 'bi-eye'); } }
-
   async function doLogin(e) {
     e.preventDefault(); startLoading("Memeriksa Akses..."); 
     let u = document.getElementById('logUser').value; let p = document.getElementById('logPass').value;
     let res = await fetchAPI("prosesLogin", {username: u, password: p});
     stopLoading(); 
     if(res.status === "sukses") {
-      sessionStorage.setItem('authToken', res.token); currentUser = res.user; document.getElementById('navInfoRole').innerText = currentUser.unitkerja; document.getElementById('mHeaderUnit').innerText = currentUser.unitkerja; 
-      if(currentUser.role !== "Admin") { document.getElementById('btnMasterAdmin').classList.add('hidden'); document.getElementById('btnSettingAdmin').classList.add('hidden'); document.getElementById('btnAkunAdmin').classList.add('hidden'); document.getElementById('mHeaderAdminIcons').classList.add('hidden'); document.getElementById('btnTambahBulan').classList.add('hidden'); document.getElementById('btnKelolaBulan').classList.add('hidden'); } 
-      else { document.getElementById('btnMasterAdmin').classList.remove('hidden'); document.getElementById('btnSettingAdmin').classList.remove('hidden'); document.getElementById('btnAkunAdmin').classList.remove('hidden'); document.getElementById('mHeaderAdminIcons').classList.remove('hidden'); document.getElementById('btnTambahBulan').classList.remove('hidden'); document.getElementById('btnKelolaBulan').classList.remove('hidden'); }
+      sessionStorage.setItem('authToken', res.token); currentUser = res.user; 
+      document.getElementById('navInfoRole').innerText = currentUser.unitkerja; 
+      document.getElementById('mHeaderUnit').innerText = currentUser.unitkerja; 
+      
+      // 👇 LOGIKA 3 ROLE USER 👇
+      let r = currentUser.role;
+      let isSuper = (r === "Super Admin");
+      let isOpd = (r === "Admin OPD");
+
+      if(isSuper) { document.getElementById('btnMasterAdmin').classList.remove('hidden'); document.getElementById('btnAkunAdmin').classList.remove('hidden'); } 
+      else { document.getElementById('btnMasterAdmin').classList.add('hidden'); document.getElementById('btnAkunAdmin').classList.add('hidden'); }
+      
+      if(isSuper || isOpd) { document.getElementById('btnSettingAdmin').classList.remove('hidden'); document.getElementById('btnTambahBulan').classList.remove('hidden'); document.getElementById('btnKelolaBulan').classList.remove('hidden'); document.getElementById('mHeaderAdminIcons').classList.remove('hidden'); } 
+      else { document.getElementById('btnSettingAdmin').classList.add('hidden'); document.getElementById('btnTambahBulan').classList.add('hidden'); document.getElementById('btnKelolaBulan').classList.add('hidden'); document.getElementById('mHeaderAdminIcons').classList.add('hidden'); }
+
       document.getElementById('viewLogin').classList.add('hidden'); document.getElementById('mainNav').classList.remove('hidden');
       sessionStorage.setItem('isLoggedIn', 'true'); sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
       switchView('viewPilihBulan'); inisialisasiAplikasi();
@@ -1263,9 +1410,28 @@
     let b = document.getElementById('pilihPeriodeUtama').value; if(!b) { alertPeringatan("Pilih atau Tambah periode terlebih dahulu!"); return; }
     globalJenisASN = document.getElementById('pilihJenisASN').value; globalBulanAktif = b;
     let obj = arrayPeriode.find(x => x.namaPeriode === b); globalHariKerja = obj ? obj.hariKerja : 22; globalHariKerja6 = obj ? obj.hariKerja6 : 26; globalStatusLock = obj ? obj.statusLock : "Buka"; globalRefBulanGaji = obj ? (obj.refBulanGaji || b) : b; globalJenisPeriode = obj ? (obj.jenisPeriode || "Reguler") : "Reguler";
-    if(document.getElementById('labelBulanPencairan')) document.getElementById('labelBulanPencairan').innerText = globalRefBulanGaji; document.getElementById('labelBulanAktif').innerText = b + " (" + globalJenisASN + ")"; document.getElementById('labelHKAktif').innerText = `${globalHariKerja} / ${globalHariKerja6}`; document.getElementById('btnMenuPegawai').disabled = false; toggleTombolPegawaiHP(true);
-    if (globalStatusLock === "Kunci") { document.getElementById('warningLock').classList.remove('hidden'); document.getElementById('btnTambahPegawai').classList.add('hidden'); document.getElementById('btnImportPegawai').classList.add('hidden'); } 
-    else { document.getElementById('warningLock').classList.add('hidden'); document.getElementById('btnTambahPegawai').classList.remove('hidden'); document.getElementById('btnImportPegawai').classList.remove('hidden'); }
+    
+    if(document.getElementById('labelBulanPencairan')) document.getElementById('labelBulanPencairan').innerText = globalRefBulanGaji; 
+    document.getElementById('labelBulanAktif').innerText = b + " (" + globalJenisASN + ")"; 
+    document.getElementById('labelHKAktif').innerText = `${globalHariKerja} / ${globalHariKerja6}`; 
+    document.getElementById('btnMenuPegawai').disabled = false; toggleTombolPegawaiHP(true);
+    
+    // 👇 LOGIKA SEMBUNYIKAN TOMBOL TAMBAH & IMPORT UNTUK OPERATOR 👇
+    if (globalStatusLock === "Kunci" || currentUser.role === "Operator") { 
+      document.getElementById('warningLock').classList.remove('hidden'); 
+      if(currentUser.role === "Operator") {
+         document.getElementById('warningLock').innerHTML = "<i class='bi bi-info-circle'></i> Hanya Admin OPD yang dapat menambah/import Pegawai.";
+      } else {
+         document.getElementById('warningLock').innerHTML = "<i class='bi bi-lock-fill'></i> PERIODE INI SUDAH DIKUNCI OLEH ADMIN <br> <span class='small text-dark'>Data hanya dapat dilihat dan dicetak.</span>";
+      }
+      document.getElementById('btnTambahPegawai').classList.add('hidden'); 
+      document.getElementById('btnImportPegawai').classList.add('hidden'); 
+    } else { 
+      document.getElementById('warningLock').classList.add('hidden'); 
+      document.getElementById('btnTambahPegawai').classList.remove('hidden'); 
+      document.getElementById('btnImportPegawai').classList.remove('hidden'); 
+    }
+    
     sessionStorage.setItem('globalBulanAktif', globalBulanAktif); sessionStorage.setItem('globalJenisASN', globalJenisASN); updateFilterGolDropdown(); switchView('viewDaftarPegawai'); muatDataPegawai();
   }
 
@@ -1481,20 +1647,25 @@
     sel.innerHTML = html; if (selectedValue) { sel.value = selectedValue; }
   }
 
-  function bukaModalPegawai(aksi, nip="", nama="", tglLahir="", golongan="", unorInduk="", unitkerja="", jabatan="", jenis="Struktural", status="TK/0 = 1", gapok=0, tjJab=0, rekening="", skp="", uuid="") {
+ function bukaModalPegawai(aksi, nip="", nama="", tglLahir="", golongan="", unorInduk="", unitkerja="", jabatan="", jenis="Struktural", status="TK/0 = 1", gapok=0, tjJab=0, rekening="", skp="", uuid="") {
     document.getElementById('mAksi').value = aksi; document.getElementById('mNipLama').value = nip; document.getElementById('mTglLahir').value = tglLahir; document.getElementById('mGolongan').value = golongan; document.getElementById('mUuid').value = uuid; renderDropdownGolongan(golongan); document.getElementById('mJenis').value = jenis; document.getElementById('mStatus').value = status; document.getElementById('mGapok').value = gapok; document.getElementById('mTjJab').value = tjJab; document.getElementById('mRekening').value = rekening;
     document.getElementById('mSkp').value = skp || "";
     
     let elNip = document.getElementById('mNip'); let elNama = document.getElementById('mNama'); let elUnitKerja = document.getElementById('mUnitKerja'); let elUnorInduk = document.getElementById('mUnorInduk');
     elNip.value = nip; elNama.value = nama; elUnitKerja.value = unitkerja;
     
-    // Unor induk ngikut dinas yg lagi login (kalau tambah baru), atau dari data lama kalau edit
     let opdAktif = document.getElementById('loginNamaDinas').innerText;
     elUnorInduk.value = unorInduk || opdAktif;
 
-    let isOperatorEdit = (aksi === 'edit' && currentUser.role !== "Admin");
-    if (isOperatorEdit) { elNip.readOnly = true; elNip.classList.add("readonly-field"); elNama.readOnly = true; elNama.classList.add("readonly-field"); } else { elNip.readOnly = false; elNip.classList.remove("readonly-field"); elNama.readOnly = false; elNama.classList.remove("readonly-field"); }
-    if (currentUser.role !== "Admin") { elUnitKerja.value = currentUser.unitkerja;  elUnitKerja.readOnly = true; elUnitKerja.classList.add("readonly-field"); } else { elUnitKerja.readOnly = false; elUnitKerja.classList.remove("readonly-field"); }
+    // Operator tidak boleh ubah NIP dan Nama
+    let isOperatorEdit = (aksi === 'edit' && currentUser.role === "Operator");
+    if (isOperatorEdit) { elNip.readOnly = true; elNip.classList.add("readonly-field"); elNama.readOnly = true; elNama.classList.add("readonly-field"); } 
+    else { elNip.readOnly = false; elNip.classList.remove("readonly-field"); elNama.readOnly = false; elNama.classList.remove("readonly-field"); }
+    
+    // Operator unit kerjanya dikunci. Admin OPD & Super Admin bebas ubah.
+    if (currentUser.role === "Operator") { elUnitKerja.value = currentUser.unitkerja;  elUnitKerja.readOnly = true; elUnitKerja.classList.add("readonly-field"); } 
+    else { elUnitKerja.readOnly = false; elUnitKerja.classList.remove("readonly-field"); }
+    
     muatDropdownJabatan(jabatan); document.getElementById('pegawaiModalTitle').innerText = aksi === 'edit' ? 'Edit Pegawai' : 'Tambah Pegawai Baru'; 
     let modalObj = bootstrap.Modal.getInstance(document.getElementById('modalKelolaPegawai')) || new bootstrap.Modal(document.getElementById('modalKelolaPegawai'));
     modalObj.show();
@@ -1913,20 +2084,103 @@
     });
   }
 
-  function toggleUnitKerjaAkun() { let r = document.getElementById('uRole').value; let op = document.getElementById('uUnitKerjaOp'); let adm = document.getElementById('uUnitKerjaAdmin'); if(r === 'Admin') { op.classList.add('hidden'); op.required = false; adm.classList.remove('hidden'); adm.required = true; } else { adm.classList.add('hidden'); adm.required = false; op.classList.remove('hidden'); op.required = true; } }
+  function toggleUnitKerjaAkun() { 
+    let r = document.getElementById('uRole').value; 
+    let op = document.getElementById('uUnitKerjaOp'); 
+    let adm = document.getElementById('uUnitKerjaAdmin'); 
+    let btnSimpan = document.getElementById('btnSimpanAkun');
+    
+    if(r === 'Super Admin' || r === 'Admin OPD') { 
+        op.classList.add('hidden'); op.required = false; 
+        adm.classList.remove('hidden'); adm.required = true; 
+        
+        // Ambil nama Instansi & Dinas dari judul web
+        let namaDinas = document.getElementById('loginNamaDinas').innerText;
+        let namaInstansi = document.getElementById('loginNamaInstansi').innerText || "PEMERINTAH PROVINSI JAMBI";
+        
+        // 👇 Logika Baru: Super Admin = Instansi, Admin OPD = Dinas 👇
+        adm.value = (r === 'Super Admin') ? namaInstansi : namaDinas;
+        btnSimpan.disabled = false;
+    } else { 
+        adm.classList.add('hidden'); adm.required = false; 
+        op.classList.remove('hidden'); op.required = true; 
+        
+        if(arrayUnitKerjaValid.length === 0) {
+            alertPeringatan("Database Unit Kerja masih kosong! Anda harus menginput minimal 1 Pegawai (atau import Excel) agar sistem tahu daftar Unit Kerja yang ada.");
+            btnSimpan.disabled = true;
+            op.placeholder = "DATA UNIT KERJA KOSONG!";
+        } else {
+            btnSimpan.disabled = false;
+            op.placeholder = "Ketik untuk mencari unit kerja...";
+        }
+    } 
+  }
 
   function bukaModalAkun(aksi, user="", role="Operator", unit="", email="", uuid="") {
-    document.getElementById('uAksi').value = aksi; document.getElementById('uUser').value = user; document.getElementById('uRole').value = role; document.getElementById('uEmail').value = email; document.getElementById('uUuid').value = uuid;
-    if(role === 'Admin') { document.getElementById('uUnitKerjaAdmin').value = unit || "Dinas Pendidikan"; document.getElementById('uUnitKerjaOp').value = ""; } else { document.getElementById('uUnitKerjaAdmin').value = "Dinas Pendidikan"; document.getElementById('uUnitKerjaOp').value = unit; }
-    let passInp = document.getElementById('uPass'); if(aksi === 'edit') { passInp.required = false; passInp.value = ""; document.getElementById('uPassHint').innerText = "(Kosongkan jika tak ingin ganti)"; document.getElementById('akunModalTitle').innerText = "Edit Akun Pengguna"; } else { passInp.required = true; passInp.value = ""; document.getElementById('uPassHint').innerText = ""; document.getElementById('akunModalTitle').innerText = "Tambah Akun Baru"; } toggleUnitKerjaAkun(); 
+    document.getElementById('uAksi').value = aksi; 
+    document.getElementById('uUser').value = user; 
+    document.getElementById('uRole').value = role; 
+    document.getElementById('uEmail').value = email; 
+    document.getElementById('uUuid').value = uuid;
+    
+    let adm = document.getElementById('uUnitKerjaAdmin');
+    let op = document.getElementById('uUnitKerjaOp');
+    let namaDinas = document.getElementById('loginNamaDinas').innerText;
+    let namaInstansi = document.getElementById('loginNamaInstansi').innerText || "PEMERINTAH PROVINSI JAMBI";
+
+    // 👇 Logika Baru Pengisian Otomatis Saat Edit/Tambah 👇
+    if(role === 'Super Admin') { 
+        adm.value = unit || namaInstansi; 
+        op.value = ""; 
+    } else if (role === 'Admin OPD') {
+        adm.value = unit || namaDinas; 
+        op.value = "";
+    } else { 
+        adm.value = namaDinas; 
+        op.value = unit; 
+    }
+    
+    let passInp = document.getElementById('uPass'); 
+    if(aksi === 'edit') { 
+        passInp.required = false; passInp.value = ""; 
+        document.getElementById('uPassHint').innerText = "(Kosongkan jika tak ingin ganti)"; 
+        document.getElementById('akunModalTitle').innerText = "Edit Akun Pengguna"; 
+    } else { 
+        passInp.required = true; passInp.value = ""; 
+        document.getElementById('uPassHint').innerText = ""; 
+        document.getElementById('akunModalTitle').innerText = "Tambah Akun Baru"; 
+    } 
+    
+    toggleUnitKerjaAkun(); 
     let modalObj = bootstrap.Modal.getInstance(document.getElementById('modalKelolaAkun')) || new bootstrap.Modal(document.getElementById('modalKelolaAkun'));
     modalObj.show();
   }
 
   async function submitAkun(e) {
-    e.preventDefault(); let aksi = document.getElementById('uAksi').value; let r = document.getElementById('uRole').value; let s = r === 'Admin' ? document.getElementById('uUnitKerjaAdmin').value : document.getElementById('uUnitKerjaOp').value.trim(); if(r !== 'Admin' && !arrayUnitKerjaValid.includes(s)) { return alertPeringatan("Unit Kerja tidak valid! Silakan hapus dan pilih dari daftar dropdown yang muncul saat Anda mengetik."); }
-    startLoading("Menyimpan Akun..."); let d = { username: document.getElementById('uUser').value, password: document.getElementById('uPass').value, role: r, unitkerja: s, email: document.getElementById('uEmail').value, uuid: document.getElementById('uUuid').value };
-    let res = await fetchAPI(aksi === 'edit' ? "updateAkun" : "simpanAkun", d); stopLoading(); if(String(res).includes("Error")) { alertError(res.pesan || res); } else { alertSukses(res); bootstrap.Modal.getInstance(document.getElementById('modalKelolaAkun')).hide(); muatDaftarAkun(); }
+    e.preventDefault(); 
+    let aksi = document.getElementById('uAksi').value; 
+    let r = document.getElementById('uRole').value; 
+    
+    // Ambil unit kerja dari kotak yang tepat sesuai Role
+    let s = (r === 'Super Admin' || r === 'Admin OPD') ? document.getElementById('uUnitKerjaAdmin').value : document.getElementById('uUnitKerjaOp').value.trim(); 
+    
+    if(r === 'Operator' && !arrayUnitKerjaValid.includes(s)) { 
+        return alertPeringatan("Unit Kerja tidak valid! Silakan pilih dari daftar dropdown yang muncul saat Anda mengetik."); 
+    }
+    
+    startLoading("Menyimpan Akun..."); 
+    let d = { username: document.getElementById('uUser').value, password: document.getElementById('uPass').value, role: r, unitkerja: s, email: document.getElementById('uEmail').value, uuid: document.getElementById('uUuid').value };
+    
+    let res = await fetchAPI(aksi === 'edit' ? "updateAkun" : "simpanAkun", d); 
+    stopLoading(); 
+    
+    if(String(res).includes("Error")) { 
+        alertError(res.pesan || res); 
+    } else { 
+        alertSukses(res); 
+        bootstrap.Modal.getInstance(document.getElementById('modalKelolaAkun')).hide(); 
+        muatDaftarAkun(); 
+    }
   }
 
   function hapusAkun(uuid, user) { 

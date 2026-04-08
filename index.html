@@ -1572,49 +1572,48 @@
   function terapkanFilterAkun() { let cari = document.getElementById('filterCariAkun').value.toLowerCase(); let filtered = globalDataAkun.filter(row => String(row[0]).toLowerCase().includes(cari) || String(row[3]).toLowerCase().includes(cari)); renderTabelAkun(filtered); }
 
   function renderTabelAkun(data) {
-    let tbody = document.getElementById('tabelBodyAkun'); 
-    if(!data.length) { 
-        document.getElementById('infoPaginationAkun').innerText = "Menampilkan 0 data"; 
-        document.getElementById('btnPaginationAkun').innerHTML = ""; 
-        return tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger fw-bold">Data tidak ditemukan.</td></tr>'; 
-    }
-    
-    let totalPages = Math.ceil(data.length / akunRowsPerPage); 
-    if(currentAkunPage > totalPages) currentAkunPage = totalPages; 
-    let start = (currentAkunPage - 1) * akunRowsPerPage; 
-    let end = start + akunRowsPerPage; 
-    let paginatedData = data.slice(start, end); 
-    let html = "";
-    
-    paginatedData.forEach(r => { 
-        let u = escapeStr(r[0]); 
-        let role = escapeStr(r[2]); 
-        let unit = escapeStr(r[3]); 
-        let email = escapeStr(r[4]); 
-        let uuid = escapeStr(r[5]); 
-        let badge = role === 'Admin' ? 'bg-danger' : 'bg-primary'; 
-        
-        // Parameter dipisah rapi agar tidak error saat diklik
-        html += `<tr>
-                    <td><b>${u}</b></td>
-                    <td>${unit}</td>
-                    <td><span class="badge ${badge}">${role}</span></td>
-                    <td>${email}</td>
-                    <td class="text-center">
-                        <button class="btn btn-sm btn-info text-white me-1 fw-bold" onclick="resetPasswordAkun('${uuid}', '${u}')"><i class="bi bi-key"></i></button>
-                        <button class="btn btn-sm btn-warning me-1" onclick="bukaModalAkun('edit', '${u}', '${role}', '${unit}', '${email}', '${uuid}')"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-sm btn-danger" onclick="hapusAkun('${uuid}', '${u}')"><i class="bi bi-trash"></i></button>
-                    </td>
-                </tr>`; 
-    });
-    
-    tbody.innerHTML = html; 
-    document.getElementById('infoPaginationAkun').innerText = `Tampil ${start + 1} - ${Math.min(end, data.length)} dari ${data.length}`;
-    
-    let btnHtml = `<button class="btn btn-sm btn-outline-primary" onclick="ubahHalamanAkun(${currentAkunPage - 1})" ${currentAkunPage === 1 ? 'disabled' : ''}>Mundur</button>`;
-    btnHtml += `<span class="btn btn-sm btn-primary disabled text-white fw-bold">Hal ${currentAkunPage}/${totalPages}</span>`;
-    btnHtml += `<button class="btn btn-sm btn-outline-primary" onclick="ubahHalamanAkun(${currentAkunPage + 1})" ${currentAkunPage === totalPages ? 'disabled' : ''}>Maju</button>`; 
-    document.getElementById('btnPaginationAkun').innerHTML = btnHtml;
+      let tbody = document.getElementById('tabelBodyAkun'); 
+      if(!data.length) { 
+          document.getElementById('infoPaginationAkun').innerText = "Menampilkan 0 data"; 
+          document.getElementById('btnPaginationAkun').innerHTML = ""; 
+          return tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger fw-bold">Data tidak ditemukan.</td></tr>'; 
+      }
+      
+      let totalPages = Math.ceil(data.length / akunRowsPerPage); 
+      if(currentAkunPage > totalPages) currentAkunPage = totalPages; 
+      let start = (currentAkunPage - 1) * akunRowsPerPage; 
+      let end = start + akunRowsPerPage; 
+      let paginatedData = data.slice(start, end); 
+      let html = "";
+      
+      paginatedData.forEach(r => { 
+          let u = escapeStr(r[0]); 
+          let role = escapeStr(r[2]); 
+          let unit = escapeStr(r[3]); 
+          let email = escapeStr(r[4]); 
+          let uuid = escapeStr(r[5]); 
+          let badge = role === 'Admin' ? 'bg-danger' : 'bg-primary'; 
+          
+          html += `<tr>
+              <td><b>${u}</b></td>
+              <td>${unit}</td>
+              <td><span class="badge ${badge}">${role}</span></td>
+              <td>${email}</td>
+              <td class="text-center">
+                  <button class="btn btn-sm btn-info text-white me-1 fw-bold" onclick="resetPasswordAkun('${uuid}', '${u}')"><i class="bi bi-key"></i></button>
+                  <button class="btn btn-sm btn-warning me-1" onclick="bukaModalAkun('edit', '${u}', '${role}', '${unit}', '${email}', '${uuid}')"><i class="bi bi-pencil"></i></button>
+                  <button class="btn btn-sm btn-danger" onclick="hapusAkun('${uuid}', '${u}')"><i class="bi bi-trash"></i></button>
+              </td>
+          </tr>`; 
+      });
+      
+      tbody.innerHTML = html; 
+      document.getElementById('infoPaginationAkun').innerText = `Tampil ${start + 1} - ${Math.min(end, data.length)} dari ${data.length}`;
+      
+      let btnHtml = `<button class="btn btn-sm btn-outline-primary" onclick="ubahHalamanAkun(${currentAkunPage - 1})" ${currentAkunPage === 1 ? 'disabled' : ''}>Mundur</button>`;
+      btnHtml += `<span class="btn btn-sm btn-primary disabled text-white fw-bold">Hal ${currentAkunPage}/${totalPages}</span>`;
+      btnHtml += `<button class="btn btn-sm btn-outline-primary" onclick="ubahHalamanAkun(${currentAkunPage + 1})" ${currentAkunPage === totalPages ? 'disabled' : ''}>Maju</button>`; 
+      document.getElementById('btnPaginationAkun').innerHTML = btnHtml;
   }
 
   function ubahHalamanAkun(page) { currentAkunPage = page; terapkanFilterAkun(); }
@@ -1642,7 +1641,7 @@
       document.getElementById('uEmail').value = email; 
       document.getElementById('uUuid').value = uuid;
       
-      if(role === 'Admin') { 
+      if (role === 'Admin') { 
           document.getElementById('uUnitKerjaAdmin').value = unit || "Dinas Pendidikan"; 
           document.getElementById('uUnitKerjaOp').value = ""; 
       } else { 
@@ -1651,18 +1650,23 @@
       }
       
       let passInp = document.getElementById('uPass'); 
-      if(aksi === 'edit') { 
-          passInp.required = false; passInp.value = ""; 
+      if (aksi === 'edit') { 
+          passInp.required = false; 
+          passInp.value = ""; 
           document.getElementById('uPassHint').innerText = "(Kosongkan jika tak ingin ganti)"; 
           document.getElementById('akunModalTitle').innerText = "Edit Akun Pengguna"; 
       } else { 
-          passInp.required = true; passInp.value = ""; 
+          passInp.required = true; 
+          passInp.value = ""; 
           document.getElementById('uPassHint').innerText = ""; 
           document.getElementById('akunModalTitle').innerText = "Tambah Akun Baru"; 
       } 
       
       toggleUnitKerjaAkun(); 
-      new bootstrap.Modal(document.getElementById('modalKelolaAkun')).show();
+      
+      // Membuka Modal secara paksa di Bootstrap 5
+      let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalKelolaAkun'));
+      modal.show();
   }
 
   async function submitAkun(e) {
@@ -1678,7 +1682,9 @@
       document.getElementById('myEmail').value = currentUser.email || ""; 
       document.getElementById('myPass').value = ""; 
       
-      new bootstrap.Modal(document.getElementById('modalProfil')).show(); 
+      // Membuka Modal secara paksa di Bootstrap 5
+      let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalProfil'));
+      modal.show();
   }
 
   async function submitProfilSendiri(e) { e.preventDefault(); startLoading("Update Profil..."); let d = { uuid: currentUser.uuid, username: currentUser.username, role: currentUser.role, unitkerja: currentUser.unitkerja, email: document.getElementById('myEmail').value, password: document.getElementById('myPass').value }; let res = await fetchAPI("updateAkun", d); stopLoading(); if(String(res).includes("Error")) { alertError(res.pesan || res); } else { alertSukses("Profil berhasil diupdate! Jika ganti password, ingat untuk login selanjutnya."); bootstrap.Modal.getInstance(document.getElementById('modalProfil')).hide(); } }
@@ -1703,17 +1709,17 @@
   function handleLogoUpload(input, hiddenId, previewId) { const file = input.files[0]; if(!file) return; const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = (e) => { const img = new Image(); img.src = e.target.result; img.onload = () => { const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const size = Math.min(img.width, img.height); const startX = (img.width - size) / 2; const startY = (img.height - size) / 2; canvas.width = 150; canvas.height = 150; ctx.clearRect(0, 0, 150, 150); ctx.drawImage(img, startX, startY, size, size, 0, 0, 150, 150); const base64Str = canvas.toDataURL('image/png'); document.getElementById(hiddenId).value = base64Str; let preview = document.getElementById(previewId); preview.src = base64Str; preview.classList.remove('hidden'); }; }; }
 
   function hapusLogo(tipe) {
-    if(tipe === 'Instansi') {
-      document.getElementById('sLogoInstansi').value = "";
-      document.getElementById('previewLogoInstansi').src = "";
-      document.getElementById('previewLogoInstansi').classList.add('hidden');
-      document.getElementById('fileLogoInstansi').value = "";
-    } else {
-      document.getElementById('sLogoDinas').value = "";
-      document.getElementById('previewLogoDinas').src = "";
-      document.getElementById('previewLogoDinas').classList.add('hidden');
-      document.getElementById('fileLogoDinas').value = "";
-    }
+      if (tipe === 'Instansi') {
+          document.getElementById('sLogoInstansi').value = "";
+          document.getElementById('previewLogoInstansi').src = "";
+          document.getElementById('previewLogoInstansi').classList.add('hidden');
+          document.getElementById('fileLogoInstansi').value = "";
+      } else {
+          document.getElementById('sLogoDinas').value = "";
+          document.getElementById('previewLogoDinas').src = "";
+          document.getElementById('previewLogoDinas').classList.add('hidden');
+          document.getElementById('fileLogoDinas').value = "";
+      }
   }
 
   // =====================================

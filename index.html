@@ -1214,8 +1214,8 @@
   // =====================================
   // TAMBAHKAN URL WEB APP UNTUK MASING-MASING OPD DI SINI
   const listOPD = [
-      { nama: "Badan Kepegawaian Daerah", url: "https://script.google.com/macros/s/AKfycbzoZWpQ6IqWqy2I2iDWjMw5oXfXUo2mhoUWemY6DHZtoJb9qTPb8Ri_jrAGb60Q0d2G/exec" },
-      { nama: "Dinas Pendidikan", url: "https://script.google.com/macros/s/AKfycbzVOJQYbLZPGhG55OIW9ahWtDxlrmeBCyMw4knMPjDXA3YIMpAUGrm61BDIexmZMU8B/exec" },
+      { nama: "Badan Kepegawaian Daerah", url: "https://script.google.com/macros/s/AKfycbzrqlBDqjd595SkUv6_YofTbI3qky9GEo28r33sp6NEjUz9wmCKYNGOEdOi7CGcgJNPLg/exec" },
+      { nama: "Dinas Pendidikan", url: "https://script.google.com/macros/s/AKfycbxarRYHu0X1EIULWec2ahTyOQEtnCMRnO1b1fOcvVnPTmTEv3ekJsdFZWXFxTvP8VgJIQ/exec" },
       { nama: "Dinas Kesehatan", url: "https://script.google.com/macros/s/CONTOH_URL_KESEHATAN/exec" },
       { nama: "Dinas Pekerjaan Umum", url: "https://script.google.com/macros/s/CONTOH_URL_PU/exec" }
       // Tambahkan OPD lain di sini sesuai kebutuhan...
@@ -1259,7 +1259,7 @@
       sessionStorage.setItem('tenantUrl', API_URL);
       
       // Munculkan loading agar user tahu sistem sedang bekerja menyedot data
-      startLoading("Menghubungkan ke Server OPD...");
+      startLoading("Menghubungkan ke Database OPD...");
       
       // 👇 INI KUNCINYA: Tarik logo & nama dinas dari server OPD yang dipilih 👇
       await inisialisasiAplikasi();
@@ -1280,11 +1280,17 @@
   async function inisialisasiAplikasi() {
     let res = await fetchAPI("getSetting", {});
     if(res && !res.error) {
-      document.getElementById('loginNamaInstansi').innerText = res.Nama_Instansi || "PEMERINTAH PROVINSI JAMBI"; document.getElementById('loginNamaDinas').innerText = res.Nama_Dinas || "DINAS PENDIDIKAN"; document.getElementById('loginSubDinas').innerText = res.Nama_Sub_Dinas ? res.Nama_Sub_Dinas.toUpperCase() : (res.Nama_Instansi ? res.Nama_Instansi.toUpperCase() : "");
+      document.getElementById('loginNamaInstansi').innerText = res.Nama_Instansi || "PEMERINTAH PROVINSI JAMBI"; 
+      document.getElementById('loginNamaDinas').innerText = res.Nama_Dinas || "DINAS PENDIDIKAN"; 
+      
+      // 👇 INI PERBAIKANNYA: Kalau kosong, ya biarkan kosong ("") 👇
+      document.getElementById('loginSubDinas').innerText = res.Nama_Sub_Dinas ? res.Nama_Sub_Dinas.toUpperCase() : "";
+      
       if(res.Logo_Instansi) { let pI = document.getElementById('loginLogoInstansi'); pI.src = res.Logo_Instansi; pI.classList.remove('hidden'); let mLogo = document.getElementById('mHeaderLogo'); if(mLogo) { mLogo.src = res.Logo_Instansi; mLogo.classList.remove('hidden'); } }
       if(res.Logo_Dinas) { let pD = document.getElementById('loginLogoDinas'); pD.src = res.Logo_Dinas; pD.classList.remove('hidden'); }
       globalPotKorpri = parseFloat(res.Pot_Korpri) || 0; 
     }
+
     muatDaftarPeriode(); muatDataUnitKerja(); muatDataPergub(); 
 
     if(sessionStorage.getItem('isLoggedIn') === 'true') {
@@ -1299,7 +1305,10 @@
       let savedView = sessionStorage.getItem('currentView') || 'viewPilihBulan'; if(savedView === 'viewManajemenASN') savedView = 'viewDaftarPegawai'; 
       switchView(savedView); if(savedView === 'viewDaftarPegawai') muatDataPegawai();
     } else {
-      document.getElementById('viewLanding').classList.add('hidden'); document.getElementById('viewLogin').classList.remove('hidden'); document.body.classList.add('bg-gradient-login');
+      // Jika belum login tapi punya API URL, tetap di halaman Login
+      document.getElementById('viewLanding').classList.add('hidden');
+      document.getElementById('viewLogin').classList.remove('hidden');
+      document.body.classList.add('bg-gradient-login');
     }
   }
 

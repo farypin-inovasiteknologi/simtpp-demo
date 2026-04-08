@@ -1253,10 +1253,23 @@
 
   function ubahNamaOPD(element) { API_URL = element.value !== "" ? element.value : ""; }
 
-  function masukKeLogin() {
+  async function masukKeLogin() {
       if(!API_URL) return alertPeringatan("Silakan pilih Instansi / OPD Anda terlebih dahulu!");
+      
       sessionStorage.setItem('tenantUrl', API_URL);
-      document.getElementById('viewLanding').classList.add('hidden'); document.getElementById('viewLogin').classList.remove('hidden'); document.body.classList.add('bg-gradient-login');
+      
+      // Munculkan loading agar user tahu sistem sedang bekerja menyedot data
+      startLoading("Menghubungkan ke Server OPD...");
+      
+      // 👇 INI KUNCINYA: Tarik logo & nama dinas dari server OPD yang dipilih 👇
+      await inisialisasiAplikasi();
+      
+      stopLoading();
+      
+      // Pindah ke halaman login
+      document.getElementById('viewLanding').classList.add('hidden');
+      document.getElementById('viewLogin').classList.remove('hidden');
+      document.body.classList.add('bg-gradient-login');
   }
 
   function kembaliKeLanding() {

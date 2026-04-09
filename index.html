@@ -1899,12 +1899,42 @@
   }
 
   function terapkanFilter() {
-    let cari = document.getElementById('filterCari').value.toLowerCase(); let fGol = document.getElementById('filterGol').value; let fUnit = document.getElementById('filterUnitKerja').value;
+    let cari = document.getElementById('filterCari').value.toLowerCase(); 
+    let fGol = document.getElementById('filterGol').value; 
+    let fUnit = document.getElementById('filterUnitKerja').value;
+    
     let filtered = globalDataPegawai.filter(row => {
-      let nip = String(row[0]).toLowerCase(); let nama = String(row[1]).toLowerCase(); let gol = String(row[3]); let unit = String(row[4]); let matchCari = nip.includes(cari) || nama.includes(cari); let golDasar = gol.split("/")[0].trim().toUpperCase(); let groupName = "";
-      if (globalJenisASN === "PPPK") { if(["XVII", "XVI", "XV", "XIV", "XIII"].includes(golDasar)) groupName = "XVII - XIII"; else if(["XII", "XI", "X", "IX"].includes(golDasar)) groupName = "XII - IX"; else if(["VIII", "VII", "VI", "V"].includes(golDasar)) groupName = "VIII - V"; else groupName = "IV - I"; } else { groupName = golDasar; }
-      let matchGol = (fGol === "" || groupName === fGol); let matchUnit = (fUnit === "" || unit === fUnit); return matchCari && matchGol && matchUnit;
-    }); renderTabelPegawai(filtered);
+      let nip = String(row[0]).toLowerCase(); 
+      let nama = String(row[1]).toLowerCase(); 
+      let gol = String(row[3]); 
+      
+      // 👇 INI DIA BIANG KEROKNYA: Sebelumnya row[4] (Unor Induk), SEHARUSNYA row[5] (Unit Kerja) 👇
+      let unit = String(row[5]); 
+      
+      let matchCari = nip.includes(cari) || nama.includes(cari); 
+      
+      // Logika Pengelompokan Golongan PNS / PPPK
+      let golDasar = gol.split("/")[0].trim().toUpperCase(); 
+      let groupName = "";
+      
+      if (globalJenisASN === "PPPK") { 
+          if(["XVII", "XVI", "XV", "XIV", "XIII"].includes(golDasar)) groupName = "XVII - XIII"; 
+          else if(["XII", "XI", "X", "IX"].includes(golDasar)) groupName = "XII - IX"; 
+          else if(["VIII", "VII", "VI", "V"].includes(golDasar)) groupName = "VIII - V"; 
+          else groupName = "IV - I"; 
+      } else { 
+          groupName = golDasar; 
+      }
+      
+      let matchGol = (fGol === "" || groupName === fGol); 
+      
+      // Pencocokan Filter Unit Kerja
+      let matchUnit = (fUnit === "" || unit === fUnit); 
+      
+      return matchCari && matchGol && matchUnit;
+    }); 
+    
+    renderTabelPegawai(filtered);
   }
 
   function renderTabelPegawai(data) {

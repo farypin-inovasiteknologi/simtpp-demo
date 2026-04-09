@@ -86,43 +86,38 @@
             .action-left button, .action-right .btn-group, .action-right .btn-group button { width: 100% !important; margin: 0 !important; }
             .action-right .dropdown-menu { width: 100%; text-align: center; }
         }
+       
        @media (min-width: 769px) {
             .app-padding { padding-top: 20px; }
             .action-left, .action-right { display: flex !important; width: auto !important; }
             .action-left button, .action-right .btn-group, .action-right .btn-group button { width: auto !important; flex: none !important; }
 
-            /* ========================================================
-               PERBAIKAN TAMPILAN TABEL PEGAWAI KHUSUS LAPTOP/DESKTOP 
-               ======================================================== */
-            
-            /* 1. Kolom Nama (Maksimal ~25 huruf ke samping, Maks 2 Baris ke bawah + titik-titik) */
+            /* 1. Kolom Nama (Maksimal 25 digit, 2 Baris) */
             #tabelBodyPegawai td:nth-child(2) b {
                 display: -webkit-box;
                 -webkit-line-clamp: 2;
                 -webkit-box-orient: vertical;
                 overflow: hidden;
                 text-overflow: ellipsis;
-                word-break: break-word;
-                max-width: 25ch; /* 25 karakter/digit */
                 white-space: normal !important;
+                max-width: 25ch;
             }
 
-            /* 2. Kolom Unit Kerja (Maksimal ~30 huruf ke samping, Maks 2 Baris ke bawah + titik-titik) */
-            #tabelBodyPegawai td:nth-child(4) {
+            /* 2. Kolom Unit Kerja (Maksimal 35 digit, 2 Baris, anti kolom kosong!) */
+            .clamp-unit {
                 display: -webkit-box;
                 -webkit-line-clamp: 2;
                 -webkit-box-orient: vertical;
                 overflow: hidden;
                 text-overflow: ellipsis;
-                word-break: break-word;
-                max-width: 30ch; /* 30 karakter/digit */
                 white-space: normal !important;
+                max-width: 35ch; 
             }
 
-            /* 3. Kolom Aksi Buka/Edit/Del (Kunci agar tetap 1 baris berjejer kesamping) */
+            /* 3. Kolom Aksi Buka/Edit/Del (Kunci agar berjejer kesamping) */
             #tabelBodyPegawai td:nth-child(7) {
                 white-space: nowrap !important;
-                width: 1%; /* Membuat kolom memeluk tombol seketat mungkin agar tidak melar */
+                width: 1%;
             }
         }
 
@@ -1337,57 +1332,7 @@
 
   function togglePassword(inputId, btn) { let inp = document.getElementById(inputId); let icon = btn.querySelector('i'); if(inp.type === "password") { inp.type = "text"; icon.classList.replace('bi-eye', 'bi-eye-slash'); } else { inp.type = "password"; icon.classList.replace('bi-eye-slash', 'bi-eye'); } }
 
-  async function inisialisasiAplikasi() {
-    let bAktif = sessionStorage.getItem('globalBulanAktif') || "";
-    let jASN = sessionStorage.getItem('globalJenisASN') || "";
-    let cUser = sessionStorage.getItem('isLoggedIn') === 'true' ? JSON.parse(sessionStorage.getItem('currentUser')) : null;
-
-    let payloadData = {};
-    if (cUser && bAktif) {
-        payloadData = { bulanAktif: bAktif, roleUser: cUser.role, unitkerjaUser: cUser.unitkerja, jenisASN: jASN };
-    }
-
-    // 1. CEK CACHE LOKAL: Apakah data pernah didownload sebelumnya?
-    let cachedDataStr = localStorage.getItem('simTppCacheData');
-    let isCached = false;
-    
-    if (cachedDataStr) {
-        try {
-            let cachedData = JSON.parse(cachedDataStr);
-            // 2. MUNCULKAN INSTAN DALAM 0.1 DETIK
-            terapkanDataInit(cachedData, cUser, bAktif, jASN, false);
-            isCached = true;
-        } catch(e) { 
-            console.error("Cache Error:", e);
-            isCached = false; 
-        }
-    }
-
-    // Jika kosong, tampilkan layar Loading besar
-    if (!isCached) {
-        startLoading("Memuat Data Sistem...");
-    }
-
-    // 3. TARIK DATA DI BACKGROUND
-    fetchAPI("getInitialLoad", payloadData).then(dataInit => {
-        if (!isCached) stopLoading(); 
-        
-        if (dataInit && !dataInit.error) {
-            localStorage.setItem('simTppCacheData', JSON.stringify(dataInit));
-            terapkanDataInit(dataInit, cUser, bAktif, jASN, isCached); 
-        } else if (dataInit.error || dataInit.status === "error") {
-            if (!isCached) alertError(dataInit.pesan || "Gagal memuat data dari server.");
-        }
-    }).catch(err => {
-        console.error("Fetch Error:", err);
-        if (!isCached) {
-            stopLoading();
-            alertError("Terjadi kesalahan sistem: " + err.message);
-        }
-    });
-  }
-
-
+  
   // 7. FUNGSI LOGIN (Tampilkan Tombol Setting untuk Semua Role)
   async function doLogin(e) {
     e.preventDefault(); startLoading("Memeriksa Akses..."); 
@@ -1433,104 +1378,6 @@
     } else { alertError(res.pesan); }
   }
 
- // 4. PENANGKAP CACHE (Tambahan agar Akun tersimpan di browser)
-  function terapkanDataInit(dataInit, cUser, bAktif, jASN, isSilentUpdate = false) {
-    globalSettingsCache = dataInit.setting;
-    let res = dataInit.setting;
-    if(res) {
-      document.getElementById('loginNamaInstansi').innerText = res.Nama_Instansi || "PEMERINTAH PROVINSI JAMBI"; 
-      document.getElementById('loginNamaDinas').innerText = res.Nama_Dinas || "DINAS PENDIDIKAN"; 
-      document.getElementById('loginSubDinas').innerText = res.Nama_Sub_Dinas ? res.Nama_Sub_Dinas.toUpperCase() : "";
-      if(document.getElementById('mOpdInduk')) document.getElementById('mOpdInduk').value = res.Nama_Dinas || "";
-      if(res.Logo_Instansi) { let pI = document.getElementById('loginLogoInstansi'); pI.src = res.Logo_Instansi; pI.classList.remove('hidden'); let mLogo = document.getElementById('mHeaderLogo'); if(mLogo) { mLogo.src = res.Logo_Instansi; mLogo.classList.remove('hidden'); } }
-      if(res.Logo_Dinas) { let pD = document.getElementById('loginLogoDinas'); pD.src = res.Logo_Dinas; pD.classList.remove('hidden'); }
-      globalPotKorpri = parseFloat(res.Pot_Korpri) || 0; 
-    }
-
-    renderDropdownPeriode(dataInit.periode);
-    
-    arrayUnitKerjaValid = dataInit.unitKerja || []; 
-    setupAutocomplete(document.getElementById('mUnitKerja'), arrayUnitKerjaValid);
-    setupAutocomplete(document.getElementById('uUnitKerjaOp'), arrayUnitKerjaValid);
-    
-    globalDataPergub = dataInit.pergub || [];
-    if(!isSilentUpdate) terapkanFilterPergub(); 
-
-    if(cUser) {
-      currentUser = cUser; 
-      document.getElementById('navInfoRole').innerText = currentUser.unitkerja;
-      
-      // 👇 SIMPAN DATA AKUN KE RAM JIKA ADA 👇
-      if (dataInit.akun && dataInit.akun.length > 0) {
-          globalDataAkun = dataInit.akun;
-      }
-      
-      let r = currentUser.role;
-      let isSuper = (r === "Super Admin");
-      let isOpd = (r === "Admin OPD");
-
-      if(isSuper) { document.getElementById('btnMasterAdmin').classList.remove('hidden'); document.getElementById('btnAkunAdmin').classList.remove('hidden'); } 
-      else { document.getElementById('btnMasterAdmin').classList.add('hidden'); document.getElementById('btnAkunAdmin').classList.add('hidden'); }
-      
-      document.getElementById('btnSettingAdmin').classList.remove('hidden');
-      document.getElementById('mHeaderAdminIcons').classList.remove('hidden');
-      
-      let iconMasterHP = document.querySelector('i[onclick="switchView(\'viewMasterPergub\')"]');
-      let iconAkunHP = document.querySelector('i[onclick="muatDaftarAkun()"]');
-
-      if(isSuper || isOpd) { 
-          document.getElementById('btnTambahBulan').classList.remove('hidden'); 
-          document.getElementById('btnKelolaBulan').classList.remove('hidden'); 
-          if(iconMasterHP) iconMasterHP.classList.remove('hidden');
-          if(iconAkunHP && isSuper) iconAkunHP.classList.remove('hidden'); else if(iconAkunHP) iconAkunHP.classList.add('hidden');
-      } else { 
-          document.getElementById('btnTambahBulan').classList.add('hidden'); 
-          document.getElementById('btnKelolaBulan').classList.add('hidden'); 
-          if(iconMasterHP) iconMasterHP.classList.add('hidden');
-          if(iconAkunHP) iconAkunHP.classList.add('hidden');
-      }
-
-      document.getElementById('viewLogin').classList.add('hidden'); 
-      document.getElementById('viewLanding').classList.add('hidden'); 
-      document.getElementById('mainNav').classList.remove('hidden');
-      
-      globalBulanAktif = bAktif; 
-      globalHariKerja = parseInt(sessionStorage.getItem('globalHariKerja')) || 22; 
-      globalJenisASN = jASN; 
-      
-      if(globalBulanAktif) { 
-          document.getElementById('labelBulanAktif').innerText = globalBulanAktif + (globalJenisASN ? " (" + globalJenisASN + ")" : ""); 
-          document.getElementById('labelHKAktif').innerText = globalHariKerja; 
-          if(!isSilentUpdate) updateFilterGolDropdown(); 
-      }
-      
-      if(!isSilentUpdate) {
-          switchView('viewPilihBulan'); 
-          document.getElementById('btnMenuPegawai').disabled = true; 
-          toggleTombolPegawaiHP(false); 
-      }
-      
-      if(globalBulanAktif && dataInit.pegawai) { 
-          globalDataPegawai = dataInit.pegawai;
-          let unitList = [...new Set(globalDataPegawai.map(item => item[5]).filter(Boolean))]; 
-          let unitDropdown = document.getElementById('filterUnitKerja'); 
-          
-          let filterValue = unitDropdown.value; 
-          unitDropdown.innerHTML = '<option value="">Semua Unit Kerja</option>'; 
-          unitList.forEach(s => unitDropdown.innerHTML += `<option value="${s}">${s}</option>`); 
-          unitDropdown.value = filterValue;
-
-          terapkanFilter();
-      }
-    } else {
-      if(!isSilentUpdate) {
-          document.getElementById('viewLanding').classList.add('hidden'); 
-          document.getElementById('viewLogin').classList.remove('hidden'); 
-          document.body.classList.add('bg-gradient-login');
-      }
-    }
-  }
- 
 
   function logoutApp() { 
     Swal.fire({ 
@@ -2008,36 +1855,48 @@
   // =====================================
   let globalDataPegawai = []; let currentPage = 1; let rowsPerPage = 15; 
 
- // GANTI FUNGSI INI DI INDEX.HTML
-async function muatDataPegawai(forceRefresh = false) {
-  // JURUS KILAT: Jika data sudah ada di RAM lokal (Browser) dan tidak butuh refresh, tampilkan instan!
-  if (!forceRefresh && globalDataPegawai && globalDataPegawai.length > 0) {
-    let unitList = [...new Set(globalDataPegawai.map(item => item[5]).filter(Boolean))];
-    let unitDropdown = document.getElementById('filterUnitKerja');
-    let currentVal = unitDropdown.value;
-    unitDropdown.innerHTML = '<option value="">Semua Unit Kerja</option>';
-    unitList.forEach(s => unitDropdown.innerHTML += `<option value="${s}">${s}</option>`);
-    unitDropdown.value = currentVal;
-    terapkanFilter();
-    return; // Berhenti di sini, tidak perlu panggil server loading!
-  }
+ async function muatDataPegawai(forceRefresh = false) {
+    // 👇 LOGIKA SUPER CACHE: Jika tidak dipaksa refresh dan bulan masih sama 👇
+    if (!forceRefresh && window.cacheDataPegawaiAll && window.cacheDataPegawaiBulan === globalBulanAktif) {
+        
+        // Cukup ubah saringannya secara lokal sesuai jenis ASN yang dipilih (0 detik!)
+        globalDataPegawai = window.cacheDataPegawaiAll.filter(p => String(p[14] || "PNS").toUpperCase() === globalJenisASN);
+        
+        let unitList = [...new Set(globalDataPegawai.map(item => item[5]).filter(Boolean))]; 
+        let unitDropdown = document.getElementById('filterUnitKerja'); 
+        let currentVal = unitDropdown.value;
+        unitDropdown.innerHTML = '<option value="">Semua Unit Kerja</option>'; 
+        unitList.forEach(s => unitDropdown.innerHTML += `<option value="${s}">${s}</option>`); 
+        unitDropdown.value = currentVal;
+        
+        terapkanFilter();
+        return; // Selesai! Tidak perlu panggil server.
+    }
 
-  startLoading("Memuat Data Pegawai..."); 
-  let data = await fetchAPI("getDaftarPegawai", { bulanAktif: globalBulanAktif, roleUser: currentUser.role, unitkerjaUser: currentUser.unitkerja, jenisASN: globalJenisASN }); 
-  stopLoading();
-  
-  if (data && !data.error && Array.isArray(data)) { 
-    globalDataPegawai = data; 
-    let unitList = [...new Set(data.map(item => item[5]).filter(Boolean))]; 
-    let unitDropdown = document.getElementById('filterUnitKerja'); 
-    unitDropdown.innerHTML = '<option value="">Semua Unit Kerja</option>'; 
-    unitList.forEach(s => unitDropdown.innerHTML += `<option value="${s}">${s}</option>`); 
-    terapkanFilter(); 
-  } 
-  else { 
-    document.getElementById('tabelBodyPegawai').innerHTML = '<tr><td colspan="7" class="text-center text-danger fw-bold">Gagal memuat data dari server.</td></tr>'; 
+    // Jika beda bulan / force refresh, minta SEMUA jenis ASN ke server
+    startLoading("Memuat Data Pegawai..."); 
+    let data = await fetchAPI("getDaftarPegawai", { bulanAktif: globalBulanAktif, roleUser: currentUser.role, unitkerjaUser: currentUser.unitkerja, jenisASN: "" }); // Kosongkan agar dapat PNS & PPPK sekaligus
+    stopLoading();
+    
+    if (data && !data.error && Array.isArray(data)) { 
+        // Update Super Cache
+        window.cacheDataPegawaiAll = data;
+        window.cacheDataPegawaiBulan = globalBulanAktif;
+        
+        // Terapkan ke tabel
+        globalDataPegawai = window.cacheDataPegawaiAll.filter(p => String(p[14] || "PNS").toUpperCase() === globalJenisASN);
+        
+        let unitList = [...new Set(globalDataPegawai.map(item => item[5]).filter(Boolean))]; 
+        let unitDropdown = document.getElementById('filterUnitKerja'); 
+        unitDropdown.innerHTML = '<option value="">Semua Unit Kerja</option>'; 
+        unitList.forEach(s => unitDropdown.innerHTML += `<option value="${s}">${s}</option>`); 
+        
+        terapkanFilter(); 
+    } 
+    else { 
+        document.getElementById('tabelBodyPegawai').innerHTML = '<tr><td colspan="7" class="text-center text-danger fw-bold">Gagal memuat data dari server.</td></tr>'; 
+    }
   }
-}
 
   function terapkanFilter() {
     let cari = document.getElementById('filterCari').value.toLowerCase(); let fGol = document.getElementById('filterGol').value; let fUnit = document.getElementById('filterUnitKerja').value;
@@ -2050,8 +1909,18 @@ async function muatDataPegawai(forceRefresh = false) {
 
   function renderTabelPegawai(data) {
     let tbody = document.getElementById('tabelBodyPegawai');
-    if(!data.length) { document.getElementById('infoPagination').innerText = "Menampilkan 0 data"; document.getElementById('btnPagination').innerHTML = ""; return tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger fw-bold">Data tidak ditemukan.</td></tr>'; }
-    let totalPages = Math.ceil(data.length / rowsPerPage); if(currentPage > totalPages) currentPage = totalPages; let start = (currentPage - 1) * rowsPerPage; let end = start + rowsPerPage; let paginatedData = data.slice(start, end); let html = "";
+    if(!data.length) { 
+        document.getElementById('infoPagination').innerText = "Menampilkan 0 data"; 
+        document.getElementById('btnPagination').innerHTML = ""; 
+        return tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger fw-bold">Data tidak ditemukan.</td></tr>'; 
+    }
+    
+    let totalPages = Math.ceil(data.length / rowsPerPage); 
+    if(currentPage > totalPages) currentPage = totalPages; 
+    let start = (currentPage - 1) * rowsPerPage; 
+    let end = start + rowsPerPage; 
+    let paginatedData = data.slice(start, end); 
+    let html = "";
 
     paginatedData.forEach(row => {
       let nip = escapeStr(row[0]); let nama = escapeStr(row[1]); let tglLahir = escapeStr(row[2]||""); let gol = escapeStr(row[3]); 
@@ -2061,10 +1930,28 @@ async function muatDataPegawai(forceRefresh = false) {
       let args = `'${nip}', '${nama}', '${tglLahir}', '${gol}', '${unorInduk}', '${unit}', '${jab}', '${jenis}', '${stat}', ${gapok}, ${tjJab}, '${rek}', '${skp}', '${uuid}'`; 
       let openPanel = `bukaPanel('${nip}', '${nama}', '${gol}', '${jab}', '${stat}', '${unit}')`; 
       
-       let btnEdit = globalStatusLock === "Kunci" ? `<button class="btn btn-sm btn-secondary me-1" onclick="alertPeringatan('Periode ini sudah dikunci Admin!')"><i class="bi bi-lock"></i></button>` : `<button class="btn btn-sm btn-primary me-1" onclick="bukaModalPegawai('edit', ${args})">Edit</button>`; let btnDel = globalStatusLock === "Kunci" ? `<button class="btn btn-sm btn-secondary" onclick="alertPeringatan('Periode ini sudah dikunci Admin!')"><i class="bi bi-lock"></i></button>` : `<button class="btn btn-sm btn-danger" onclick="hapusPegawai('${nip}', '${nama}', '${uuid}')">Del</button>`;
-      html += `<tr class="clickable"><td onclick="${openPanel}">${nip}</td><td onclick="${openPanel}"><b>${nama}</b></td><td onclick="${openPanel}">${gol}</td><td onclick="${openPanel}">${unit}</td><td onclick="${openPanel}">${jab}</td><td onclick="${openPanel}">${rek}</td><td class="text-center no-click"><button class="btn btn-sm btn-info text-white me-1" onclick="${openPanel}">Buka</button>${btnEdit}${btnDel}</td></tr>`;
+      let btnEdit = globalStatusLock === "Kunci" ? `<button class="btn btn-sm btn-secondary me-1" onclick="alertPeringatan('Periode ini sudah dikunci Admin!')"><i class="bi bi-lock"></i></button>` : `<button class="btn btn-sm btn-primary me-1" onclick="bukaModalPegawai('edit', ${args})">Edit</button>`; 
+      let btnDel = globalStatusLock === "Kunci" ? `<button class="btn btn-sm btn-secondary" onclick="alertPeringatan('Periode ini sudah dikunci Admin!')"><i class="bi bi-lock"></i></button>` : `<button class="btn btn-sm btn-danger" onclick="hapusPegawai('${nip}', '${nama}', '${uuid}')">Del</button>`;
+      
+      // 👇 PERBAIKAN: Unit Kerja dibungkus dengan <div class="clamp-unit"> agar aman 👇
+      html += `<tr class="clickable">
+                  <td onclick="${openPanel}">${nip}</td>
+                  <td onclick="${openPanel}"><b>${nama}</b></td>
+                  <td onclick="${openPanel}">${gol}</td>
+                  <td onclick="${openPanel}"><div class="clamp-unit">${unit}</div></td>
+                  <td onclick="${openPanel}">${jab}</td>
+                  <td onclick="${openPanel}">${rek}</td>
+                  <td class="text-center no-click"><button class="btn btn-sm btn-info text-white me-1" onclick="${openPanel}">Buka</button>${btnEdit}${btnDel}</td>
+               </tr>`;
     });
-    tbody.innerHTML = html; document.getElementById('infoPagination').innerText = `Menampilkan ${start + 1} - ${Math.min(end, data.length)} dari Total ${data.length} Pegawai`; let btnHtml = `<button class="btn btn-sm btn-outline-primary" onclick="ubahHalaman(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>Mundur</button><span class="btn btn-sm btn-primary disabled text-white fw-bold">Hal ${currentPage} / ${totalPages}</span><button class="btn btn-sm btn-outline-primary" onclick="ubahHalaman(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Maju</button>`; document.getElementById('btnPagination').innerHTML = btnHtml;
+    
+    tbody.innerHTML = html; 
+    document.getElementById('infoPagination').innerText = `Menampilkan ${start + 1} - ${Math.min(end, data.length)} dari Total ${data.length} Pegawai`; 
+    
+    let btnHtml = `<button class="btn btn-sm btn-outline-primary" onclick="ubahHalaman(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>Mundur</button>
+                   <span class="btn btn-sm btn-primary disabled text-white fw-bold">Hal ${currentPage} / ${totalPages}</span>
+                   <button class="btn btn-sm btn-outline-primary" onclick="ubahHalaman(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Maju</button>`; 
+    document.getElementById('btnPagination').innerHTML = btnHtml;
   }
 
   function ubahHalaman(page) { currentPage = page; terapkanFilter(); }
@@ -2138,6 +2025,156 @@ async function muatDataPegawai(forceRefresh = false) {
   }
 
   function validasiNIP(input) { let nilaiBersih = input.value.replace(/[\s-]/g, ''); input.value = nilaiBersih; if (nilaiBersih !== "") { let isAngka = /^\d+$/.test(nilaiBersih); if (!isAngka || nilaiBersih.length !== 18) { alertPeringatan("Perhatian! NIP wajib terdiri dari tepat 18 digit angka murni."); input.classList.add('border-danger'); } else { input.classList.remove('border-danger'); } } }
+
+    async function inisialisasiAplikasi() {
+    let bAktif = sessionStorage.getItem('globalBulanAktif') || "";
+    let jASN = sessionStorage.getItem('globalJenisASN') || "";
+    let cUser = sessionStorage.getItem('isLoggedIn') === 'true' ? JSON.parse(sessionStorage.getItem('currentUser')) : null;
+
+    let payloadData = {};
+    if (cUser && bAktif) {
+        // 👇 PERBAIKAN: Minta jenisASN:"" agar Server mengirim PNS & PPPK sekaligus! 👇
+        payloadData = { bulanAktif: bAktif, roleUser: cUser.role, unitkerjaUser: cUser.unitkerja, jenisASN: "" };
+    }
+
+    let cachedDataStr = localStorage.getItem('simTppCacheData');
+    let isCached = false;
+    
+    if (cachedDataStr) {
+        try {
+            let cachedData = JSON.parse(cachedDataStr);
+            terapkanDataInit(cachedData, cUser, bAktif, jASN, false);
+            isCached = true;
+        } catch(e) { 
+            console.error("Cache Error:", e);
+            isCached = false; 
+        }
+    }
+
+    if (!isCached) {
+        startLoading("Memuat Data Sistem...");
+    }
+
+    fetchAPI("getInitialLoad", payloadData).then(dataInit => {
+        if (!isCached) stopLoading(); 
+        
+        if (dataInit && !dataInit.error) {
+            localStorage.setItem('simTppCacheData', JSON.stringify(dataInit));
+            terapkanDataInit(dataInit, cUser, bAktif, jASN, isCached); 
+        } else if (dataInit.error || dataInit.status === "error") {
+            if (!isCached) alertError(dataInit.pesan || "Gagal memuat data dari server.");
+        }
+    }).catch(err => {
+        console.error("Fetch Error:", err);
+        if (!isCached) {
+            stopLoading();
+            alertError("Terjadi kesalahan sistem: " + err.message);
+        }
+    });
+  }
+
+  function terapkanDataInit(dataInit, cUser, bAktif, jASN, isSilentUpdate = false) {
+    globalSettingsCache = dataInit.setting;
+    let res = dataInit.setting;
+    if(res) {
+      document.getElementById('loginNamaInstansi').innerText = res.Nama_Instansi || "PEMERINTAH PROVINSI JAMBI"; 
+      document.getElementById('loginNamaDinas').innerText = res.Nama_Dinas || "DINAS PENDIDIKAN"; 
+      document.getElementById('loginSubDinas').innerText = res.Nama_Sub_Dinas ? res.Nama_Sub_Dinas.toUpperCase() : "";
+      if(document.getElementById('mOpdInduk')) document.getElementById('mOpdInduk').value = res.Nama_Dinas || "";
+      if(res.Logo_Instansi) { let pI = document.getElementById('loginLogoInstansi'); pI.src = res.Logo_Instansi; pI.classList.remove('hidden'); let mLogo = document.getElementById('mHeaderLogo'); if(mLogo) { mLogo.src = res.Logo_Instansi; mLogo.classList.remove('hidden'); } }
+      if(res.Logo_Dinas) { let pD = document.getElementById('loginLogoDinas'); pD.src = res.Logo_Dinas; pD.classList.remove('hidden'); }
+      globalPotKorpri = parseFloat(res.Pot_Korpri) || 0; 
+    }
+
+    renderDropdownPeriode(dataInit.periode);
+    
+    arrayUnitKerjaValid = dataInit.unitKerja || []; 
+    setupAutocomplete(document.getElementById('mUnitKerja'), arrayUnitKerjaValid);
+    setupAutocomplete(document.getElementById('uUnitKerjaOp'), arrayUnitKerjaValid);
+    
+    globalDataPergub = dataInit.pergub || [];
+    if(!isSilentUpdate) terapkanFilterPergub(); 
+
+    if(cUser) {
+      currentUser = cUser; 
+      document.getElementById('navInfoRole').innerText = currentUser.unitkerja;
+      
+      if (dataInit.akun && dataInit.akun.length > 0) {
+          globalDataAkun = dataInit.akun;
+      }
+      
+      let r = currentUser.role;
+      let isSuper = (r === "Super Admin");
+      let isOpd = (r === "Admin OPD");
+
+      if(isSuper) { document.getElementById('btnMasterAdmin').classList.remove('hidden'); document.getElementById('btnAkunAdmin').classList.remove('hidden'); } 
+      else { document.getElementById('btnMasterAdmin').classList.add('hidden'); document.getElementById('btnAkunAdmin').classList.add('hidden'); }
+      
+      document.getElementById('btnSettingAdmin').classList.remove('hidden');
+      document.getElementById('mHeaderAdminIcons').classList.remove('hidden');
+      
+      let iconMasterHP = document.querySelector('i[onclick="switchView(\'viewMasterPergub\')"]');
+      let iconAkunHP = document.querySelector('i[onclick="muatDaftarAkun()"]');
+
+      if(isSuper || isOpd) { 
+          document.getElementById('btnTambahBulan').classList.remove('hidden'); 
+          document.getElementById('btnKelolaBulan').classList.remove('hidden'); 
+          if(iconMasterHP) iconMasterHP.classList.remove('hidden');
+          if(iconAkunHP && isSuper) iconAkunHP.classList.remove('hidden'); else if(iconAkunHP) iconAkunHP.classList.add('hidden');
+      } else { 
+          document.getElementById('btnTambahBulan').classList.add('hidden'); 
+          document.getElementById('btnKelolaBulan').classList.add('hidden'); 
+          if(iconMasterHP) iconMasterHP.classList.add('hidden');
+          if(iconAkunHP) iconAkunHP.classList.add('hidden');
+      }
+
+      document.getElementById('viewLogin').classList.add('hidden'); 
+      document.getElementById('viewLanding').classList.add('hidden'); 
+      document.getElementById('mainNav').classList.remove('hidden');
+      
+      globalBulanAktif = bAktif; 
+      globalHariKerja = parseInt(sessionStorage.getItem('globalHariKerja')) || 22; 
+      globalJenisASN = jASN; 
+      
+      if(globalBulanAktif) { 
+          document.getElementById('labelBulanAktif').innerText = globalBulanAktif + (globalJenisASN ? " (" + globalJenisASN + ")" : ""); 
+          document.getElementById('labelHKAktif').innerText = globalHariKerja; 
+          if(!isSilentUpdate) updateFilterGolDropdown(); 
+      }
+      
+      if(!isSilentUpdate) {
+          switchView('viewPilihBulan'); 
+          document.getElementById('btnMenuPegawai').disabled = true; 
+          toggleTombolPegawaiHP(false); 
+      }
+      
+      // 👇 SUPER CACHE: Simpan semua data bulan ini (PNS + PPPK) ke memori khusus 👇
+      if(globalBulanAktif && dataInit.pegawai) { 
+          window.cacheDataPegawaiAll = dataInit.pegawai; // Simpan semua!
+          window.cacheDataPegawaiBulan = globalBulanAktif; // Tandai bulannya
+          
+          // Pisahkan khusus untuk ditampilkan sesuai pilihan saat ini
+          globalDataPegawai = window.cacheDataPegawaiAll.filter(p => String(p[14] || "PNS").toUpperCase() === globalJenisASN);
+          
+          let unitList = [...new Set(globalDataPegawai.map(item => item[5]).filter(Boolean))]; 
+          let unitDropdown = document.getElementById('filterUnitKerja'); 
+          
+          let filterValue = unitDropdown.value; 
+          unitDropdown.innerHTML = '<option value="">Semua Unit Kerja</option>'; 
+          unitList.forEach(s => unitDropdown.innerHTML += `<option value="${s}">${s}</option>`); 
+          unitDropdown.value = filterValue;
+
+          terapkanFilter();
+      }
+    } else {
+      if(!isSilentUpdate) {
+          document.getElementById('viewLanding').classList.add('hidden'); 
+          document.getElementById('viewLogin').classList.remove('hidden'); 
+          document.body.classList.add('bg-gradient-login');
+      }
+    }
+  }
+
 
   // =====================================
   // 7. HITUNG AMPRAH & TPP (PANEL ASN)

@@ -228,7 +228,7 @@
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-start mb-3 gap-3">
                 <div class="action-left d-flex flex-wrap gap-2">
                     <button id="btnTambahPegawai" class="btn btn-primary btn-sm fw-bold shadow-sm" onclick="bukaModalPegawai('tambah')"><i class="bi bi-person-plus"></i> Tambah</button>
-                    <button id="btnImportPegawai" class="btn btn-success btn-sm fw-bold shadow-sm" onclick="bukaModalImport('pegawai')"><i class="bi bi-file-earmark-excel"></i> Import</button>
+                   
                 </div>
                 <div class="action-right d-flex flex-wrap gap-2 justify-content-md-end">
                     <div class="btn-group shadow-sm">
@@ -1062,16 +1062,44 @@
   <div class="modal-dialog"><div class="modal-content">
     <div class="modal-header bg-primary text-white"><h5 class="modal-title">Buka Periode TPP Baru</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
     <div class="modal-body">
-      <form onsubmit="simpanPeriodeLanjut(event)">
-        <div class="mb-2"><label>Tahun</label><input type="number" id="pTahun" class="form-control readonly-field" readonly></div>
-        <div class="mb-2"><label>Nama Periode</label><input type="text" id="pBulanNama" class="form-control fw-bold text-danger" required></div>
-        <input type="hidden" id="pBulanAngka">
-        <div class="mb-2"><label class="fw-bold text-primary">Jenis Periode</label><select id="pJenisPeriode" class="form-select border-primary fw-bold" onchange="toggleIndukPajak()"><option value="Reguler">Bulan Reguler</option><option value="THR">Gaji 14 (THR)</option><option value="Gaji 13">Gaji 13</option></select></div>
-        <div class="mb-3 hidden" id="boxIndukPajak"><label class="fw-bold text-danger">Bulan pencairan gaji</label><select id="pIndukPajak" class="form-select border-danger fw-bold" onchange="sinkronHariKerja()"></select><small class="text-muted d-block mt-1">Pilih bulan reguler tempat Gaji 14 THR/Gaji 13 ini dicairkan.</small></div>
-        <div class="row"><div class="col-6 mb-3"><label>HK (5 Hari Kerja)</label><input type="number" id="pHariKerja" class="form-control border-primary fw-bold" required></div><div class="col-6 mb-3"><label>HK (6 Hari Kerja)</label><input type="number" id="pHariKerja6" class="form-control border-primary fw-bold" required></div></div>
-        <div class="form-check mb-3 p-3 bg-light border rounded"><input class="form-check-input" type="checkbox" id="pSalinPegawai" checked><label class="form-check-label fw-bold text-success" for="pSalinPegawai"><i class="bi bi-copy"></i> Salin data pegawai bulan sebelumnya</label></div>
-        <button type="submit" class="btn btn-primary w-100 fw-bold">BUKA PERIODE BARU</button>
-      </form>
+      <form id="formTambahPeriode" onsubmit="simpanPeriodeLanjut(event)">
+  <div class="mb-2"><label>Tahun</label><input type="number" id="pTahun" class="form-control readonly-field" readonly></div>
+  <div class="mb-2"><label>Nama Periode</label><input type="text" id="pBulanNama" class="form-control fw-bold text-danger" required></div>
+  <input type="hidden" id="pBulanAngka">
+  <div class="mb-2">
+    <label class="fw-bold text-primary">Jenis Periode</label>
+    <select id="pJenisPeriode" class="form-select border-primary fw-bold" onchange="toggleIndukPajak()">
+      <option value="Reguler">Bulan Reguler</option>
+      <option value="THR">Gaji 14 (THR)</option>
+      <option value="Gaji 13">Gaji 13</option>
+    </select>
+  </div>
+  <div class="mb-3 hidden" id="boxIndukPajak">
+    <label class="fw-bold text-danger">Pilih bulan pencairan gaji</label>
+    <select id="pIndukPajak" class="form-select border-danger fw-bold" onchange="sinkronHariKerja()"></select>
+    <small class="text-muted d-block mt-1">Pilih bulan reguler tempat Gaji 14 THR/Gaji 13 ini dicairkan.</small>
+  </div>
+  <div class="row">
+    <div class="col-6 mb-3"><label>HK (5 Hari Kerja)</label><input type="number" id="pHariKerja" class="form-control border-primary fw-bold" required></div>
+    <div class="col-6 mb-3"><label>HK (6 Hari Kerja)</label><input type="number" id="pHariKerja6" class="form-control border-primary fw-bold" required></div>
+  </div>
+  
+  <div class="mb-3 bg-light p-3 border rounded border-success">
+    <label class="fw-bold text-success mb-2"><i class="bi bi-database-fill-down"></i> Sumber Data Pegawai</label>
+    <select id="pSumberData" class="form-select border-success fw-bold mb-2" onchange="toggleSumberData()">
+      <option value="salin">Salin Pegawai dari Bulan Sebelumnya</option>
+      <option value="import">Import dari File Excel SKP BKD</option>
+      <option value="kosong">Buka Kosong (Tanpa Pegawai)</option>
+    </select>
+
+    <div id="boxImportExcel" class="hidden mt-3">
+       <input type="file" id="pFileImportPegawai" class="form-control border-success mb-2" accept=".xlsx, .xls">
+       <button type="button" class="btn btn-sm btn-outline-success w-100" onclick="unduhTemplateExcelCustom('pegawai')"><i class="bi bi-download"></i> Unduh Format Excel</button>
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-primary w-100 fw-bold py-2">BUKA PERIODE BARU</button>
+</form>
     </div>
   </div></div>
 </div>
@@ -1309,6 +1337,7 @@
 
   // FUNGSI PENDAMPING: Menerapkan data ke Tampilan HTML
   function terapkanDataInit(dataInit, cUser, bAktif, jASN, isSilentUpdate = false) {
+    globalSettingsCache = dataInit.setting;
     let res = dataInit.setting;
     if(res) {
       document.getElementById('loginNamaInstansi').innerText = res.Nama_Instansi || "PEMERINTAH PROVINSI JAMBI"; 
@@ -1610,48 +1639,132 @@
   function sinkronHariKerja() { let namaInduk = document.getElementById('pIndukPajak').value; if(!namaInduk) return; let dataInduk = arrayPeriode.find(p => p.namaPeriode === namaInduk); if(dataInduk) { document.getElementById('pHariKerja').value = dataInduk.hariKerja; document.getElementById('pHariKerja6').value = dataInduk.hariKerja6; } }
 
   async function simpanPeriodeLanjut(e) {
-    e.preventDefault(); 
-    let btnSubmit = e.target.querySelector('button[type="submit"]'); 
-    btnSubmit.disabled = true; 
-    
-    let jenis = document.getElementById('pJenisPeriode').value; 
-    let tahunInput = document.getElementById('pTahun').value;
-    let namaPeriode = document.getElementById('pBulanNama').value; 
-    let refBulan = namaPeriode; 
-    let indukPajakVal = (jenis === "Reguler") ? "" : document.getElementById('pIndukPajak').value;
+      e.preventDefault();
+      let btnSubmit = e.target.querySelector('button[type="submit"]');
+      let sumber = document.getElementById('pSumberData').value;
+      let fileInput = document.getElementById('pFileImportPegawai');
 
-    // 👇 LOGIKA BARU: Cegah ganda untuk THR dan Gaji 13 di tahun yang sama
-    if (jenis === "THR" || jenis === "Gaji 13") {
-        let sudahAda = arrayPeriode.find(p => p.jenisPeriode === jenis && p.tahun == tahunInput);
-        if (sudahAda) {
-            btnSubmit.disabled = false;
-            return alertPeringatan(`Gagal! Periode ${jenis} untuk tahun ${tahunInput} sudah pernah ditambahkan.`);
-        }
-    }
+      if (sumber === 'import' && !fileInput.files[0]) {
+          return alertPeringatan("Pilih file Excel terlebih dahulu untuk diimpor!");
+      }
 
-    const d = { 
-        tahun: tahunInput, 
-        bulanAngka: document.getElementById('pBulanAngka').value, 
-        namaPeriode: namaPeriode, 
-        hariKerja: document.getElementById('pHariKerja').value, 
-        hariKerja6: document.getElementById('pHariKerja6').value, 
-        salinData: document.getElementById('pSalinPegawai').checked, 
-        jenisPeriode: jenis, 
-        refBulanGaji: refBulan, 
-        indukPajak: indukPajakVal 
-    };
+      btnSubmit.disabled = true;
+      let jenis = document.getElementById('pJenisPeriode').value;
+      let tahunInput = document.getElementById('pTahun').value;
+      let namaPeriode = document.getElementById('pBulanNama').value;
+      let indukPajakVal = (jenis === "Reguler") ? "" : document.getElementById('pIndukPajak').value;
 
-    let res = await fetchAPI("simpanPeriode", d); 
-    btnSubmit.disabled = false; 
-    
-    if(res.status === "sukses") { 
-        alertSukses(res.pesan); 
-        bootstrap.Modal.getInstance(document.getElementById('modalTambahPeriode')).hide(); 
-        renderDropdownPeriode(res.dataTerbaru); 
-    } else { 
-        alertError(res.pesan); 
-    }
-}
+      if (jenis === "THR" || jenis === "Gaji 13") {
+          let sudahAda = arrayPeriode.find(p => p.jenisPeriode === jenis && p.tahun == tahunInput);
+          if (sudahAda) {
+              btnSubmit.disabled = false;
+              return alertPeringatan(`Gagal! Periode ${jenis} untuk tahun ${tahunInput} sudah pernah ditambahkan.`);
+          }
+      }
+
+      startLoading("Membuka Periode Baru...");
+
+      // 1. BUAT PERIODE TERLEBIH DAHULU (Server Google)
+      const d = {
+          tahun: tahunInput, bulanAngka: document.getElementById('pBulanAngka').value, namaPeriode: namaPeriode, hariKerja: document.getElementById('pHariKerja').value, hariKerja6: document.getElementById('pHariKerja6').value,
+          salinData: (sumber === 'salin'), // True jika memilih salin, False jika memilih kosong/import
+          jenisPeriode: jenis, refBulanGaji: namaPeriode, indukPajak: indukPajakVal
+      };
+
+      let res = await fetchAPI("simpanPeriode", d);
+
+      if (res.status !== "sukses") {
+          stopLoading(); btnSubmit.disabled = false;
+          return alertError(res.pesan);
+      }
+
+      // 2. JIKA SUMBER ADALAH IMPORT EXCEL, KITA PROSES SEKARANG JUGA!
+      if (sumber === 'import') {
+          Swal.getHtmlContainer().innerHTML = "Menganalisa File Excel SKP...";
+          let file = fileInput.files[0];
+          let reader = new FileReader();
+
+          reader.onload = async function(ev) {
+              let data = new Uint8Array(ev.target.result);
+              let workbook = XLSX.read(data, {type: 'array'});
+              let data2D = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1, defval: ""});
+
+              if(data2D.length === 0) {
+                  stopLoading(); btnSubmit.disabled = false;
+                  return alertError("Periode terbuka, tapi file Excel kosong!");
+              }
+
+              let headerRowIndex = -1; let colMap = {};
+              // Deteksi posisi Kolom Pintar
+              for(let i = 0; i < Math.min(30, data2D.length); i++) {
+                  let rowStr = data2D[i].map(c => String(c).toLowerCase()).join("");
+                  if(rowStr.includes("nip") && rowStr.includes("nama")) {
+                      headerRowIndex = i;
+                      data2D[i].forEach((colName, idx) => {
+                          let name = String(colName).toLowerCase().replace(/[\s.]/g, '');
+                          if(name === "nip") colMap.nip = idx;
+                          else if(name.includes("nama")) colMap.nama = idx;
+                          else if(name.includes("tgllahir") || name.includes("tanggallahir")) colMap.tglLahir = idx;
+                          else if(name.includes("gol") || name.includes("pangkat")) colMap.golongan = idx;
+                          else if(name.includes("unorinduk") || name.includes("opd") || name.includes("induk")) colMap.unorInduk = idx;
+                          else if(name.includes("unitkerja") || name.includes("lokasikerja")) colMap.unitkerja = idx;
+                          else if(name === "jabatan" || name.includes("namajabatan")) colMap.namaJabatan = idx;
+                          else if(name.includes("jenisjabatan")) colMap.jenisJab = idx;
+                          else if(name.includes("status") || name.includes("kawin")) colMap.statusKawin = idx;
+                          else if(name.includes("gajipokok") || name.includes("gapok")) colMap.gapok = idx;
+                          else if(name.includes("tunjanganjabatan") || name.includes("tjjabatan")) colMap.tjJab = idx;
+                          else if(name.includes("rekening")) colMap.rekening = idx;
+                          else if(name.includes("skp") || name.includes("nilaiskp")) colMap.skp = idx;
+                      });
+                      break;
+                  }
+              }
+
+              if(headerRowIndex === -1 || colMap.nip === undefined) {
+                  stopLoading(); btnSubmit.disabled = false;
+                  return alertPeringatan("Periode dibuka, tapi format Excel gagal dideteksi (Pastikan ada tulisan NIP dan Nama).");
+              }
+
+              let payload = [];
+              for(let i = headerRowIndex + 1; i < data2D.length; i++) {
+                  let row = data2D[i];
+                  if(!row[colMap.nip]) continue;
+                  let nipBersih = String(row[colMap.nip]).replace(/[\s-']/g, '');
+                  if(!/^\d{18}$/.test(nipBersih)) continue; // Filter 18 digit murni
+
+                  payload.push({
+                      nip: nipBersih, nama: colMap.nama !== undefined ? String(row[colMap.nama] || "") : "", tglLahir: colMap.tglLahir !== undefined ? formatTanggalExcel(row[colMap.tglLahir]) : "", golongan: colMap.golongan !== undefined ? String(row[colMap.golongan] || "") : "", unorInduk: colMap.unorInduk !== undefined ? String(row[colMap.unorInduk] || "") : "", unitkerja: colMap.unitkerja !== undefined ? String(row[colMap.unitkerja] || "") : "", namaJabatan: colMap.namaJabatan !== undefined ? String(row[colMap.namaJabatan] || "") : "", jenisJab: colMap.jenisJab !== undefined ? String(row[colMap.jenisJab] || "") : "Struktural", statusKawin: colMap.statusKawin !== undefined ? String(row[colMap.statusKawin] || "") : "TK/0 = 1", gapok: colMap.gapok !== undefined ? parseFloat(row[colMap.gapok]) || 0 : 0, tjJab: colMap.tjJab !== undefined ? parseFloat(row[colMap.tjJab]) || 0 : 0, rekening: colMap.rekening !== undefined ? String(row[colMap.rekening] || "").replace(/[']/g, '') : "", skp: colMap.skp !== undefined ? String(row[colMap.skp] || "") : ""
+                  });
+              }
+
+              if(payload.length === 0) {
+                  stopLoading(); btnSubmit.disabled = false;
+                  return alertPeringatan("Periode dibuka, tapi tidak ada NIP valid di file Excel.");
+              }
+
+              // KIRIM DATA PEGAWAI KE DATABASE
+              Swal.getHtmlContainer().innerHTML = `Menyimpan ${payload.length} Pegawai ke Database...`;
+              let resImport = await fetchAPI("importPegawaiMassal", {payload: payload, bulanAktif: namaPeriode});
+              
+              stopLoading(); btnSubmit.disabled = false;
+              if(String(resImport).includes("Error")) { alertError(resImport.pesan || resImport); }
+              else { alertSukses(`Periode ${namaPeriode} Terbuka & Data Excel berhasil diimpor!`); }
+
+              bootstrap.Modal.getInstance(document.getElementById('modalTambahPeriode')).hide();
+              renderDropdownPeriode(res.dataTerbaru);
+              document.getElementById('formTambahPeriode').reset();
+              toggleSumberData();
+          };
+          reader.readAsArrayBuffer(file);
+      } 
+      // JIKA SUMBER BUKAN IMPORT EXCEL (Salin / Kosong)
+      else {
+          stopLoading(); btnSubmit.disabled = false;
+          alertSukses(res.pesan);
+          bootstrap.Modal.getInstance(document.getElementById('modalTambahPeriode')).hide();
+          renderDropdownPeriode(res.dataTerbaru);
+      }
+  }
 
   async function muatDaftarPeriode() { let data = await fetchAPI("getDaftarPeriode", {}); if (data && !data.error) { renderDropdownPeriode(data); } }
 
@@ -2422,16 +2535,58 @@ async function muatDataPegawai(forceRefresh = false) {
   // =====================================
   // 10. PENGATURAN KOP (SETTINGS)
   // =====================================
+  // Variabel Global untuk menyimpan pengaturan di RAM
+  let globalSettingsCache = null; 
+
+  function isiFormSetting(res) {
+    document.getElementById('sDinas').value = res.Nama_Dinas || ""; document.getElementById('sSubDinas').value = res.Nama_Sub_Dinas || ""; document.getElementById('sInstansi').value = res.Nama_Instansi || ""; document.getElementById('sKepJab').value = res.Kepala_Jabatan || ""; document.getElementById('sKepNama').value = res.Kepala_Nama || ""; document.getElementById('sKepPangkat').value = res.Kepala_Pangkat || ""; document.getElementById('sKepNIP').value = res.Kepala_NIP || ""; document.getElementById('sBenNama').value = res.Bendahara_Nama || ""; document.getElementById('sBenPangkat').value = res.Bendahara_Pangkat || ""; document.getElementById('sBenNIP').value = res.Bendahara_NIP || ""; document.getElementById('sRekKorpri').value = res.Rek_Korpri || ""; document.getElementById('sPotKorpri').value = res.Pot_Korpri || ""; document.getElementById('sLogoDinas').value = res.Logo_Dinas || ""; document.getElementById('sLogoInstansi').value = res.Logo_Instansi || "";
+    if(res.Logo_Dinas) { let pD = document.getElementById('previewLogoDinas'); pD.src = res.Logo_Dinas; pD.classList.remove('hidden'); }
+    if(res.Logo_Instansi) { let pI = document.getElementById('previewLogoInstansi'); pI.src = res.Logo_Instansi; pI.classList.remove('hidden'); }
+  }
+
   async function bukaSetting() {
-    switchView('viewSetting'); let res = await fetchAPI("getSetting", {});
-    if(res && !res.error) { document.getElementById('sDinas').value = res.Nama_Dinas || ""; document.getElementById('sSubDinas').value = res.Nama_Sub_Dinas || ""; document.getElementById('sInstansi').value = res.Nama_Instansi || ""; document.getElementById('sKepJab').value = res.Kepala_Jabatan || ""; document.getElementById('sKepNama').value = res.Kepala_Nama || ""; document.getElementById('sKepPangkat').value = res.Kepala_Pangkat || ""; document.getElementById('sKepNIP').value = res.Kepala_NIP || ""; document.getElementById('sBenNama').value = res.Bendahara_Nama || ""; document.getElementById('sBenPangkat').value = res.Bendahara_Pangkat || ""; document.getElementById('sBenNIP').value = res.Bendahara_NIP || ""; document.getElementById('sRekKorpri').value = res.Rek_Korpri || ""; document.getElementById('sPotKorpri').value = res.Pot_Korpri || ""; document.getElementById('sLogoDinas').value = res.Logo_Dinas || ""; document.getElementById('sLogoInstansi').value = res.Logo_Instansi || ""; if(res.Logo_Dinas) { let pD = document.getElementById('previewLogoDinas'); pD.src = res.Logo_Dinas; pD.classList.remove('hidden'); } if(res.Logo_Instansi) { let pI = document.getElementById('previewLogoInstansi'); pI.src = res.Logo_Instansi; pI.classList.remove('hidden'); } }
+    switchView('viewSetting');
+    
+    // JIKA DATA SUDAH ADA DI RAM, LANGSUNG TAMPILKAN (0 DETIK!)
+    if (globalSettingsCache) {
+        isiFormSetting(globalSettingsCache);
+    } else {
+        // JIKA BELUM ADA (Pertama kali), baru minta ke server
+        startLoading("Memuat Pengaturan...");
+        let res = await fetchAPI("getSetting", {});
+        stopLoading();
+        if(res && !res.error) {
+            globalSettingsCache = res;
+            isiFormSetting(res);
+        }
+    }
   }
 
   async function submitSetting(e) {
     e.preventDefault(); startLoading("Menyimpan Pengaturan..."); 
     let d = { usernameAksi: currentUser.username, Nama_Dinas: document.getElementById('sDinas').value, Nama_Sub_Dinas: document.getElementById('sSubDinas').value || "", Nama_Instansi: document.getElementById('sInstansi').value, Kepala_Jabatan: document.getElementById('sKepJab').value, Kepala_Nama: document.getElementById('sKepNama').value, Kepala_Pangkat: document.getElementById('sKepPangkat').value, Kepala_NIP: document.getElementById('sKepNIP').value, Bendahara_Nama: document.getElementById('sBenNama').value, Bendahara_Pangkat: document.getElementById('sBenPangkat').value, Bendahara_NIP: document.getElementById('sBenNIP').value, Rek_Korpri: document.getElementById('sRekKorpri').value, Pot_Korpri: document.getElementById('sPotKorpri').value || 0, Logo_Dinas: document.getElementById('sLogoDinas').value || "", Logo_Instansi: document.getElementById('sLogoInstansi').value || "" };
-    let res = await fetchAPI("simpanSetting", d); stopLoading(); 
-    if(String(res).includes("Akses Ditolak") || String(res).includes("Error")) { alertError(res.pesan || res); } else { alertSukses(res); }
+    
+    let res = await fetchAPI("simpanSetting", d); 
+    stopLoading(); 
+    
+    if(String(res).includes("Akses Ditolak") || String(res).includes("Error")) { 
+        alertError(res.pesan || res); 
+    } else { 
+        alertSukses(res); 
+        globalSettingsCache = d; // Update RAM Cache
+        
+        // Update LocalStorage agar saat F5/Refresh, data tidak kembali ke awal
+        try {
+            let currentCache = JSON.parse(localStorage.getItem('simTppCacheData') || "{}");
+            currentCache.setting = d;
+            localStorage.setItem('simTppCacheData', JSON.stringify(currentCache));
+        } catch(e) {}
+        
+        document.getElementById('loginNamaInstansi').innerText = d.Nama_Instansi || "PEMERINTAH PROVINSI JAMBI";
+        document.getElementById('loginNamaDinas').innerText = d.Nama_Dinas || "DINAS PENDIDIKAN";
+        document.getElementById('loginSubDinas').innerText = d.Nama_Sub_Dinas ? d.Nama_Sub_Dinas.toUpperCase() : "";
+        globalPotKorpri = parseFloat(d.Pot_Korpri) || 0;
+    }
   }
 
   function hapusLogo(tipe) {
@@ -2455,6 +2610,32 @@ async function muatDataPegawai(forceRefresh = false) {
   async function unduhRekapPajak(format, e) { if(e) e.preventDefault(); if(!globalBulanAktif) return alertPeringatan("Pilih bulan dulu!"); startLoading("Menyusun Rekap Pajak..."); let res = await fetchAPI("cetakRekapPajakTER", {bulanAktif: globalBulanAktif, roleUser: currentUser.role, unitkerjaUser: currentUser.unitkerja, jenisASN: globalJenisASN}); stopLoading(); if(res && res.error) { alertError("❌ " + res.error); } else if(res && res[format.toLowerCase()]) { showDownloadModal(res[format.toLowerCase()]); } else { alertError("❌ Gagal."); } }
 
   function cetakPDFPerorangan(tabId, namaFile) { window.scrollTo(0, 0); let element = document.getElementById('viewManajemenASN'); let navPills = element.querySelector('.nav-pills'); let actionBtns = element.querySelectorAll('button'); let origPillsDisplay = navPills ? navPills.style.display : ''; if(navPills) navPills.style.display = 'none'; actionBtns.forEach(b => { b.dataset.origDisplay = b.style.display; b.style.display = 'none'; }); let tables = element.querySelectorAll('.table-responsive'); tables.forEach(t => { t.style.overflow = 'visible'; }); let selects = element.querySelectorAll('.form-select'); selects.forEach(s => { s.dataset.origBg = s.style.backgroundImage; s.style.backgroundImage = 'none'; }); startLoading("Menyusun PDF..."); let opt = { margin: 0.3, filename: `${namaFile}_${asNIPAktif}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, scrollY: 0, scrollX: 0 }, jsPDF: { unit: 'in', format: 'legal', orientation: 'portrait' } }; html2pdf().set(opt).from(element).save().then(() => { stopLoading(); if(navPills) navPills.style.display = origPillsDisplay; actionBtns.forEach(b => { b.style.display = b.dataset.origDisplay; }); tables.forEach(t => { t.style.overflow = ''; }); selects.forEach(s => { s.style.backgroundImage = s.dataset.origBg; }); setTimeout(() => { alertSukses("File PDF Perorangan berhasil diunduh!"); }, 500); }).catch(err => { stopLoading(); if(navPills) navPills.style.display = origPillsDisplay; actionBtns.forEach(b => { b.style.display = b.dataset.origDisplay; }); tables.forEach(t => { t.style.overflow = ''; }); selects.forEach(s => { s.style.backgroundImage = s.dataset.origBg; }); setTimeout(() => { alertError("Gagal memproses PDF: " + err); }, 500); }); }
+
+  // Fungsi untuk menampilkan/menyembunyikan tombol upload file
+  function toggleSumberData() {
+      let sumber = document.getElementById('pSumberData').value;
+      if (sumber === 'import') document.getElementById('boxImportExcel').classList.remove('hidden');
+      else document.getElementById('boxImportExcel').classList.add('hidden');
+  }
+
+  // Fungsi mengubah format tanggal Excel
+  function formatTanggalExcel(excelDate) {
+      if(!excelDate) return "";
+      if(!isNaN(excelDate)) { let date = new Date((excelDate - (25567 + 2)) * 86400 * 1000); return date.toISOString().split('T')[0]; }
+      let strDate = String(excelDate).trim(); let regexBaku = /^\d{4}-\d{2}-\d{2}$/;
+      if(regexBaku.test(strDate)) return strDate;
+      let parts = strDate.split(/[-/]/);
+      if(parts.length === 3) {
+          if(parts[0].length === 4) return `${parts[0]}-${parts[1].padStart(2,'0')}-${parts[2].padStart(2,'0')}`;
+          return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+      }
+      return "1970-01-01";
+  }
+
+  function unduhTemplateExcelCustom(jenis) {
+      document.getElementById('importJenis').value = jenis;
+      unduhTemplateExcel();
+  }
 
   // =====================================
   // 12. ANIMASI LOADING & ALERT

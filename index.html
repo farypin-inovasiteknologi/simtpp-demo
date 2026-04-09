@@ -3289,7 +3289,11 @@ async function buatExcelNominatifJS(res) {
 // TRIGGER TOMBOL DOWNLOAD MENGGUNAKAN EXCELJS
 // ==============================================================
 
-// 1. UPDATE FUNGSI NOMINATIF
+// ==============================================================
+// TRIGGER TOMBOL DOWNLOAD MENGGUNAKAN EXCELJS & JSPDF
+// ==============================================================
+
+// 1. UPDATE FUNGSI NOMINATIF (Dengan Peringatan Gaji 0)
 async function unduhNominatifKolektif(format, e) { 
     if(e) e.preventDefault(); 
     if(!globalBulanAktif) return alertPeringatan("Pilih bulan terlebih dahulu!"); 
@@ -3301,12 +3305,37 @@ async function unduhNominatifKolektif(format, e) {
 
     if(res && res.error) return alertError("❌ " + res.error); 
     if (res && res.status === "sukses") {
-        if(format === 'excel') buatExcelNominatifJS(res);
-        else if (format === 'pdf') buatPdfNominatifJS(res); // Panggil fungsi PDF
-    } else { alertError("❌ Gagal mengambil data."); } 
+        // 👇 LOGIKA CEK GAJI KOSONG (0) 👇
+        let adaBelumSimpan = res.data.some(c => c.gajiKotor === 0);
+        
+        if (adaBelumSimpan) {
+            Swal.fire({
+                title: 'Ada Data Belum Lengkap!',
+                text: 'Ditemukan pegawai yang data Gaji-nya belum tersimpan (angkanya Rp 0). Yakin ingin lanjut mencetak?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, Lanjut Cetak!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    if(format === 'excel') buatExcelNominatifJS(res);
+                    else if (format === 'pdf') buatPdfNominatifJS(res);
+                }
+            });
+        } else {
+            // Jika aman semua, langsung cetak
+            if(format === 'excel') buatExcelNominatifJS(res);
+            else if (format === 'pdf') buatPdfNominatifJS(res);
+        }
+    } else { 
+        alertError("❌ Gagal mengambil data."); 
+    } 
 }
 
-// 2. UPDATE FUNGSI LAPORAN LAINNYA
+
+// 2. UPDATE FUNGSI LAPORAN LAINNYA (Dengan Peringatan Gaji 0)
 async function fetchDataLaporan(format, e, funcExcel, funcPdf) {
     if(e) e.preventDefault(); 
     if(!globalBulanAktif) return alertPeringatan("Pilih bulan terlebih dahulu!"); 
@@ -3323,8 +3352,30 @@ async function fetchDataLaporan(format, e, funcExcel, funcPdf) {
         if(res && res.error) {
             return alertError("❌ " + res.error); 
         } else if (res && res.status === "sukses") {
-            if(format === 'excel') funcExcel(res);
-            else if (format === 'pdf') funcPdf(res); 
+            // 👇 LOGIKA CEK GAJI KOSONG (0) 👇
+            let adaBelumSimpan = res.data.some(c => c.gajiKotor === 0);
+            
+            if (adaBelumSimpan) {
+                Swal.fire({
+                    title: 'Ada Data Belum Lengkap!',
+                    text: 'Ditemukan pegawai yang data Gaji-nya belum tersimpan (angkanya Rp 0). Yakin ingin lanjut mencetak?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, Lanjut Cetak!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        if(format === 'excel') funcExcel(res);
+                        else if (format === 'pdf') funcPdf(res); 
+                    }
+                });
+            } else {
+                // Jika aman semua, langsung cetak
+                if(format === 'excel') funcExcel(res);
+                else if (format === 'pdf') funcPdf(res); 
+            }
         } else { 
             alertError("❌ Gagal mengambil data dari server."); 
         } 
@@ -3335,13 +3386,11 @@ async function fetchDataLaporan(format, e, funcExcel, funcPdf) {
     }
 }
 
-// Mapping Tombol
+// Mapping Tombol (Biarkan tetap seperti ini)
 function unduhPerhitunganKolektif(format, e) { fetchDataLaporan(format, e, buatExcelPerhitunganJS, buatPdfPerhitunganJS); }
 function unduhRekapGolongan(format, e) { fetchDataLaporan(format, e, buatExcelRekapGolonganJS, buatPdfRekapGolonganJS); }
 function unduhRekening(format, e) { fetchDataLaporan(format, e, buatExcelRekeningJS, buatPdfRekeningJS); }
 function unduhRekapPajak(format, e) { fetchDataLaporan(format, e, buatExcelRekapPajakJS, buatPdfRekapPajakJS); }
-
-
 
   function cetakPDFPerorangan(tabId, namaFile) { window.scrollTo(0, 0); let element = document.getElementById('viewManajemenASN'); let navPills = element.querySelector('.nav-pills'); let actionBtns = element.querySelectorAll('button'); let origPillsDisplay = navPills ? navPills.style.display : ''; if(navPills) navPills.style.display = 'none'; actionBtns.forEach(b => { b.dataset.origDisplay = b.style.display; b.style.display = 'none'; }); let tables = element.querySelectorAll('.table-responsive'); tables.forEach(t => { t.style.overflow = 'visible'; }); let selects = element.querySelectorAll('.form-select'); selects.forEach(s => { s.dataset.origBg = s.style.backgroundImage; s.style.backgroundImage = 'none'; }); startLoading("Menyusun PDF..."); let opt = { margin: 0.3, filename: `${namaFile}_${asNIPAktif}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, scrollY: 0, scrollX: 0 }, jsPDF: { unit: 'in', format: 'legal', orientation: 'portrait' } }; html2pdf().set(opt).from(element).save().then(() => { stopLoading(); if(navPills) navPills.style.display = origPillsDisplay; actionBtns.forEach(b => { b.style.display = b.dataset.origDisplay; }); tables.forEach(t => { t.style.overflow = ''; }); selects.forEach(s => { s.style.backgroundImage = s.dataset.origBg; }); setTimeout(() => { alertSukses("File PDF Perorangan berhasil diunduh!"); }, 500); }).catch(err => { stopLoading(); if(navPills) navPills.style.display = origPillsDisplay; actionBtns.forEach(b => { b.style.display = b.dataset.origDisplay; }); tables.forEach(t => { t.style.overflow = ''; }); selects.forEach(s => { s.style.backgroundImage = s.dataset.origBg; }); setTimeout(() => { alertError("Gagal memproses PDF: " + err); }, 500); }); }
 

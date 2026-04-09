@@ -1054,7 +1054,7 @@
             <label>Role / Hak Akses</label>
             <select id="uRole" class="form-select border-primary fw-bold" onchange="toggleUnitKerjaAkun()">
               <option value="Operator">User Unit Kerja (Operator)</option>
-              <option value="Admin Kab/Kota">Admin Kab/Kota (Cabdin/UPTD)</option>
+              <option value="Admin Sub Unit/UPTD">Admin Sub Unit/UPTD</option>
               <option value="Admin OPD">Admin OPD (Dinas/Badan)</option>
               <option value="Super Admin">Super Admin (Pusat)</option>
             </select>
@@ -1994,7 +1994,7 @@
     sel.innerHTML = html; if (selectedValue) { sel.value = selectedValue; }
   }
 
-   // BATASI DROPDOWN SAAT ADMIN KAB/KOTA MENAMBAH PEGAWAI MANUAL
+   // BATASI DROPDOWN SAAT ADMIN SUB UNIT MENAMBAH PEGAWAI MANUAL
   function bukaModalPegawai(aksi, nip="", nama="", tglLahir="", golongan="", unorInduk="", unitkerja="", jabatan="", jenis="Struktural", status="TK/0 = 1", gapok=0, tjJab=0, rekening="", skp="", uuid="") {
     document.getElementById('mAksi').value = aksi; document.getElementById('mNipLama').value = nip; document.getElementById('mTglLahir').value = tglLahir; document.getElementById('mGolongan').value = golongan; document.getElementById('mUuid').value = uuid; renderDropdownGolongan(golongan); document.getElementById('mJenis').value = jenis; document.getElementById('mStatus').value = status; document.getElementById('mGapok').value = gapok; document.getElementById('mTjJab').value = tjJab; document.getElementById('mRekening').value = rekening;
     document.getElementById('mSkp').value = skp || "";
@@ -2016,11 +2016,11 @@
         elUnitKerja.value = currentUser.unitkerja;  
         elUnitKerja.readOnly = true; elUnitKerja.classList.add("readonly-field"); 
     } 
-    else if (currentUser.role === "Admin Kab/Kota") {
+    else if (currentUser.role === "Admin Sub Unit/UPTD") {
         elUnitKerja.readOnly = false; elUnitKerja.classList.remove("readonly-field");
-        // Filter Autocomplete: Hanya tampilkan Unit Kerja yang ada di Kabupaten Admin ini
-        let unitsInKab = arrayUnitKerjaFull.filter(u => String(u.kabKota).toLowerCase() === String(currentUser.unitkerja).toLowerCase()).map(u => u.nama);
-        setupAutocomplete(elUnitKerja, unitsInKab);
+        // Filter Autocomplete: Hanya tampilkan Unit Kerja yang ada di sub unit Admin ini
+        let unitsInSubUnit = arrayUnitKerjaFull.filter(u => String(u.subUnit).toLowerCase() === String(currentUser.unitkerja).toLowerCase()).map(u => u.nama);
+        setupAutocomplete(elUnitKerja, unitsInSubUnit);
     }
     else { 
         elUnitKerja.readOnly = false; elUnitKerja.classList.remove("readonly-field"); 
@@ -2625,7 +2625,7 @@
 
   // Variabel Global Baru untuk menyimpan Kamus Wilayah
   let arrayUnitKerjaFull = [];
-  let arrayKabKotaValid = [];
+  let arraySubUnitValid = [];
 
   function terapkanDataInit(dataInit, cUser, bAktif, jASN, isSilentUpdate = false) {
     globalSettingsCache = dataInit.setting;
@@ -2645,7 +2645,7 @@
     // 👇 PENGOLAHAN KAMUS WILAYAH DARI SERVER 👇
     arrayUnitKerjaFull = dataInit.unitKerjaFull || []; 
     arrayUnitKerjaValid = arrayUnitKerjaFull.map(u => u.nama); // Array biasa untuk Unit Kerja
-    arrayKabKotaValid = [...new Set(arrayUnitKerjaFull.map(u => u.kabKota).filter(Boolean))]; // Array unik untuk Kab/Kota
+    arraySubUnitValid = [...new Set(arrayUnitKerjaFull.map(u => u.subUnit).filter(Boolean))]; // Array unik untuk Sub Unit
 
     setupAutocomplete(document.getElementById('mUnitKerja'), arrayUnitKerjaValid);
     setupAutocomplete(document.getElementById('uUnitKerjaOp'), arrayUnitKerjaValid);
@@ -2664,7 +2664,7 @@
       let r = currentUser.role;
       let isSuper = (r === "Super Admin");
       let isOpd = (r === "Admin OPD");
-      let isKabKota = (r === "Admin Kab/Kota");
+      let isSubUnit = (r === "Admin Sub Unit/UPTD");
 
       if(isSuper) { document.getElementById('btnMasterAdmin').classList.remove('hidden'); document.getElementById('btnAkunAdmin').classList.remove('hidden'); } 
       else { document.getElementById('btnMasterAdmin').classList.add('hidden'); document.getElementById('btnAkunAdmin').classList.add('hidden'); }
@@ -2675,8 +2675,8 @@
       let iconMasterHP = document.querySelector('i[onclick="switchView(\'viewMasterPergub\')"]');
       let iconAkunHP = document.querySelector('i[onclick="muatDaftarAkun()"]');
 
-      // Admin Kab/Kota DIBERIKAN HAK BUKA PERIODE & SETTING, tapi tidak bisa Master TPP
-      if(isSuper || isOpd || isKabKota) { 
+      // Admin Sub Unit DIBERIKAN HAK BUKA PERIODE & SETTING, tapi tidak bisa Master TPP
+      if(isSuper || isOpd || isSubUnit) { 
           document.getElementById('btnTambahBulan').classList.remove('hidden'); 
           document.getElementById('btnKelolaBulan').classList.remove('hidden'); 
           if(iconMasterHP && (isSuper || isOpd)) iconMasterHP.classList.remove('hidden'); else if(iconMasterHP) iconMasterHP.classList.add('hidden');
@@ -2749,17 +2749,17 @@
         if(adm) adm.value = (r === 'Super Admin') ? namaInstansi : namaDinas;
         if(btnSimpan) btnSimpan.disabled = false;
         
-    } else if (r === 'Admin Kab/Kota') {
+    } else if (r === 'Admin Sub Unit/UPTD') {
         if(adm) { adm.classList.add('hidden'); adm.required = false; }
         if(op && op.parentNode) op.parentNode.classList.remove('hidden'); 
         
-        // Bentuk Autocomplete untuk Kabupaten
-        setupAutocomplete(document.getElementById('uUnitKerjaOp'), arrayKabKotaValid);
+        // Bentuk Autocomplete untuk Sub Unit
+        setupAutocomplete(document.getElementById('uUnitKerjaOp'), arraySubUnitValid);
         
         let newOp = document.getElementById('uUnitKerjaOp'); // Ambil elemen baru hasil kloning
-        if(newOp) newOp.placeholder = "Ketik nama Kabupaten / Kota...";
+        if(newOp) newOp.placeholder = "Ketik nama Sub Unit/UPTD/Kab/Kota...";
         
-        if(arrayKabKotaValid.length === 0) {
+        if(arraySubUnitValid.length === 0) {
             if(btnSimpan) btnSimpan.disabled = true;
         } else { 
             if(btnSimpan) btnSimpan.disabled = false; 

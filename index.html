@@ -1994,7 +1994,8 @@
     sel.innerHTML = html; if (selectedValue) { sel.value = selectedValue; }
   }
 
- function bukaModalPegawai(aksi, nip="", nama="", tglLahir="", golongan="", unorInduk="", unitkerja="", jabatan="", jenis="Struktural", status="TK/0 = 1", gapok=0, tjJab=0, rekening="", skp="", uuid="") {
+   // BATASI DROPDOWN SAAT ADMIN KAB/KOTA MENAMBAH PEGAWAI MANUAL
+  function bukaModalPegawai(aksi, nip="", nama="", tglLahir="", golongan="", unorInduk="", unitkerja="", jabatan="", jenis="Struktural", status="TK/0 = 1", gapok=0, tjJab=0, rekening="", skp="", uuid="") {
     document.getElementById('mAksi').value = aksi; document.getElementById('mNipLama').value = nip; document.getElementById('mTglLahir').value = tglLahir; document.getElementById('mGolongan').value = golongan; document.getElementById('mUuid').value = uuid; renderDropdownGolongan(golongan); document.getElementById('mJenis').value = jenis; document.getElementById('mStatus').value = status; document.getElementById('mGapok').value = gapok; document.getElementById('mTjJab').value = tjJab; document.getElementById('mRekening').value = rekening;
     document.getElementById('mSkp').value = skp || "";
     
@@ -2004,17 +2005,28 @@
     let opdAktif = document.getElementById('loginNamaDinas').innerText;
     elUnorInduk.value = unorInduk || opdAktif;
 
-    // 👇 PERBAIKAN: Default ke OPD Aktif (Dinas), BUKAN Instansi
     elUnitKerja.value = unitkerja || opdAktif;
 
-    // Operator tidak boleh ubah NIP dan Nama
     let isOperatorEdit = (aksi === 'edit' && currentUser.role === "Operator");
     if (isOperatorEdit) { elNip.readOnly = true; elNip.classList.add("readonly-field"); elNama.readOnly = true; elNama.classList.add("readonly-field"); } 
     else { elNip.readOnly = false; elNip.classList.remove("readonly-field"); elNama.readOnly = false; elNama.classList.remove("readonly-field"); }
     
-    // Operator unit kerjanya dikunci. Admin OPD & Super Admin bebas ubah.
-    if (currentUser.role === "Operator") { elUnitKerja.value = currentUser.unitkerja;  elUnitKerja.readOnly = true; elUnitKerja.classList.add("readonly-field"); } 
-    else { elUnitKerja.readOnly = false; elUnitKerja.classList.remove("readonly-field"); }
+    // 👇 LOGIKA BATASAN PENGISIAN UNIT KERJA 👇
+    if (currentUser.role === "Operator") { 
+        elUnitKerja.value = currentUser.unitkerja;  
+        elUnitKerja.readOnly = true; elUnitKerja.classList.add("readonly-field"); 
+    } 
+    else if (currentUser.role === "Admin Kab/Kota") {
+        elUnitKerja.readOnly = false; elUnitKerja.classList.remove("readonly-field");
+        // Filter Autocomplete: Hanya tampilkan Unit Kerja yang ada di Kabupaten Admin ini
+        let unitsInKab = arrayUnitKerjaFull.filter(u => String(u.kabKota).toLowerCase() === String(currentUser.unitkerja).toLowerCase()).map(u => u.nama);
+        setupAutocomplete(elUnitKerja, unitsInKab);
+    }
+    else { 
+        elUnitKerja.readOnly = false; elUnitKerja.classList.remove("readonly-field"); 
+        // Super Admin / Admin OPD bisa lihat semua
+        setupAutocomplete(elUnitKerja, arrayUnitKerjaValid);
+    }
     
     muatDropdownJabatan(jabatan); document.getElementById('pegawaiModalTitle').innerText = aksi === 'edit' ? 'Edit Pegawai' : 'Tambah Pegawai Baru'; 
     let modalObj = bootstrap.Modal.getInstance(document.getElementById('modalKelolaPegawai')) || new bootstrap.Modal(document.getElementById('modalKelolaPegawai'));
@@ -2721,7 +2733,6 @@
     }
   }
 
-  // MENGUBAH TAMPILAN MODAL AKUN SESUAI ROLE (Ada tambahan Admin Kab/Kota)
   function toggleUnitKerjaAkun() { 
     let r = document.getElementById('uRole').value; 
     let op = document.getElementById('uUnitKerjaOp'); 
@@ -2729,83 +2740,88 @@
     let btnSimpan = document.getElementById('btnSimpanAkun');
     
     if(r === 'Super Admin' || r === 'Admin OPD') { 
-        op.parentNode.classList.add('hidden'); // Sembunyikan wrapper autocomplete
-        adm.classList.remove('hidden'); adm.required = true; 
+        if(op && op.parentNode) op.parentNode.classList.add('hidden'); 
+        if(adm) { adm.classList.remove('hidden'); adm.required = true; }
         
         let namaDinas = document.getElementById('loginNamaDinas').innerText;
         let namaInstansi = document.getElementById('loginNamaInstansi').innerText || "PEMERINTAH PROVINSI JAMBI";
         
-        adm.value = (r === 'Super Admin') ? namaInstansi : namaDinas;
-        btnSimpan.disabled = false;
+        if(adm) adm.value = (r === 'Super Admin') ? namaInstansi : namaDinas;
+        if(btnSimpan) btnSimpan.disabled = false;
         
     } else if (r === 'Admin Kab/Kota') {
-        adm.classList.add('hidden'); adm.required = false; 
-        op.parentNode.classList.remove('hidden'); 
+        if(adm) { adm.classList.add('hidden'); adm.required = false; }
+        if(op && op.parentNode) op.parentNode.classList.remove('hidden'); 
         
-        // Ubah Autocomplete menjadi Data Kabupaten
-        setupAutocomplete(op, arrayKabKotaValid);
-        op.placeholder = "Ketik nama Kabupaten / Kota...";
+        // Bentuk Autocomplete untuk Kabupaten
+        setupAutocomplete(document.getElementById('uUnitKerjaOp'), arrayKabKotaValid);
+        
+        let newOp = document.getElementById('uUnitKerjaOp'); // Ambil elemen baru hasil kloning
+        if(newOp) newOp.placeholder = "Ketik nama Kabupaten / Kota...";
         
         if(arrayKabKotaValid.length === 0) {
-            alertPeringatan("Database Kabupaten belum diatur! Isi kolom Kabupaten di DB_Unit_Kerja.");
-            btnSimpan.disabled = true;
-        } else { btnSimpan.disabled = false; }
+            if(btnSimpan) btnSimpan.disabled = true;
+        } else { 
+            if(btnSimpan) btnSimpan.disabled = false; 
+        }
         
     } else { 
-        adm.classList.add('hidden'); adm.required = false; 
-        op.parentNode.classList.remove('hidden'); 
+        if(adm) { adm.classList.add('hidden'); adm.required = false; }
+        if(op && op.parentNode) op.parentNode.classList.remove('hidden'); 
         
-        // Ubah Autocomplete menjadi Data Unit Kerja Sekolah
-        setupAutocomplete(op, arrayUnitKerjaValid);
-        op.placeholder = "Ketik untuk mencari unit kerja sekolah/UPTD...";
+        // Bentuk Autocomplete untuk Unit Kerja Sekolah/UPTD
+        setupAutocomplete(document.getElementById('uUnitKerjaOp'), arrayUnitKerjaValid);
+        
+        let newOp = document.getElementById('uUnitKerjaOp'); // Ambil elemen baru hasil kloning
+        if(newOp) {
+           newOp.placeholder = "Ketik untuk mencari unit kerja sekolah/UPTD...";
+           if(arrayUnitKerjaValid.length === 0) newOp.placeholder = "DATA UNIT KERJA KOSONG!";
+        }
         
         if(arrayUnitKerjaValid.length === 0) {
-            btnSimpan.disabled = true;
-            op.placeholder = "DATA UNIT KERJA KOSONG!";
-        } else { btnSimpan.disabled = false; }
+            if(btnSimpan) btnSimpan.disabled = true;
+        } else { 
+            if(btnSimpan) btnSimpan.disabled = false; 
+        }
     } 
   }
 
-  // BATASI DROPDOWN SAAT ADMIN KAB/KOTA MENAMBAH PEGAWAI MANUAL
-  function bukaModalPegawai(aksi, nip="", nama="", tglLahir="", golongan="", unorInduk="", unitkerja="", jabatan="", jenis="Struktural", status="TK/0 = 1", gapok=0, tjJab=0, rekening="", skp="", uuid="") {
-    document.getElementById('mAksi').value = aksi; document.getElementById('mNipLama').value = nip; document.getElementById('mTglLahir').value = tglLahir; document.getElementById('mGolongan').value = golongan; document.getElementById('mUuid').value = uuid; renderDropdownGolongan(golongan); document.getElementById('mJenis').value = jenis; document.getElementById('mStatus').value = status; document.getElementById('mGapok').value = gapok; document.getElementById('mTjJab').value = tjJab; document.getElementById('mRekening').value = rekening;
-    document.getElementById('mSkp').value = skp || "";
+  function bukaModalAkun(aksi, user="", role="Operator", unit="", email="", uuid="") {
+    document.getElementById('uAksi').value = aksi; 
+    document.getElementById('uUser').value = user; 
+    document.getElementById('uRole').value = role; 
+    document.getElementById('uEmail').value = email; 
+    document.getElementById('uUuid').value = uuid;
     
-    let elNip = document.getElementById('mNip'); let elNama = document.getElementById('mNama'); let elUnitKerja = document.getElementById('mUnitKerja'); let elUnorInduk = document.getElementById('mUnorInduk');
-    elNip.value = nip; elNama.value = nama; elUnitKerja.value = unitkerja;
-    
-    let opdAktif = document.getElementById('loginNamaDinas').innerText;
-    elUnorInduk.value = unorInduk || opdAktif;
-
-    elUnitKerja.value = unitkerja || opdAktif;
-
-    let isOperatorEdit = (aksi === 'edit' && currentUser.role === "Operator");
-    if (isOperatorEdit) { elNip.readOnly = true; elNip.classList.add("readonly-field"); elNama.readOnly = true; elNama.classList.add("readonly-field"); } 
-    else { elNip.readOnly = false; elNip.classList.remove("readonly-field"); elNama.readOnly = false; elNama.classList.remove("readonly-field"); }
-    
-    // 👇 LOGIKA BATASAN PENGISIAN UNIT KERJA 👇
-    if (currentUser.role === "Operator") { 
-        elUnitKerja.value = currentUser.unitkerja;  
-        elUnitKerja.readOnly = true; elUnitKerja.classList.add("readonly-field"); 
+    let passInp = document.getElementById('uPass'); 
+    if(aksi === 'edit') { 
+        passInp.required = false; passInp.value = ""; 
+        document.getElementById('uPassHint').innerText = "(Kosongkan jika tak ingin ganti)"; 
+        document.getElementById('akunModalTitle').innerText = "Edit Akun Pengguna"; 
+    } else { 
+        passInp.required = true; passInp.value = ""; 
+        document.getElementById('uPassHint').innerText = ""; 
+        document.getElementById('akunModalTitle').innerText = "Tambah Akun Baru"; 
     } 
-    else if (currentUser.role === "Admin Kab/Kota") {
-        elUnitKerja.readOnly = false; elUnitKerja.classList.remove("readonly-field");
-        // Filter Autocomplete: Hanya tampilkan Unit Kerja yang ada di Kabupaten Admin ini
-        let unitsInKab = arrayUnitKerjaFull.filter(u => String(u.kabKota).toLowerCase() === String(currentUser.unitkerja).toLowerCase()).map(u => u.nama);
-        setupAutocomplete(elUnitKerja, unitsInKab);
-    }
-    else { 
-        elUnitKerja.readOnly = false; elUnitKerja.classList.remove("readonly-field"); 
-        // Super Admin / Admin OPD bisa lihat semua
-        setupAutocomplete(elUnitKerja, arrayUnitKerjaValid);
+    
+    // 👇 PANGGIL TOGGLE DULU AGAR AUTOCOMPLETE TERBENTUK SEBELUM KITA ISI VALUE-NYA 👇
+    toggleUnitKerjaAkun(); 
+
+    // 👇 SETELAH TOGGLE SELESAI, BARU KITA TEMBAKKAN DATANYA AGAR TIDAK HANGUS 👇
+    let op = document.getElementById('uUnitKerjaOp');
+    if(role === 'Super Admin' || role === 'Admin OPD') { 
+        if(op) op.value = ""; 
+    } else { 
+        if(op) op.value = unit; 
     }
     
-    muatDropdownJabatan(jabatan); document.getElementById('pegawaiModalTitle').innerText = aksi === 'edit' ? 'Edit Pegawai' : 'Tambah Pegawai Baru'; 
-    let modalObj = bootstrap.Modal.getInstance(document.getElementById('modalKelolaPegawai')) || new bootstrap.Modal(document.getElementById('modalKelolaPegawai'));
+    // Munculkan Modalnya
+    let modalObj = bootstrap.Modal.getInstance(document.getElementById('modalKelolaAkun')) || new bootstrap.Modal(document.getElementById('modalKelolaAkun'));
     modalObj.show();
   }
+ 
 
-  
+
   // 2. FUNGSI SIMPAN AKUN (Paksa refresh tabel setelah simpan)
   async function submitAkun(e) {
     e.preventDefault(); 

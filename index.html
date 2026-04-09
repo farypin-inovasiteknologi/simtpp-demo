@@ -3707,7 +3707,7 @@ function buatExcelPerhitunganJS(res) {
     const wb = new ExcelJS.Workbook();
     const sheet = wb.addWorksheet('Perhitungan TPP', { pageSetup: { paperSize: 5, orientation: 'landscape' } });
 
-    // A. Setup 63 Lebar Kolom (A hingga BK)
+    // 1. SETUP LEBAR KOLOM SECARA MASAL (Agar lebih cepat)
     let cols = [{ width: 5 }, { width: 35 }, { width: 8 }, { width: 8 }]; // A-D
     for(let i=0; i<14; i++) cols.push({ width: 5 }); // E-R (Absen)
     cols.push({ width: 10 }, { width: 10 }); // S-T (SKP)
@@ -3715,67 +3715,74 @@ function buatExcelPerhitunganJS(res) {
     cols.push({ width: 15 }); // BK (Total Bersih)
     sheet.columns = cols;
 
-    // B. Header Laporan
+    // 2. KOP SURAT
     sheet.mergeCells('A1:BK1'); sheet.getCell('A1').value = `PERHITUNGAN TPP ( TAMBAHAN PENGHASILAN PEGAWAI ) OPD ${res.setting.Nama_Dinas} BULAN ${res.bulanBesar}`;
     sheet.mergeCells('A2:BK2'); sheet.getCell('A2').value = `${res.jenisASN} ${res.unitCetak}`;
     for(let i=1; i<=2; i++) { sheet.getCell(`A${i}`).font = { bold: true, size: 12 }; sheet.getCell(`A${i}`).alignment = { horizontal: 'center' }; }
 
-    // C. Buat Struktur Header Kompleks (Baris 5-8)
-    let r5 = sheet.getRow(5); let r6 = sheet.getRow(6); let r7 = sheet.getRow(7); let r8 = sheet.getRow(8);
-    r5.height = 25; r6.height = 25; r7.height = 30; r8.height = 15;
+    // ==========================================================
+    // 3. CARA BENAR MEMBUAT HEADER 3 TINGKAT (ANTI RATA/HANCUR)
+    // ==========================================================
+    // Blok A-D (Tembus 3 Tingkat ke bawah)
+    sheet.mergeCells('A5:A7'); sheet.getCell('A5').value = "No.";
+    sheet.mergeCells('B5:B7'); sheet.getCell('B5').value = "Nama / NIP / Gol. / Jabatan";
+    sheet.mergeCells('C5:C7'); sheet.getCell('C5').value = "Kelas\nJab.";
+    sheet.mergeCells('D5:D7'); sheet.getCell('D5').value = "Hari\nKerja";
 
-    r5.getCell('A').value = "No."; sheet.mergeCells('A5:A7');
-    r5.getCell('B').value = "Nama / NIP / Gol. / Jabatan"; sheet.mergeCells('B5:B7');
-    r5.getCell('C').value = "Kelas\nJabatan"; sheet.mergeCells('C5:C7');
-    r5.getCell('D').value = "Hari\nKerja"; sheet.mergeCells('D5:D7');
+    // Blok E-R (Keterangan Tidak Hadir)
+    sheet.mergeCells('E5:R5'); sheet.getCell('E5').value = "Keterangan Tidak Hadir (KTH)";
+    sheet.mergeCells('E6:E7'); sheet.getCell('E6').value = "DL";
+    sheet.mergeCells('F6:F7'); sheet.getCell('F6').value = "S";
+    sheet.mergeCells('G6:G7'); sheet.getCell('G6').value = "C";
+    sheet.mergeCells('H6:H7'); sheet.getCell('H6').value = "KP";
+    
+    // Terlambat (I-L)
+    sheet.mergeCells('I6:L6'); sheet.getCell('I6').value = "Terlambat Datang";
+    sheet.getCell('I7').value = "TL1"; sheet.getCell('J7').value = "TL2"; sheet.getCell('K7').value = "TL3"; sheet.getCell('L7').value = "TL4";
+    
+    // Cepat Pulang (M-P)
+    sheet.mergeCells('M6:P6'); sheet.getCell('M6').value = "Cepat Pulang";
+    sheet.getCell('M7').value = "CP1"; sheet.getCell('N7').value = "CP2"; sheet.getCell('O7').value = "CP3"; sheet.getCell('P7').value = "CP4";
+    
+    sheet.mergeCells('Q6:Q7'); sheet.getCell('Q6').value = "TK";
+    sheet.mergeCells('R6:R7'); sheet.getCell('R6').value = "AS/UB";
 
-    r5.getCell('E').value = "Keterangan Tidak Hadir (KTH)"; sheet.mergeCells('E5:R5');
-    r6.getCell('E').value = "DL"; sheet.mergeCells('E6:E7');
-    r6.getCell('F').value = "S"; sheet.mergeCells('F6:F7');
-    r6.getCell('G').value = "C"; sheet.mergeCells('G6:G7');
-    r6.getCell('H').value = "KP"; sheet.mergeCells('H6:H7');
-    r6.getCell('I').value = "Terlambat Datang"; sheet.mergeCells('I6:L6');
-    r7.getCell('I').value = "TL1"; r7.getCell('J').value = "TL2"; r7.getCell('K').value = "TL3"; r7.getCell('L').value = "TL4";
-    r6.getCell('M').value = "Cepat Pulang"; sheet.mergeCells('M6:P6');
-    r7.getCell('M').value = "CP1"; r7.getCell('N').value = "CP2"; r7.getCell('O').value = "CP3"; r7.getCell('P').value = "CP4";
-    r6.getCell('Q').value = "TK"; sheet.mergeCells('Q6:Q7');
-    r6.getCell('R').value = "ASUB"; sheet.mergeCells('R6:R7');
+    // Blok S-T
+    sheet.mergeCells('S5:S7'); sheet.getCell('S5').value = "Predikat\nKerja";
+    sheet.mergeCells('T5:T7'); sheet.getCell('T5').value = "Tidak\nMenilai";
 
-    r5.getCell('S').value = "Predikat\nKerja"; sheet.mergeCells('S5:S7');
-    r5.getCell('T').value = "Tidak\nMenilai"; sheet.mergeCells('T5:T7');
+    // Helper untuk konversi index angka ke huruf kolom Excel (U = 21, dst)
+    const numToLet = (n) => { let s=""; while(n>=0){ s=String.fromCharCode((n%26)+65)+s; n=Math.floor(n/26)-1; } return s; };
 
-    // Helper untuk Looping Header Hitungan
-    const headerHitungan = [
-        { cIdx: 21, title: "Kriteria TPP Dasar (100%)", span: 6 },
-        { cIdx: 27, title: "Perhitungan Produktivitas Kerja (PK 60%)", span: 18, subs: [ { cIdx: 27, t: "Nilai PK (Setelah Bobot)" }, { cIdx: 33, t: "Potongan Absen PK" }, { cIdx: 39, t: "Akhir PK Netto" } ] },
-        { cIdx: 45, title: "Perhitungan Disiplin Kerja (DK 40%)", span: 18, subs: [ { cIdx: 45, t: "Bobot DK Dasar (40%)" }, { cIdx: 51, t: "Potongan Absen DK" }, { cIdx: 57, t: "Akhir DK Netto" } ] }
-    ];
+    // Kriteria TPP Dasar (U-Z)
+    sheet.mergeCells('U5:Z6'); sheet.getCell('U5').value = "Kriteria TPP Dasar (100%)";
+    ['BK','PK','KK','TB','KP','Total'].forEach((txt, i) => sheet.getCell(numToLet(21 - 1 + i) + '7').value = txt);
 
-    const numToLet = (n) => { let s=""; while(n>=0){ s=String.fromCharCode((n%26)+65)+s; Math.floor(n/26); n=Math.floor(n/26)-1; } return s; };
+    // Produktivitas Kerja (AA-AR)
+    sheet.mergeCells('AA5:AR5'); sheet.getCell('AA5').value = "Perhitungan Produktivitas Kerja (PK 60%)";
+    sheet.mergeCells('AA6:AF6'); sheet.getCell('AA6').value = "Nilai PK (Setelah Bobot)";
+    ['BK','PK','KK','TB','KP','Total'].forEach((txt, i) => sheet.getCell(numToLet(27 - 1 + i) + '7').value = txt);
+    sheet.mergeCells('AG6:AL6'); sheet.getCell('AG6').value = "Potongan Absen PK";
+    ['BK','PK','KK','TB','KP','Total'].forEach((txt, i) => sheet.getCell(numToLet(33 - 1 + i) + '7').value = txt);
+    sheet.mergeCells('AM6:AR6'); sheet.getCell('AM6').value = "Akhir PK Netto";
+    ['BK','PK','KK','TB','KP','Total'].forEach((txt, i) => sheet.getCell(numToLet(39 - 1 + i) + '7').value = txt);
 
-    headerHitungan.forEach(h => {
-        let l1 = numToLet(h.cIdx-1); let l2 = numToLet(h.cIdx - 1 + h.span - 1);
-        r5.getCell(l1).value = h.title; sheet.mergeCells(`${l1}5:${l2}5`);
-        
-        if(h.subs) {
-            h.subs.forEach(s => {
-                let sl1 = numToLet(s.cIdx-1); let sl2 = numToLet(s.cIdx - 1 + 6 - 1);
-                r6.getCell(sl1).value = s.t; sheet.mergeCells(`${sl1}6:${sl2}6`);
-                ['BK','PK','KK','TB','KP','Total'].forEach((txt, i) => r7.getCell(numToLet(s.cIdx-1+i)).value = txt);
-            });
-        } else {
-            let sl1 = numToLet(h.cIdx-1); let sl2 = numToLet(h.cIdx - 1 + 6 - 1);
-            sheet.mergeCells(`${sl1}6:${sl2}6`);
-            ['BK','PK','KK','TB','KP','Total'].forEach((txt, i) => r7.getCell(numToLet(h.cIdx-1+i)).value = txt);
-        }
-    });
+    // Disiplin Kerja (AS-BJ)
+    sheet.mergeCells('AS5:BJ5'); sheet.getCell('AS5').value = "Perhitungan Disiplin Kerja (DK 40%)";
+    sheet.mergeCells('AS6:AX6'); sheet.getCell('AS6').value = "Bobot DK Dasar (40%)";
+    ['BK','PK','KK','TB','KP','Total'].forEach((txt, i) => sheet.getCell(numToLet(45 - 1 + i) + '7').value = txt);
+    sheet.mergeCells('AY6:BD6'); sheet.getCell('AY6').value = "Potongan Absen DK";
+    ['BK','PK','KK','TB','KP','Total'].forEach((txt, i) => sheet.getCell(numToLet(51 - 1 + i) + '7').value = txt);
+    sheet.mergeCells('BE6:BJ6'); sheet.getCell('BE6').value = "Akhir DK Netto";
+    ['BK','PK','KK','TB','KP','Total'].forEach((txt, i) => sheet.getCell(numToLet(57 - 1 + i) + '7').value = txt);
 
-    r5.getCell('BK').value = "TPP Diterima\nSebelum Pajak"; sheet.mergeCells('BK5:BK7');
+    // Ujung Kanan (BK)
+    sheet.mergeCells('BK5:BK7'); sheet.getCell('BK5').value = "TPP Diterima\nSebelum Pajak";
 
-    // Beri Nomor Urut Kolom 1-63 di baris 8
-    for(let i=1; i<=63; i++) { r8.getCell(i).value = i.toString(); }
+    // Nomor Urut Kolom di Baris 8
+    for(let i=1; i<=63; i++) { sheet.getCell(numToLet(i-1) + '8').value = i.toString(); }
 
-    // Styling Header
+    // 4. STYLE HEADER SECARA MASSAL (Lebih cepat)
     for (let i = 5; i <= 8; i++) {
         sheet.getRow(i).eachCell((cell, colN) => {
             cell.font = { bold: i!==8, italic: i===8, size: i===8 ? 8 : 9 }; 
@@ -3783,16 +3790,17 @@ function buatExcelPerhitunganJS(res) {
             cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
             
             if(i===8) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'E9ECEF' } };
-            else {
-                if(colN >= 5 && colN <= 18) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'D9EAD3' } }; // Hijau
-                else if(colN >= 27 && colN <= 44) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FCE5CD' } }; // Orange
-                else if(colN >= 45 && colN <= 62) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'E4D7F5' } }; // Ungu
-                else cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'CFE2F3' } }; // Biru
-            }
+            else if(colN >= 5 && colN <= 18) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'D9EAD3' } }; // Hijau
+            else if(colN >= 27 && colN <= 44) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FCE5CD' } }; // Orange
+            else if(colN >= 45 && colN <= 62) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'E4D7F5' } }; // Ungu
+            else cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'CFE2F3' } }; // Biru
         });
     }
+    sheet.getRow(5).height = 25; sheet.getRow(6).height = 25; sheet.getRow(7).height = 30; sheet.getRow(8).height = 15;
 
-    // D. Pengisian Data Grouping
+    // ==========================================================
+    // 5. PENGISIAN DATA & OPTIMASI KECEPATAN BROWSER
+    // ==========================================================
     let grouped = {};
     res.data.forEach(c => {
         let golDasar = c.golonganAsli.split("/")[0].trim().toUpperCase();
@@ -3804,10 +3812,14 @@ function buatExcelPerhitunganJS(res) {
     let urutanGol = res.jenisASN === "PPPK" ? ["XVII - XIII", "XII - IX", "VIII - V", "IV - I"] : ["IV", "III", "II", "I"];
     let noUrut = 1; let currentRow = 9; let subTotalRows = [];
 
+    // Persiapkan style baku di memori (agar browser tidak kerja keras membaca tiap sel)
+    const borderStyle = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+
     urutanGol.forEach(gol => {
         if(grouped[gol] && grouped[gol].length > 0) {
             let startRowGroup = currentRow;
             
+            // Masukkan data sekaligus (Batch Insert)
             grouped[gol].forEach(c => {
                 let a = c.rawAbsen;
                 let kr = [c.bk, c.pk, c.kk, c.tb, c.kp, c.tppBruto];
@@ -3819,17 +3831,18 @@ function buatExcelPerhitunganJS(res) {
                 let akhDK = bDK.map((v, i) => v - pAbsDK[i]);
 
                 let row = sheet.getRow(currentRow);
-                row.height = 80;
+                row.height = 65; // Sedikit dipangkas agar muat lebih banyak
                 row.values = [
-                    noUrut++, `${c.nama}\nNIP. ${c.nip}\n${res.jenisASN} - Gol. ${c.golonganAsli}\n${c.jabatan}`, "Kls", c.hk,
+                    noUrut++, `${c.nama}\nNIP. ${c.nip}\n${res.jenisASN} - Gol. ${c.golonganAsli}\n${c.jabatan}`, c.pergub ? c.pergub.kelasJabatan : "-", c.hk,
                     a.dl, a.s, a.c, a.kp, a.tl1, a.tl2, a.tl3, a.tl4, a.cp1, a.cp2, a.cp3, a.cp4, a.tk, a.asub,
                     c.skp, c.menilai === "Tidak Menilai" ? "Tidak Menilai" : "",
                     ...kr, ...nSKP, ...pAbsPK, ...akhPK, ...bDK, ...pAbsDK, ...akhDK,
                     { formula: `AR${currentRow}+BJ${currentRow}` }
                 ];
                 
-                row.eachCell((cell, colN) => {
-                    cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+                // Styling super ringan (Hindari numFmt yang berat jika nilainya 0)
+                row.eachCell({ includeEmpty: false }, (cell, colN) => {
+                    cell.border = borderStyle;
                     cell.alignment = { vertical: 'middle', wrapText: true, horizontal: colN === 2 ? 'left' : (colN <= 20 ? 'center' : 'right') };
                     if(colN >= 21) cell.numFmt = '#,##0';
                 });
@@ -3842,10 +3855,12 @@ function buatExcelPerhitunganJS(res) {
             rowSub.getCell('B').value = `TOTAL GOLONGAN ${gol}`;
             rowSub.getCell('B').font = { bold: true };
             
-            for(let i=21; i<=63; i++) { rowSub.getCell(i).value = { formula: `SUM(${numToLet(i-1)}${startRowGroup}:${numToLet(i-1)}${currentRow-1})` }; }
+            for(let i=21; i<=63; i++) { 
+                rowSub.getCell(i).value = { formula: `SUM(${numToLet(i-1)}${startRowGroup}:${numToLet(i-1)}${currentRow-1})` }; 
+            }
 
-            rowSub.eachCell((cell, colN) => {
-                cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+            rowSub.eachCell({ includeEmpty: false }, (cell, colN) => {
+                cell.border = borderStyle;
                 cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'F3F3F3' } };
                 if (colN >= 21) { cell.numFmt = '#,##0'; cell.font = {bold: true}; }
             });
@@ -3864,7 +3879,7 @@ function buatExcelPerhitunganJS(res) {
             rowGrand.getCell(i).value = { formula: sumFormula };
         }
     }
-    rowGrand.eachCell((cell, colN) => {
+    rowGrand.eachCell({ includeEmpty: false }, (cell, colN) => {
         cell.border = { top: {style:'medium'}, left: {style:'thin'}, bottom: {style:'medium'}, right: {style:'thin'} };
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'E9ECEF' } };
         if (colN >= 21) { cell.numFmt = '#,##0'; cell.font = {bold: true}; }

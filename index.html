@@ -1353,7 +1353,53 @@
     });
   }
 
-  // FUNGSI PENDAMPING: Menerapkan data ke Tampilan HTML
+
+  // 7. FUNGSI LOGIN (Tampilkan Tombol Setting untuk Semua Role)
+  async function doLogin(e) {
+    e.preventDefault(); startLoading("Memeriksa Akses..."); 
+    let u = document.getElementById('logUser').value; let p = document.getElementById('logPass').value;
+    let res = await fetchAPI("prosesLogin", {username: u, password: p});
+    stopLoading(); 
+    if(res.status === "sukses") {
+      sessionStorage.setItem('authToken', res.token); currentUser = res.user; 
+      document.getElementById('navInfoRole').innerText = currentUser.unitkerja; 
+      document.getElementById('mHeaderUnit').innerText = currentUser.unitkerja; 
+      
+      let r = currentUser.role;
+      let isSuper = (r === "Super Admin");
+      let isOpd = (r === "Admin OPD");
+
+      // Tampilkan/Sembunyikan Master TPP dan Akun
+      if(isSuper) { document.getElementById('btnMasterAdmin').classList.remove('hidden'); document.getElementById('btnAkunAdmin').classList.remove('hidden'); } 
+      else { document.getElementById('btnMasterAdmin').classList.add('hidden'); document.getElementById('btnAkunAdmin').classList.add('hidden'); }
+      
+      // Semua role BISA melihat menu Setting, jadi kita pastikan Setting muncul
+      document.getElementById('btnSettingAdmin').classList.remove('hidden');
+      document.getElementById('mHeaderAdminIcons').classList.remove('hidden');
+      
+      // Tapi fitur Tambah Bulan, Kelola Bulan, Icon Akun (HP) & Icon Master (HP) tetap hanya untuk Admin
+      let iconMasterHP = document.querySelector('i[onclick="switchView(\'viewMasterPergub\')"]');
+      let iconAkunHP = document.querySelector('i[onclick="muatDaftarAkun()"]');
+
+      if(isSuper || isOpd) { 
+          document.getElementById('btnTambahBulan').classList.remove('hidden'); 
+          document.getElementById('btnKelolaBulan').classList.remove('hidden'); 
+          if(iconMasterHP) iconMasterHP.classList.remove('hidden');
+          if(iconAkunHP && isSuper) iconAkunHP.classList.remove('hidden'); else if(iconAkunHP) iconAkunHP.classList.add('hidden');
+      } else { 
+          document.getElementById('btnTambahBulan').classList.add('hidden'); 
+          document.getElementById('btnKelolaBulan').classList.add('hidden'); 
+          if(iconMasterHP) iconMasterHP.classList.add('hidden');
+          if(iconAkunHP) iconAkunHP.classList.add('hidden');
+      }
+
+      document.getElementById('viewLogin').classList.add('hidden'); document.getElementById('mainNav').classList.remove('hidden');
+      sessionStorage.setItem('isLoggedIn', 'true'); sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+      switchView('viewPilihBulan'); inisialisasiAplikasi();
+    } else { alertError(res.pesan); }
+  }
+
+  // 8. FUNGSI INIT (Terapkan visibilitas yang sama saat di-Reload)
   function terapkanDataInit(dataInit, cUser, bAktif, jASN, isSilentUpdate = false) {
     globalSettingsCache = dataInit.setting;
     let res = dataInit.setting;
@@ -1387,8 +1433,24 @@
       if(isSuper) { document.getElementById('btnMasterAdmin').classList.remove('hidden'); document.getElementById('btnAkunAdmin').classList.remove('hidden'); } 
       else { document.getElementById('btnMasterAdmin').classList.add('hidden'); document.getElementById('btnAkunAdmin').classList.add('hidden'); }
       
-      if(isSuper || isOpd) { document.getElementById('btnSettingAdmin').classList.remove('hidden'); document.getElementById('btnTambahBulan').classList.remove('hidden'); document.getElementById('btnKelolaBulan').classList.remove('hidden'); document.getElementById('mHeaderAdminIcons').classList.remove('hidden'); } 
-      else { document.getElementById('btnSettingAdmin').classList.add('hidden'); document.getElementById('btnTambahBulan').classList.add('hidden'); document.getElementById('btnKelolaBulan').classList.add('hidden'); document.getElementById('mHeaderAdminIcons').classList.add('hidden'); }
+      // Pastikan tombol setting dan block icon HP muncul untuk semua
+      document.getElementById('btnSettingAdmin').classList.remove('hidden');
+      document.getElementById('mHeaderAdminIcons').classList.remove('hidden');
+      
+      let iconMasterHP = document.querySelector('i[onclick="switchView(\'viewMasterPergub\')"]');
+      let iconAkunHP = document.querySelector('i[onclick="muatDaftarAkun()"]');
+
+      if(isSuper || isOpd) { 
+          document.getElementById('btnTambahBulan').classList.remove('hidden'); 
+          document.getElementById('btnKelolaBulan').classList.remove('hidden'); 
+          if(iconMasterHP) iconMasterHP.classList.remove('hidden');
+          if(iconAkunHP && isSuper) iconAkunHP.classList.remove('hidden'); else if(iconAkunHP) iconAkunHP.classList.add('hidden');
+      } else { 
+          document.getElementById('btnTambahBulan').classList.add('hidden'); 
+          document.getElementById('btnKelolaBulan').classList.add('hidden'); 
+          if(iconMasterHP) iconMasterHP.classList.add('hidden');
+          if(iconAkunHP) iconAkunHP.classList.add('hidden');
+      }
 
       document.getElementById('viewLogin').classList.add('hidden'); 
       document.getElementById('viewLanding').classList.add('hidden'); 
@@ -1404,14 +1466,12 @@
           if(!isSilentUpdate) updateFilterGolDropdown(); 
       }
       
-      // PINTU KEAMANAN: Paksa masuk Home & Kunci Tombol Pegawai jika baru reload
       if(!isSilentUpdate) {
           switchView('viewPilihBulan'); 
           document.getElementById('btnMenuPegawai').disabled = true; 
           toggleTombolPegawaiHP(false); 
       }
       
-      // JIKA ADA DATA PEGAWAI DI CACHE / SERVER (Masukkan ke Global RAM)
       if(globalBulanAktif && dataInit.pegawai) { 
           globalDataPegawai = dataInit.pegawai;
           let unitList = [...new Set(globalDataPegawai.map(item => item[5]).filter(Boolean))]; 
@@ -1431,33 +1491,6 @@
           document.body.classList.add('bg-gradient-login');
       }
     }
-  }
-
-  async function doLogin(e) {
-    e.preventDefault(); startLoading("Memeriksa Akses..."); 
-    let u = document.getElementById('logUser').value; let p = document.getElementById('logPass').value;
-    let res = await fetchAPI("prosesLogin", {username: u, password: p});
-    stopLoading(); 
-    if(res.status === "sukses") {
-      sessionStorage.setItem('authToken', res.token); currentUser = res.user; 
-      document.getElementById('navInfoRole').innerText = currentUser.unitkerja; 
-      document.getElementById('mHeaderUnit').innerText = currentUser.unitkerja; 
-      
-      // 👇 LOGIKA 3 ROLE USER 👇
-      let r = currentUser.role;
-      let isSuper = (r === "Super Admin");
-      let isOpd = (r === "Admin OPD");
-
-      if(isSuper) { document.getElementById('btnMasterAdmin').classList.remove('hidden'); document.getElementById('btnAkunAdmin').classList.remove('hidden'); } 
-      else { document.getElementById('btnMasterAdmin').classList.add('hidden'); document.getElementById('btnAkunAdmin').classList.add('hidden'); }
-      
-      if(isSuper || isOpd) { document.getElementById('btnSettingAdmin').classList.remove('hidden'); document.getElementById('btnTambahBulan').classList.remove('hidden'); document.getElementById('btnKelolaBulan').classList.remove('hidden'); document.getElementById('mHeaderAdminIcons').classList.remove('hidden'); } 
-      else { document.getElementById('btnSettingAdmin').classList.add('hidden'); document.getElementById('btnTambahBulan').classList.add('hidden'); document.getElementById('btnKelolaBulan').classList.add('hidden'); document.getElementById('mHeaderAdminIcons').classList.add('hidden'); }
-
-      document.getElementById('viewLogin').classList.add('hidden'); document.getElementById('mainNav').classList.remove('hidden');
-      sessionStorage.setItem('isLoggedIn', 'true'); sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
-      switchView('viewPilihBulan'); inisialisasiAplikasi();
-    } else { alertError(res.pesan); }
   }
 
   function logoutApp() { 
@@ -2421,11 +2454,26 @@ async function muatDataPegawai(forceRefresh = false) {
   // =====================================
   let globalDataAkun = []; let currentAkunPage = 1; let akunRowsPerPage = 15;
 
-  async function muatDaftarAkun() {
-    switchView('viewManajemenAkun'); startLoading("Memuat Data Akun...");
-    let data = await fetchAPI("getDaftarAkun", {}); stopLoading(); 
-    if(data && !data.error) { globalDataAkun = data; terapkanFilterAkun(); }
-    else { alertError(data.pesan || "Gagal memuat daftar akun dari server!"); }
+  // 1. FUNGSI MUAT DAFTAR AKUN (INSTAN)
+  async function muatDaftarAkun(forceRefresh = false) {
+    switchView('viewManajemenAkun'); 
+    
+    // Jika data sudah ada di RAM dan tidak disuruh refresh, tampilkan 0 detik!
+    if (!forceRefresh && globalDataAkun && globalDataAkun.length > 0) {
+      terapkanFilterAkun();
+      return;
+    }
+    
+    startLoading("Memuat Data Akun...");
+    let data = await fetchAPI("getDaftarAkun", {}); 
+    stopLoading(); 
+    
+    if(data && !data.error) { 
+      globalDataAkun = data; 
+      terapkanFilterAkun(); 
+    } else { 
+      alertError(data.pesan || "Gagal memuat daftar akun dari server!"); 
+    }
   }
 
   function terapkanFilterAkun() { let cari = document.getElementById('filterCariAkun').value.toLowerCase(); let filtered = globalDataAkun.filter(row => String(row[0]).toLowerCase().includes(cari) || String(row[3]).toLowerCase().includes(cari)); renderTabelAkun(filtered); }
@@ -2439,26 +2487,7 @@ async function muatDataPegawai(forceRefresh = false) {
   }
   function ubahHalamanAkun(page) { currentAkunPage = page; terapkanFilterAkun(); }
 
-  function resetPasswordAkun(uuid, user) { 
-    Swal.fire({
-      title: 'Reset Password?',
-      text: `Yakin ingin mereset password akun "${user}" menjadi standar "123456" ?`,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#ffc107',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: '<i class="bi bi-key"></i> Ya, Reset!'
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        startLoading("Mereset Password..."); 
-        let res = await fetchAPI("resetPasswordAdmin", uuid); 
-        stopLoading(); 
-        if(String(res).includes("SUKSES")) alertSukses(res); 
-        else alertError(res.pesan || res);
-      }
-    });
-  }
-
+   
   function toggleUnitKerjaAkun() { 
     let r = document.getElementById('uRole').value; 
     let op = document.getElementById('uUnitKerjaOp'); 
@@ -2531,12 +2560,12 @@ async function muatDataPegawai(forceRefresh = false) {
     modalObj.show();
   }
 
+  // 2. FUNGSI SIMPAN AKUN (Paksa refresh tabel setelah simpan)
   async function submitAkun(e) {
     e.preventDefault(); 
     let aksi = document.getElementById('uAksi').value; 
     let r = document.getElementById('uRole').value; 
     
-    // Ambil unit kerja dari kotak yang tepat sesuai Role
     let s = (r === 'Super Admin' || r === 'Admin OPD') ? document.getElementById('uUnitKerjaAdmin').value : document.getElementById('uUnitKerjaOp').value.trim(); 
     
     if(r === 'Operator' && !arrayUnitKerjaValid.includes(s)) { 
@@ -2554,10 +2583,11 @@ async function muatDataPegawai(forceRefresh = false) {
     } else { 
         alertSukses(res); 
         bootstrap.Modal.getInstance(document.getElementById('modalKelolaAkun')).hide(); 
-        muatDaftarAkun(); 
+        muatDaftarAkun(true); // <--- True: Paksa tarik data terbaru dari server
     }
   }
 
+  // 3. FUNGSI HAPUS AKUN (Paksa refresh tabel setelah hapus)
   function hapusAkun(uuid, user) { 
     Swal.fire({
       title: 'Hapus Akun Pengguna?',
@@ -2573,7 +2603,32 @@ async function muatDataPegawai(forceRefresh = false) {
         let res = await fetchAPI("hapusAkun", uuid); 
         stopLoading(); 
         if(String(res).includes("Error")) { alertError(res.pesan || res); } 
-        else { alertSukses(res); muatDaftarAkun(); }
+        else { alertSukses(res); muatDaftarAkun(true); } // <--- True: Paksa tarik data terbaru
+      }
+    });
+  }
+
+  // 4. FUNGSI RESET PASSWORD (Paksa refresh tabel setelah reset)
+  function resetPasswordAkun(uuid, user) { 
+    Swal.fire({
+      title: 'Reset Password?',
+      text: `Yakin ingin mereset password akun "${user}" menjadi standar "123456" ?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#ffc107',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: '<i class="bi bi-key"></i> Ya, Reset!'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        startLoading("Mereset Password..."); 
+        let res = await fetchAPI("resetPasswordAdmin", uuid); 
+        stopLoading(); 
+        if(String(res).includes("SUKSES")) {
+            alertSukses(res); 
+            muatDaftarAkun(true); // <--- True: Paksa tarik data terbaru
+        } else {
+            alertError(res.pesan || res);
+        }
       }
     });
   }
@@ -2596,10 +2651,105 @@ async function muatDataPegawai(forceRefresh = false) {
   // Variabel Global untuk menyimpan pengaturan di RAM
   let globalSettingsCache = null; 
 
+  // 5. FUNGSI ISI FORM SETTING (LENGKAP DENGAN KUNCI AKSES ROLE)
   function isiFormSetting(res) {
-    document.getElementById('sDinas').value = res.Nama_Dinas || ""; document.getElementById('sSubDinas').value = res.Nama_Sub_Dinas || ""; document.getElementById('sInstansi').value = res.Nama_Instansi || ""; document.getElementById('sKepJab').value = res.Kepala_Jabatan || ""; document.getElementById('sKepNama').value = res.Kepala_Nama || ""; document.getElementById('sKepPangkat').value = res.Kepala_Pangkat || ""; document.getElementById('sKepNIP').value = res.Kepala_NIP || ""; document.getElementById('sBenNama').value = res.Bendahara_Nama || ""; document.getElementById('sBenPangkat').value = res.Bendahara_Pangkat || ""; document.getElementById('sBenNIP').value = res.Bendahara_NIP || ""; document.getElementById('sRekKorpri').value = res.Rek_Korpri || ""; document.getElementById('sPotKorpri').value = res.Pot_Korpri || ""; document.getElementById('sLogoDinas').value = res.Logo_Dinas || ""; document.getElementById('sLogoInstansi').value = res.Logo_Instansi || "";
-    if(res.Logo_Dinas) { let pD = document.getElementById('previewLogoDinas'); pD.src = res.Logo_Dinas; pD.classList.remove('hidden'); }
-    if(res.Logo_Instansi) { let pI = document.getElementById('previewLogoInstansi'); pI.src = res.Logo_Instansi; pI.classList.remove('hidden'); }
+    document.getElementById('sDinas').value = res.Nama_Dinas || ""; 
+    document.getElementById('sSubDinas').value = res.Nama_Sub_Dinas || ""; 
+    document.getElementById('sInstansi').value = res.Nama_Instansi || ""; 
+    document.getElementById('sKepJab').value = res.Kepala_Jabatan || ""; 
+    document.getElementById('sKepNama').value = res.Kepala_Nama || ""; 
+    document.getElementById('sKepPangkat').value = res.Kepala_Pangkat || ""; 
+    document.getElementById('sKepNIP').value = res.Kepala_NIP || ""; 
+    document.getElementById('sBenNama').value = res.Bendahara_Nama || ""; 
+    document.getElementById('sBenPangkat').value = res.Bendahara_Pangkat || ""; 
+    document.getElementById('sBenNIP').value = res.Bendahara_NIP || ""; 
+    document.getElementById('sRekKorpri').value = res.Rek_Korpri || ""; 
+    document.getElementById('sPotKorpri').value = res.Pot_Korpri || ""; 
+    document.getElementById('sLogoDinas').value = res.Logo_Dinas || ""; 
+    document.getElementById('sLogoInstansi').value = res.Logo_Instansi || "";
+    
+    let pD = document.getElementById('previewLogoDinas');
+    if(res.Logo_Dinas) { pD.src = res.Logo_Dinas; pD.classList.remove('hidden'); } else { pD.classList.add('hidden'); }
+    
+    let pI = document.getElementById('previewLogoInstansi');
+    if(res.Logo_Instansi) { pI.src = res.Logo_Instansi; pI.classList.remove('hidden'); } else { pI.classList.add('hidden'); }
+
+    // ==========================================
+    // LOGIKA ROLE AKSES SETTING (KUNCI/BUKA KOLOM)
+    // ==========================================
+    let role = currentUser.role;
+    let boxSub = document.getElementById('sSubDinas').parentNode; // Ambil kotak (div) pembungkusnya
+    let labelSub = boxSub.querySelector('label'); // Ambil tag labelnya
+    
+    let inpInstansi = document.getElementById('sInstansi');
+    let inpDinas = document.getElementById('sDinas');
+    let inpSubDinas = document.getElementById('sSubDinas');
+    let inpRek = document.getElementById('sRekKorpri');
+    let inpPot = document.getElementById('sPotKorpri');
+    
+    let btnLogoInstansi = document.getElementById('fileLogoInstansi');
+    let btnHapusLogoInstansi = btnLogoInstansi.nextElementSibling; // Target tombol hapus logo
+    let btnLogoDinas = document.getElementById('fileLogoDinas');
+    let btnHapusLogoDinas = btnLogoDinas.nextElementSibling; // Target tombol hapus logo
+    
+    // Pertama, Reset semua ke mode terbuka (Bisa Diedit)
+    [inpInstansi, inpDinas, inpRek, inpPot, inpSubDinas].forEach(el => {
+        el.readOnly = false;
+        el.classList.remove('readonly-field', 'bg-light');
+    });
+    [btnLogoInstansi, btnHapusLogoInstansi, btnLogoDinas, btnHapusLogoDinas].forEach(el => el.classList.remove('hidden'));
+    
+    // Terapkan Pengekangan
+    if (role === "Super Admin") {
+        boxSub.classList.add('hidden'); // Sembunyikan Sub Dinas
+    } 
+    else if (role === "Admin OPD") {
+        boxSub.classList.add('hidden'); // Sembunyikan Sub Dinas
+        inpInstansi.readOnly = true; inpInstansi.classList.add('readonly-field', 'bg-light');
+        btnLogoInstansi.classList.add('hidden'); btnHapusLogoInstansi.classList.add('hidden');
+    } 
+    else if (role === "Operator") {
+        boxSub.classList.remove('hidden'); // Munculkan Sub Dinas khusus Operator
+        labelSub.innerText = "Unit Kerja"; // Ubah namanya
+        inpSubDinas.value = currentUser.unitkerja; // Isi otomatis dengan unit kerjanya
+        
+        // Kunci semua kecuali Kepala & Bendahara
+        [inpInstansi, inpDinas, inpSubDinas, inpRek, inpPot].forEach(el => {
+            el.readOnly = true; el.classList.add('readonly-field', 'bg-light');
+        });
+        [btnLogoInstansi, btnHapusLogoInstansi, btnLogoDinas, btnHapusLogoDinas].forEach(el => el.classList.add('hidden'));
+    }
+  }
+
+  // 6. FUNGSI SUBMIT SETTING
+  async function submitSetting(e) {
+    e.preventDefault(); startLoading("Menyimpan Pengaturan..."); 
+    
+    let subDinasVal = document.getElementById('sSubDinas').value || "";
+    if (currentUser.role !== "Operator") subDinasVal = ""; // Bersihkan jika bukan operator
+    
+    let d = { usernameAksi: currentUser.username, Nama_Dinas: document.getElementById('sDinas').value, Nama_Sub_Dinas: subDinasVal, Nama_Instansi: document.getElementById('sInstansi').value, Kepala_Jabatan: document.getElementById('sKepJab').value, Kepala_Nama: document.getElementById('sKepNama').value, Kepala_Pangkat: document.getElementById('sKepPangkat').value, Kepala_NIP: document.getElementById('sKepNIP').value, Bendahara_Nama: document.getElementById('sBenNama').value, Bendahara_Pangkat: document.getElementById('sBenPangkat').value, Bendahara_NIP: document.getElementById('sBenNIP').value, Rek_Korpri: document.getElementById('sRekKorpri').value, Pot_Korpri: document.getElementById('sPotKorpri').value || 0, Logo_Dinas: document.getElementById('sLogoDinas').value || "", Logo_Instansi: document.getElementById('sLogoInstansi').value || "" };
+    
+    let res = await fetchAPI("simpanSetting", d); 
+    stopLoading(); 
+    
+    if(String(res).includes("Akses Ditolak") || String(res).includes("Error")) { 
+        alertError(res.pesan || res); 
+    } else { 
+        alertSukses(res); 
+        globalSettingsCache = d; 
+        
+        try {
+            let currentCache = JSON.parse(localStorage.getItem('simTppCacheData') || "{}");
+            currentCache.setting = d;
+            localStorage.setItem('simTppCacheData', JSON.stringify(currentCache));
+        } catch(e) {}
+        
+        document.getElementById('loginNamaInstansi').innerText = d.Nama_Instansi || "PEMERINTAH PROVINSI JAMBI";
+        document.getElementById('loginNamaDinas').innerText = d.Nama_Dinas || "DINAS PENDIDIKAN";
+        document.getElementById('loginSubDinas').innerText = d.Nama_Sub_Dinas ? d.Nama_Sub_Dinas.toUpperCase() : "";
+        globalPotKorpri = parseFloat(d.Pot_Korpri) || 0;
+    }
   }
 
   async function bukaSetting() {
@@ -2620,32 +2770,7 @@ async function muatDataPegawai(forceRefresh = false) {
     }
   }
 
-  async function submitSetting(e) {
-    e.preventDefault(); startLoading("Menyimpan Pengaturan..."); 
-    let d = { usernameAksi: currentUser.username, Nama_Dinas: document.getElementById('sDinas').value, Nama_Sub_Dinas: document.getElementById('sSubDinas').value || "", Nama_Instansi: document.getElementById('sInstansi').value, Kepala_Jabatan: document.getElementById('sKepJab').value, Kepala_Nama: document.getElementById('sKepNama').value, Kepala_Pangkat: document.getElementById('sKepPangkat').value, Kepala_NIP: document.getElementById('sKepNIP').value, Bendahara_Nama: document.getElementById('sBenNama').value, Bendahara_Pangkat: document.getElementById('sBenPangkat').value, Bendahara_NIP: document.getElementById('sBenNIP').value, Rek_Korpri: document.getElementById('sRekKorpri').value, Pot_Korpri: document.getElementById('sPotKorpri').value || 0, Logo_Dinas: document.getElementById('sLogoDinas').value || "", Logo_Instansi: document.getElementById('sLogoInstansi').value || "" };
-    
-    let res = await fetchAPI("simpanSetting", d); 
-    stopLoading(); 
-    
-    if(String(res).includes("Akses Ditolak") || String(res).includes("Error")) { 
-        alertError(res.pesan || res); 
-    } else { 
-        alertSukses(res); 
-        globalSettingsCache = d; // Update RAM Cache
-        
-        // Update LocalStorage agar saat F5/Refresh, data tidak kembali ke awal
-        try {
-            let currentCache = JSON.parse(localStorage.getItem('simTppCacheData') || "{}");
-            currentCache.setting = d;
-            localStorage.setItem('simTppCacheData', JSON.stringify(currentCache));
-        } catch(e) {}
-        
-        document.getElementById('loginNamaInstansi').innerText = d.Nama_Instansi || "PEMERINTAH PROVINSI JAMBI";
-        document.getElementById('loginNamaDinas').innerText = d.Nama_Dinas || "DINAS PENDIDIKAN";
-        document.getElementById('loginSubDinas').innerText = d.Nama_Sub_Dinas ? d.Nama_Sub_Dinas.toUpperCase() : "";
-        globalPotKorpri = parseFloat(d.Pot_Korpri) || 0;
-    }
-  }
+
 
   function hapusLogo(tipe) {
       if (tipe === 'Instansi') { document.getElementById('sLogoInstansi').value = ""; document.getElementById('previewLogoInstansi').src = ""; document.getElementById('previewLogoInstansi').classList.add('hidden'); document.getElementById('fileLogoInstansi').value = ""; } 

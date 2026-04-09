@@ -1276,7 +1276,7 @@
   const listOPD = [
       { nama: "Badan Kepegawaian Daerah", url: "https://script.google.com/macros/s/AKfycbw4PkelgARfgw65YLreJJ9GG7OynQDnEYtmYqz1fpoSnRLgH0cbltEBSpzciq0pPOXk9w/exec" },
       { nama: "Dinas Pendidikan", url: "https://script.google.com/macros/s/AKfycbwdAwCvzT3TBmxCc6uaTfD-7IE3f7iByNGgHCKW8Asnbo5zyDhj6m-bRJIcMS74-LfyZA/exec" },
-      { nama: "Uji Coba", url: "https://script.google.com/macros/s/AKfycbxxUMPhZztUE6JzrpcmKEQNoRTdGLLY4pZJWOda8vyks8kAqoAT6z5ZySgJsv7ZQkzq/exec"}
+      { nama: "Uji Coba", url: "https://script.google.com/macros/s/AKfycbwFPHoMeSpBESHfqhF2tenNezvCU6vA9mJWmwlytKKUhrw3DqYETj5NwrdP7wQtmhL4/exec"}
   ];
 
   let API_URL = ""; 
@@ -3128,6 +3128,38 @@
   async function downloadLaporan(jenis, format, e) { if(e) e.preventDefault(); if(!globalBulanAktif) return alertPeringatan("Pilih bulan terlebih dahulu!"); startLoading("Menyiapkan File..."); let urls = await fetchAPI("cetakKeSheet", {jenis: jenis, bulanAktif: globalBulanAktif}); stopLoading(); if(urls && urls[format.toLowerCase()]) { showDownloadModal(urls[format.toLowerCase()]); } else { alertError("❌ Gagal."); } }
 
 
+function cetakPDFPerorangan(tabId, namaFile) { window.scrollTo(0, 0); let element = document.getElementById('viewManajemenASN'); let navPills = element.querySelector('.nav-pills'); let actionBtns = element.querySelectorAll('button'); let origPillsDisplay = navPills ? navPills.style.display : ''; if(navPills) navPills.style.display = 'none'; actionBtns.forEach(b => { b.dataset.origDisplay = b.style.display; b.style.display = 'none'; }); let tables = element.querySelectorAll('.table-responsive'); tables.forEach(t => { t.style.overflow = 'visible'; }); let selects = element.querySelectorAll('.form-select'); selects.forEach(s => { s.dataset.origBg = s.style.backgroundImage; s.style.backgroundImage = 'none'; }); startLoading("Menyusun PDF..."); let opt = { margin: 0.3, filename: `${namaFile}_${asNIPAktif}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, scrollY: 0, scrollX: 0 }, jsPDF: { unit: 'in', format: 'legal', orientation: 'portrait' } }; html2pdf().set(opt).from(element).save().then(() => { stopLoading(); if(navPills) navPills.style.display = origPillsDisplay; actionBtns.forEach(b => { b.style.display = b.dataset.origDisplay; }); tables.forEach(t => { t.style.overflow = ''; }); selects.forEach(s => { s.style.backgroundImage = s.dataset.origBg; }); setTimeout(() => { alertSukses("File PDF Perorangan berhasil diunduh!"); }, 500); }).catch(err => { stopLoading(); if(navPills) navPills.style.display = origPillsDisplay; actionBtns.forEach(b => { b.style.display = b.dataset.origDisplay; }); tables.forEach(t => { t.style.overflow = ''; }); selects.forEach(s => { s.style.backgroundImage = s.dataset.origBg; }); setTimeout(() => { alertError("Gagal memproses PDF: " + err); }, 500); }); }
+
+  // Fungsi untuk menampilkan/menyembunyikan tombol upload file
+  function toggleSumberData() {
+      let sumber = document.getElementById('pSumberData').value;
+      if (sumber === 'import') document.getElementById('boxImportExcel').classList.remove('hidden');
+      else document.getElementById('boxImportExcel').classList.add('hidden');
+  }
+
+  // Fungsi mengubah format tanggal Excel
+  function formatTanggalExcel(excelDate) {
+      if(!excelDate) return "";
+      if(!isNaN(excelDate)) { let date = new Date((excelDate - (25567 + 2)) * 86400 * 1000); return date.toISOString().split('T')[0]; }
+      let strDate = String(excelDate).trim(); let regexBaku = /^\d{4}-\d{2}-\d{2}$/;
+      if(regexBaku.test(strDate)) return strDate;
+      let parts = strDate.split(/[-/]/);
+      if(parts.length === 3) {
+          if(parts[0].length === 4) return `${parts[0]}-${parts[1].padStart(2,'0')}-${parts[2].padStart(2,'0')}`;
+          return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+      }
+      return "1970-01-01";
+  }
+
+  function unduhTemplateExcelCustom(jenis) {
+      document.getElementById('importJenis').value = jenis;
+      unduhTemplateExcel();
+  }
+
+
+
+
+
 // ==============================================================
 // ALAT BANTU (HELPER) WAJIB FRONTEND
 // ==============================================================
@@ -3739,6 +3771,90 @@ async function buatExcelPerhitunganJS(res) {
     unduhFile(wb, `Perhitungan_TPP_${res.bulanBesar}_${res.unitCetak}.xlsx`);
     Swal.close();
 }
+
+
+
+  // =======================================================
+  // MESIN PENCARI BULAN KOSONG (SMART PERIODE)
+  // =======================================================
+  // 1. MESIN PENCARI BULAN KOSONG
+  function getSmartBulanAngka() {
+      let reguler = [];
+      if (arrayPeriode && arrayPeriode.length > 0) {
+          reguler = arrayPeriode
+              .filter(p => p.jenisPeriode === "Reguler" || !p.jenisPeriode)
+              .map(p => parseInt(p.bulanAngka))
+              .filter(n => !isNaN(n));
+      }
+      
+      // Cari bulan dari 1 s/d 12 yang KOSONG (Prioritas yang paling awal)
+      for (let i = 1; i <= 12; i++) {
+          if (!reguler.includes(i)) return i; 
+      }
+      return 1; // Default jika seluruh 12 bulan penuh
+  }
+
+// =======================================================
+// MESIN SMART AUTOCOMPLETE DROPDOWN (JANGAN DIHAPUS)
+// =======================================================
+function setupAutocomplete(inp, arr) {
+    if (!inp) return;
+    // Bersihkan event listener lama jika ada
+    let newInp = inp.cloneNode(true);
+    inp.parentNode.replaceChild(newInp, inp);
+    inp = newInp;
+
+    inp.addEventListener("input", function(e) {
+        let a, b, val = this.value;
+        closeAllLists();
+        if (!val) return false;
+        
+        a = document.createElement("DIV");
+        a.setAttribute("id", this.id + "autocomplete-list");
+        a.setAttribute("class", "autocomplete-items");
+        this.parentNode.appendChild(a);
+        
+        let count = 0;
+        for (let i = 0; i < arr.length; i++) {
+            let displayStr = typeof arr[i] === 'object' ? arr[i].display : String(arr[i]);
+            let valStr = typeof arr[i] === 'object' ? arr[i].value : String(arr[i]);
+
+            if (displayStr.toLowerCase().includes(val.toLowerCase()) || valStr.toLowerCase().includes(val.toLowerCase())) {
+                count++;
+                b = document.createElement("DIV");
+                let regex = new RegExp(`(${val})`, "gi");
+                b.innerHTML = displayStr.replace(regex, "<strong class='text-primary'>$1</strong>");
+                b.innerHTML += "<input type='hidden' value='" + valStr.replace(/'/g, "&#39;") + "'>";
+                b.addEventListener("click", function(e) {
+                    inp.value = this.getElementsByTagName("input")[0].value;
+                    closeAllLists();
+                });
+                a.appendChild(b);
+            }
+            if(count >= 20) break; // Batasi max 20 dropdown agar tidak lag browsernya
+        }
+    });
+}
+
+function closeAllLists(elmnt) {
+    let x = document.getElementsByClassName("autocomplete-items");
+    for (let i = 0; i < x.length; i++) {
+        if (elmnt != x[i] && elmnt != document.getElementById("mUnitKerja") && elmnt != document.getElementById("mJabatan") && elmnt != document.getElementById("uUnitKerjaOp")) {
+            x[i].parentNode.removeChild(x[i]);
+        }
+    }
+}
+document.addEventListener("click", function (e) { closeAllLists(e.target); });
+
+  function closeAllLists(elmnt) {
+    let x = document.getElementsByClassName("autocomplete-items");
+    for (let i = 0; i < x.length; i++) {
+       if (elmnt != x[i] && elmnt != document.getElementById("mUnitKerja") && elmnt != document.getElementById("mJabatan") && elmnt != document.getElementById("uUnitKerjaOp")) {
+           x[i].parentNode.removeChild(x[i]);
+       }
+    }
+  }
+  document.addEventListener("click", function (e) { closeAllLists(e.target); });
 
 </script>
 </body>

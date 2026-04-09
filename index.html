@@ -86,10 +86,44 @@
             .action-left button, .action-right .btn-group, .action-right .btn-group button { width: 100% !important; margin: 0 !important; }
             .action-right .dropdown-menu { width: 100%; text-align: center; }
         }
-        @media (min-width: 769px) {
+       @media (min-width: 769px) {
             .app-padding { padding-top: 20px; }
             .action-left, .action-right { display: flex !important; width: auto !important; }
             .action-left button, .action-right .btn-group, .action-right .btn-group button { width: auto !important; flex: none !important; }
+
+            /* ========================================================
+               PERBAIKAN TAMPILAN TABEL PEGAWAI KHUSUS LAPTOP/DESKTOP 
+               ======================================================== */
+            
+            /* 1. Kolom Nama (Maksimal ~25 huruf ke samping, Maks 2 Baris ke bawah + titik-titik) */
+            #tabelBodyPegawai td:nth-child(2) b {
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                word-break: break-word;
+                max-width: 25ch; /* 25 karakter/digit */
+                white-space: normal !important;
+            }
+
+            /* 2. Kolom Unit Kerja (Maksimal ~30 huruf ke samping, Maks 2 Baris ke bawah + titik-titik) */
+            #tabelBodyPegawai td:nth-child(4) {
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                word-break: break-word;
+                max-width: 30ch; /* 30 karakter/digit */
+                white-space: normal !important;
+            }
+
+            /* 3. Kolom Aksi Buka/Edit/Del (Kunci agar tetap 1 baris berjejer kesamping) */
+            #tabelBodyPegawai td:nth-child(7) {
+                white-space: nowrap !important;
+                width: 1%; /* Membuat kolom memeluk tombol seketat mungkin agar tidak melar */
+            }
         }
 
         /* CSS Khusus Smart Autocomplete */
@@ -1164,11 +1198,11 @@
           </div>
           <div class="col-md-6">
             <h6 class="fw-bold text-success border-bottom pb-2 mb-3"><i class="bi bi-briefcase"></i> Data Jabatan & Gaji Pokok</h6>
-            <div class="mb-2"><label>Jabatan (Master TPP)</label>
-  <div class="autocomplete-wrapper">
-    <input type="text" id="mJabatan" class="form-control border-success" autocomplete="off" required>
-  </div>
-</div>
+            
+            <div class="mb-2"> <label>Jabatan (Master TPP)</label> <div class="autocomplete-wrapper">
+    <input type="text" id="mJabatan" class="form-control border-success" placeholder="Ketik jabatan dan pilih data yg muncul..." autocomplete="off" required>
+  </div> </div>
+
             <div class="mb-2"><label>Jenis Jabatan</label><select id="mJenis" class="form-select"><option value="Struktural">Struktural</option><option value="Fungsional Tertentu">Fungsional Tertentu</option><option value="Fungsional Umum">Fungsional Umum</option></select></div>
             <div class="mb-2"><label>Status Kawin / Jiwa</label><select id="mStatus" class="form-select"><option value="TK/0 = 1">TK/0 = 1 Jiwa (Sendiri)</option><option value="TK/1 = 2">TK/1 = 2 Jiwa</option><option value="TK/2 = 3">TK/2 = 3 Jiwa</option><option value="TK/3 = 4">TK/3 = 4 Jiwa</option><option value="K/0 = 2">K/0 = 2 Jiwa (Suami+Istri)</option><option value="K/1 = 3">K/1 = 3 Jiwa</option><option value="K/2 = 4">K/2 = 4 Jiwa</option><option value="K/3 = 5">K/3 = 5 Jiwa</option></select></div>
             <div class="row g-2 mb-2"><div class="col-6"><label>Gaji Pokok</label><input type="number" id="mGapok" class="form-control fw-bold" value="0" required></div><div class="col-6"><label>Tunj. Jabatan</label><input type="number" id="mTjJab" class="form-control fw-bold" value="0" required></div></div>
@@ -1242,7 +1276,7 @@
   // 👇 PASTIKAN LINK API INI BENAR (ISI DARI HASIL DEPLOY TERBARU) 👇
   const listOPD = [
       { nama: "Badan Kepegawaian Daerah", url: "https://script.google.com/macros/s/AKfycbw4PkelgARfgw65YLreJJ9GG7OynQDnEYtmYqz1fpoSnRLgH0cbltEBSpzciq0pPOXk9w/exec" },
-      { nama: "Dinas Pendidikan", url: "https://script.google.com/macros/s/AKfycbxG5qGn5YymsG_zpV_WXsUEVYDHtMi7AAtPKdE0QzZv5ZL24GDPNYQJ1Wk0DeA4RyvX/exec" },
+      { nama: "Dinas Pendidikan", url: "https://script.google.com/macros/s/AKfycbwdAwCvzT3TBmxCc6uaTfD-7IE3f7iByNGgHCKW8Asnbo5zyDhj6m-bRJIcMS74-LfyZA/exec" },
       { nama: "Uji Coba", url: "https://script.google.com/macros/s/AKfycbyubKFEGPHIB2RiwNKwAksaOJJ_5ug9k7MH0ikKtANzSYQc7EBun5pSIAuIqxxkB_MZ/exec"}
   ];
 

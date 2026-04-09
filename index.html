@@ -1101,7 +1101,7 @@
 
     <div id="boxImportExcel" class="hidden mt-3">
        <input type="file" id="pFileImportPegawai" class="form-control border-success mb-2" accept=".xlsx, .xls">
-       <button type="button" class="btn btn-sm btn-outline-success w-100" onclick="unduhTemplateExcelCustom('pegawai')"><i class="bi bi-download"></i> Unduh Format Excel</button>
+       <button type="button" class="btn btn-sm btn-outline-success w-100 hidden" onclick="unduhTemplateExcelCustom('pegawai')"><i class="bi bi-download"></i> Unduh Format Excel</button>
     </div>
   </div>
 
@@ -1715,7 +1715,7 @@
       let fileInput = document.getElementById('pFileImportPegawai');
 
       if (sumber === 'import' && !fileInput.files[0]) {
-          return alertPeringatan("Pilih file Excel terlebih dahulu untuk diimpor!");
+          return alertPeringatan("Pilih file Excel BKD terlebih dahulu untuk diimpor!");
       }
 
       btnSubmit.disabled = true;
@@ -1734,10 +1734,10 @@
 
       startLoading("Membuka Periode Baru...");
 
-      // 1. BUAT PERIODE TERLEBIH DAHULU (Server Google)
+      // 1. BUAT PERIODE TERLEBIH DAHULU (Di Server Google)
       const d = {
           tahun: tahunInput, bulanAngka: document.getElementById('pBulanAngka').value, namaPeriode: namaPeriode, hariKerja: document.getElementById('pHariKerja').value, hariKerja6: document.getElementById('pHariKerja6').value,
-          salinData: (sumber === 'salin'), // True jika memilih salin, False jika memilih kosong/import
+          salinData: (sumber === 'salin'), // True jika memilih salin
           jenisPeriode: jenis, refBulanGaji: namaPeriode, indukPajak: indukPajakVal
       };
 
@@ -1748,9 +1748,9 @@
           return alertError(res.pesan);
       }
 
-      // 2. JIKA SUMBER ADALAH IMPORT EXCEL, KITA PROSES SEKARANG JUGA!
+      // 2. JIKA SUMBER ADALAH IMPORT EXCEL BKD, KITA PROSES SEKARANG JUGA!
       if (sumber === 'import') {
-          Swal.getHtmlContainer().innerHTML = "Menganalisa File Excel SKP...";
+          Swal.getHtmlContainer().innerHTML = "Menganalisa File Excel SKP BKD...";
           let file = fileInput.files[0];
           let reader = new FileReader();
 
@@ -1764,61 +1764,64 @@
                   return alertError("Periode terbuka, tapi file Excel kosong!");
               }
 
-              let headerRowIndex = -1; let colMap = {};
-              // Deteksi posisi Kolom Pintar
-              for(let i = 0; i < Math.min(30, data2D.length); i++) {
-                  let rowStr = data2D[i].map(c => String(c).toLowerCase()).join("");
-                  if(rowStr.includes("nip") && rowStr.includes("nama")) {
-                      headerRowIndex = i;
-                      data2D[i].forEach((colName, idx) => {
-                          let name = String(colName).toLowerCase().replace(/[\s.]/g, '');
-                          if(name === "nip") colMap.nip = idx;
-                          else if(name.includes("nama")) colMap.nama = idx;
-                          else if(name.includes("tgllahir") || name.includes("tanggallahir")) colMap.tglLahir = idx;
-                          else if(name.includes("gol") || name.includes("pangkat")) colMap.golongan = idx;
-                          else if(name.includes("unorinduk") || name.includes("opd") || name.includes("induk")) colMap.unorInduk = idx;
-                          else if(name.includes("unitkerja") || name.includes("lokasikerja")) colMap.unitkerja = idx;
-                          else if(name === "jabatan" || name.includes("namajabatan")) colMap.namaJabatan = idx;
-                          else if(name.includes("jenisjabatan")) colMap.jenisJab = idx;
-                          else if(name.includes("status") || name.includes("kawin")) colMap.statusKawin = idx;
-                          else if(name.includes("gajipokok") || name.includes("gapok")) colMap.gapok = idx;
-                          else if(name.includes("tunjanganjabatan") || name.includes("tjjabatan")) colMap.tjJab = idx;
-                          else if(name.includes("rekening")) colMap.rekening = idx;
-                          else if(name.includes("skp") || name.includes("nilaiskp")) colMap.skp = idx;
-                      });
-                      break;
-                  }
-              }
-
-              if(headerRowIndex === -1 || colMap.nip === undefined) {
-                  stopLoading(); btnSubmit.disabled = false;
-                  return alertPeringatan("Periode dibuka, tapi format Excel gagal dideteksi (Pastikan ada tulisan NIP dan Nama).");
-              }
-
               let payload = [];
-              for(let i = headerRowIndex + 1; i < data2D.length; i++) {
+              
+              // LOOPING BACA DATA EXCEL BKD
+              // Kita mulai dari index 1 (Baris ke-2 di Excel) karena baris 0 biasanya adalah judul kolom
+              for(let i = 1; i < data2D.length; i++) {
                   let row = data2D[i];
-                  if(!row[colMap.nip]) continue;
-                  let nipBersih = String(row[colMap.nip]).replace(/[\s-']/g, '');
-                  if(!/^\d{18}$/.test(nipBersih)) continue; // Filter 18 digit murni
+                  
+                  // Kolom D adalah Index 3 (NIP)
+                  let nipVal = row[3];
+                  if(!nipVal) continue; // Abaikan jika baris kosong
+                  
+                  let nipBersih = String(nipVal).replace(/[\s-']/g, '');
+                  if(!/^\d{18}$/.test(nipBersih)) continue; // Wajib 18 digit angka murni
 
+                  // NORMALISASI JENIS PEGAWAI (Kolom AF / Index 31)
+                  // Kita ubah semua jadi huruf besar (uppercase) agar kebal huruf kecil/besar
+                  let jenisPegawaiRaw = String(row[31] || "").trim().toUpperCase();
+                  let statusPegawaiVal = "PNS"; // Default aman
+                  
+                  if (jenisPegawaiRaw.includes("PPPK") || jenisPegawaiRaw.includes("P3K")) {
+                      statusPegawaiVal = "PPPK";
+                  } else if (jenisPegawaiRaw.includes("PNS")) {
+                      statusPegawaiVal = "PNS";
+                  }
+
+                  // SUSUN DATA BERDASARKAN INDEKS KOLOM BKD
                   payload.push({
-                      nip: nipBersih, nama: colMap.nama !== undefined ? String(row[colMap.nama] || "") : "", tglLahir: colMap.tglLahir !== undefined ? formatTanggalExcel(row[colMap.tglLahir]) : "", golongan: colMap.golongan !== undefined ? String(row[colMap.golongan] || "") : "", unorInduk: colMap.unorInduk !== undefined ? String(row[colMap.unorInduk] || "") : "", unitkerja: colMap.unitkerja !== undefined ? String(row[colMap.unitkerja] || "") : "", namaJabatan: colMap.namaJabatan !== undefined ? String(row[colMap.namaJabatan] || "") : "", jenisJab: colMap.jenisJab !== undefined ? String(row[colMap.jenisJab] || "") : "Struktural", statusKawin: colMap.statusKawin !== undefined ? String(row[colMap.statusKawin] || "") : "TK/0 = 1", gapok: colMap.gapok !== undefined ? parseFloat(row[colMap.gapok]) || 0 : 0, tjJab: colMap.tjJab !== undefined ? parseFloat(row[colMap.tjJab]) || 0 : 0, rekening: colMap.rekening !== undefined ? String(row[colMap.rekening] || "").replace(/[']/g, '') : "", skp: colMap.skp !== undefined ? String(row[colMap.skp] || "") : ""
+                      nip: nipBersih, 
+                      nama: String(row[4] || "").trim(),          // Kolom E (Index 4)
+                      unitkerja: String(row[8] || "").trim(),     // Kolom I (Index 8)
+                      unorInduk: String(row[10] || "").trim(),    // Kolom K (Index 10)
+                      skp: String(row[16] || "").trim(),          // Kolom Q (Index 16)
+                      golongan: String(row[30] || "").trim(),     // Kolom AE (Index 30)
+                      statusPegawai: statusPegawaiVal,            // Kolom AF (Index 31)
+                      
+                      // KOSONGKAN DATA LAINNYA SESUAI PERMINTAAN
+                      tglLahir: "", 
+                      namaJabatan: "", 
+                      jenisJab: "Struktural", 
+                      statusKawin: "TK/0 = 1", 
+                      gapok: 0, 
+                      tjJab: 0, 
+                      rekening: ""
                   });
               }
 
               if(payload.length === 0) {
                   stopLoading(); btnSubmit.disabled = false;
-                  return alertPeringatan("Periode dibuka, tapi tidak ada NIP valid di file Excel.");
+                  return alertPeringatan("Periode dibuka, tapi tidak ada data NIP valid di Kolom D (Excel).");
               }
 
-              // KIRIM DATA PEGAWAI KE DATABASE
+              // KIRIM DATA PEGAWAI BKD KE DATABASE SERVER
               Swal.getHtmlContainer().innerHTML = `Menyimpan ${payload.length} Pegawai ke Database...`;
               let resImport = await fetchAPI("importPegawaiMassal", {payload: payload, bulanAktif: namaPeriode});
               
               stopLoading(); btnSubmit.disabled = false;
               if(String(resImport).includes("Error")) { alertError(resImport.pesan || resImport); }
-              else { alertSukses(`Periode ${namaPeriode} Terbuka & Data Excel berhasil diimpor!`); }
+              else { alertSukses(`Periode ${namaPeriode} Terbuka & Data SKP BKD berhasil diimpor!`); }
 
               bootstrap.Modal.getInstance(document.getElementById('modalTambahPeriode')).hide();
               renderDropdownPeriode(res.dataTerbaru);

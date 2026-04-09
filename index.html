@@ -1320,32 +1320,35 @@
     if (cachedDataStr) {
         try {
             let cachedData = JSON.parse(cachedDataStr);
-            // 2. MUNCULKAN INSTAN DALAM 0.1 DETIK (Layar loading tidak tampil lama)
-            terapkanDataInit(cachedData, cUser, bAktif, jASN);
+            // 2. MUNCULKAN INSTAN DALAM 0.1 DETIK
+            terapkanDataInit(cachedData, cUser, bAktif, jASN, false);
             isCached = true;
-        } catch(e) { console.log("Cache usang/rusak."); }
+        } catch(e) { 
+            console.error("Cache Error:", e);
+            isCached = false; 
+        }
     }
 
-    // Jika kosong (baru login di PC baru), baru tampilkan layar Loading besar
+    // Jika kosong, tampilkan layar Loading besar
     if (!isCached) {
         startLoading("Memuat Data Sistem...");
     }
 
-    // 3. TARIK DATA DI BACKGROUND (Tanpa menggangu user yang sedang melihat tabel)
+    // 3. TARIK DATA DI BACKGROUND
     fetchAPI("getInitialLoad", payloadData).then(dataInit => {
         if (!isCached) stopLoading(); 
         
         if (dataInit && !dataInit.error) {
-            // Perbarui cache di hardisk browser untuk F5 berikutnya
             localStorage.setItem('simTppCacheData', JSON.stringify(dataInit));
-            
-            // Perbarui UI secara diam-diam tanpa merestet ketikan user
             terapkanDataInit(dataInit, cUser, bAktif, jASN, isCached); 
+        } else if (dataInit.error || dataInit.status === "error") {
+            if (!isCached) alertError(dataInit.pesan || "Gagal memuat data dari server.");
         }
     }).catch(err => {
+        console.error("Fetch Error:", err);
         if (!isCached) {
             stopLoading();
-            alertError("Gagal terhubung ke server. Cek koneksi Anda.");
+            alertError("Terjadi kesalahan sistem: " + err.message);
         }
     });
   }
@@ -1366,16 +1369,12 @@
 
     renderDropdownPeriode(dataInit.periode);
     
-    arrayUnitKerjaValid = dataInit.unitKerja || [];
-
+    arrayUnitKerjaValid = dataInit.unitKerja || []; 
     setupAutocomplete(document.getElementById('mUnitKerja'), arrayUnitKerjaValid);
-setupAutocomplete(document.getElementById('uUnitKerjaOp'), arrayUnitKerjaValid);
-
-    let list = document.getElementById('listUnitKerjaUtama'); 
-    if(list) { list.innerHTML = ""; arrayUnitKerjaValid.forEach(unit => { list.innerHTML += `<option value="${unit}">`; }); }
+    setupAutocomplete(document.getElementById('uUnitKerjaOp'), arrayUnitKerjaValid);
     
     globalDataPergub = dataInit.pergub || [];
-    if(!isSilentUpdate) terapkanFilterPergub(); // Jika update diam-diam, tidak usah refresh tabel yang sedang dibuka
+    if(!isSilentUpdate) terapkanFilterPergub(); 
 
     if(cUser) {
       currentUser = cUser; 
@@ -1402,27 +1401,22 @@ setupAutocomplete(document.getElementById('uUnitKerjaOp'), arrayUnitKerjaValid);
       if(globalBulanAktif) { 
           document.getElementById('labelBulanAktif').innerText = globalBulanAktif + (globalJenisASN ? " (" + globalJenisASN + ")" : ""); 
           document.getElementById('labelHKAktif').innerText = globalHariKerja; 
-          document.getElementById('btnMenuPegawai').disabled = false; 
           if(!isSilentUpdate) updateFilterGolDropdown(); 
       }
       
-      //let savedView = sessionStorage.getItem('currentView') || 'viewPilihBulan'; 
-      if(savedView === 'viewManajemenASN') savedView = 'viewDaftarPegawai'; 
-      //if(!isSilentUpdate) switchView(savedView); 
-
+      // PINTU KEAMANAN: Paksa masuk Home & Kunci Tombol Pegawai jika baru reload
       if(!isSilentUpdate) {
-          switchView('viewPilihBulan'); // Paksa ke Menu Home
-          document.getElementById('btnMenuPegawai').disabled = true; // Matikan tombol nav atas
-          toggleTombolPegawaiHP(false); // Matikan tombol nav HP
+          switchView('viewPilihBulan'); 
+          document.getElementById('btnMenuPegawai').disabled = true; 
+          toggleTombolPegawaiHP(false); 
       }
       
-      // Load data pegawai instan
-      if(savedView === 'viewDaftarPegawai' && globalBulanAktif && dataInit.pegawai) { 
+      // JIKA ADA DATA PEGAWAI DI CACHE / SERVER (Masukkan ke Global RAM)
+      if(globalBulanAktif && dataInit.pegawai) { 
           globalDataPegawai = dataInit.pegawai;
           let unitList = [...new Set(globalDataPegawai.map(item => item[5]).filter(Boolean))]; 
           let unitDropdown = document.getElementById('filterUnitKerja'); 
           
-          // Simpan nilai dropdown filter user agar tidak kerest saat update diam-diam
           let filterValue = unitDropdown.value; 
           unitDropdown.innerHTML = '<option value="">Semua Unit Kerja</option>'; 
           unitList.forEach(s => unitDropdown.innerHTML += `<option value="${s}">${s}</option>`); 
@@ -1438,7 +1432,7 @@ setupAutocomplete(document.getElementById('uUnitKerjaOp'), arrayUnitKerjaValid);
       }
     }
   }
-
+  
   async function doLogin(e) {
     e.preventDefault(); startLoading("Memeriksa Akses..."); 
     let u = document.getElementById('logUser').value; let p = document.getElementById('logPass').value;

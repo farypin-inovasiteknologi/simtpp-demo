@@ -1399,7 +1399,7 @@
     } else { alertError(res.pesan); }
   }
 
-  // 8. FUNGSI INIT (Terapkan visibilitas yang sama saat di-Reload)
+ // 4. PENANGKAP CACHE (Tambahan agar Akun tersimpan di browser)
   function terapkanDataInit(dataInit, cUser, bAktif, jASN, isSilentUpdate = false) {
     globalSettingsCache = dataInit.setting;
     let res = dataInit.setting;
@@ -1426,6 +1426,11 @@
       currentUser = cUser; 
       document.getElementById('navInfoRole').innerText = currentUser.unitkerja;
       
+      // 👇 SIMPAN DATA AKUN KE RAM JIKA ADA 👇
+      if (dataInit.akun && dataInit.akun.length > 0) {
+          globalDataAkun = dataInit.akun;
+      }
+      
       let r = currentUser.role;
       let isSuper = (r === "Super Admin");
       let isOpd = (r === "Admin OPD");
@@ -1433,7 +1438,6 @@
       if(isSuper) { document.getElementById('btnMasterAdmin').classList.remove('hidden'); document.getElementById('btnAkunAdmin').classList.remove('hidden'); } 
       else { document.getElementById('btnMasterAdmin').classList.add('hidden'); document.getElementById('btnAkunAdmin').classList.add('hidden'); }
       
-      // Pastikan tombol setting dan block icon HP muncul untuk semua
       document.getElementById('btnSettingAdmin').classList.remove('hidden');
       document.getElementById('mHeaderAdminIcons').classList.remove('hidden');
       
@@ -1492,6 +1496,7 @@
       }
     }
   }
+ 
 
   function logoutApp() { 
     Swal.fire({ 
@@ -1631,92 +1636,74 @@
   // =====================================
   // 4. PERIODE (BULAN)
   // =====================================
-  function bukaModalTambahPeriode() {
-    let nextBulanAngka = getSmartBulanAngka();
-    let nextTahun = new Date().getFullYear(); 
-    
-    if(arrayPeriode && arrayPeriode.length > 0) { 
-      let lastReguler = [...arrayPeriode].reverse().find(p => p.jenisPeriode === "Reguler" || !p.jenisPeriode); 
-      if(lastReguler && !isNaN(lastReguler.tahun)) { 
-        nextTahun = parseInt(lastReguler.tahun);
-        // Jika bulan yang direkomendasikan adalah Januari, tapi bulan terakhir di database adalah Desember, berarti ganti tahun!
-        if (nextBulanAngka === 1 && lastReguler.bulanAngka == 12) { 
-          nextTahun += 1; 
-        } 
-      } 
-    }
-    
-    // Keamanan ekstra agar tidak undefined
-    if(isNaN(nextBulanAngka) || nextBulanAngka < 1 || nextBulanAngka > 12) nextBulanAngka = 1;
-    if(isNaN(nextTahun)) nextTahun = new Date().getFullYear();
 
-    const namaBulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-    
-    document.getElementById('pTahun').value = nextTahun; 
-    document.getElementById('pBulanAngka').value = nextBulanAngka; 
-    document.getElementById('pBulanNama').value = namaBulan[nextBulanAngka] + " " + nextTahun; 
-    document.getElementById('pHariKerja').value = ""; 
-    document.getElementById('pHariKerja6').value = ""; 
-    document.getElementById('pJenisPeriode').value = "Reguler"; 
-    
-    toggleIndukPajak();
-    
-    let selInduk = document.getElementById('pIndukPajak'); 
-    selInduk.innerHTML = ""; 
-    if(arrayPeriode) {
-        arrayPeriode.forEach(p => { 
+  // 2. MODAL TAMBAH PERIODE
+  function bukaModalTambahPeriode() {
+      let nextBulanAngka = getSmartBulanAngka();
+      let nextTahun = new Date().getFullYear(); 
+      
+      // Tentukan Tahun berdasarkan data terakhir
+      if(arrayPeriode && arrayPeriode.length > 0) { 
+          let lastReguler = [...arrayPeriode].reverse().find(p => p.jenisPeriode === "Reguler" || !p.jenisPeriode); 
+          if(lastReguler && !isNaN(lastReguler.tahun)) { 
+              nextTahun = parseInt(lastReguler.tahun);
+              // Jika bulan yang disarankan adalah Januari, tapi Desember di database SUDAH ADA, ganti tahun!
+              let isDesemberAda = arrayPeriode.some(p => (p.jenisPeriode === "Reguler" || !p.jenisPeriode) && parseInt(p.bulanAngka) === 12);
+              if (nextBulanAngka === 1 && isDesemberAda) { 
+                  nextTahun += 1; 
+              } 
+          } 
+      } 
+
+      const namaBulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+      
+      document.getElementById('pTahun').value = nextTahun; 
+      document.getElementById('pBulanAngka').value = nextBulanAngka; 
+      document.getElementById('pBulanNama').value = namaBulan[nextBulanAngka] + " " + nextTahun; 
+      document.getElementById('pHariKerja').value = ""; 
+      document.getElementById('pHariKerja6').value = ""; 
+      document.getElementById('pJenisPeriode').value = "Reguler"; 
+      
+      toggleIndukPajak();
+      
+      let selInduk = document.getElementById('pIndukPajak'); 
+      selInduk.innerHTML = ""; 
+      if(arrayPeriode) {
+          arrayPeriode.forEach(p => { 
           if(p.jenisPeriode === "Reguler" || !p.jenisPeriode) { 
               selInduk.innerHTML += `<option value="${p.namaPeriode}">${p.namaPeriode}</option>`; 
           } 
-        });
-    }
-    
-    let modalObj = bootstrap.Modal.getInstance(document.getElementById('modalTambahPeriode')) || new bootstrap.Modal(document.getElementById('modalTambahPeriode'));
-    modalObj.show();
+          });
+      }
+      
+      let modalObj = bootstrap.Modal.getInstance(document.getElementById('modalTambahPeriode')) || new bootstrap.Modal(document.getElementById('modalTambahPeriode'));
+      modalObj.show();
   }
 
+  // 3. TOGGLE INDUK PAJAK
   function toggleIndukPajak() {
-    let jenis = document.getElementById('pJenisPeriode').value; 
-    let inputNama = document.getElementById('pBulanNama'); 
-    let inputAngka = document.getElementById('pBulanAngka'); 
-    let tahun = document.getElementById('pTahun').value || new Date().getFullYear(); 
-    let nextBulanAngka = getSmartBulanAngka();
-    let nextTahun = new Date().getFullYear(); 
-    
-    if(arrayPeriode && arrayPeriode.length > 0) { 
-      let lastReguler = [...arrayPeriode].reverse().find(p => p.jenisPeriode === "Reguler" || !p.jenisPeriode); 
-      if(lastReguler && !isNaN(lastReguler.tahun)) { 
-        nextTahun = parseInt(lastReguler.tahun);
-        // Jika bulan yang direkomendasikan adalah Januari, tapi bulan terakhir di database adalah Desember, berarti ganti tahun!
-        if (nextBulanAngka === 1 && lastReguler.bulanAngka == 12) { 
-          nextTahun += 1; 
-        } 
-      } 
-    }
-    
-    let boxInduk = document.getElementById('boxIndukPajak'); 
-    if (jenis === "Reguler") { boxInduk.classList.add("hidden"); } else { boxInduk.classList.remove("hidden"); }
-    
-    if(arrayPeriode && arrayPeriode.length > 0) { 
-      let lastReguler = [...arrayPeriode].reverse().find(p => p.jenisPeriode === "Reguler" || !p.jenisPeriode); 
-      if(lastReguler && !isNaN(lastReguler.bulanAngka)) { 
-          nextBulanAngka = lastReguler.bulanAngka == 12 ? 1 : parseInt(lastReguler.bulanAngka) + 1; 
-      } 
-    }
-    
-    const namaBulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-    
-    if(jenis === "Reguler") { 
-      inputNama.value = namaBulan[nextBulanAngka] + " " + tahun; 
-      inputAngka.value = nextBulanAngka; 
-      document.getElementById('pHariKerja').value = ""; 
-      document.getElementById('pHariKerja6').value = ""; 
-    } else { 
-      inputNama.value = jenis + " " + tahun; 
-      inputAngka.value = (jenis === "THR") ? 14 : 13; 
-      document.getElementById('pHariKerja').value = 22; 
-      document.getElementById('pHariKerja6').value = 26; 
-    }
+      let jenis = document.getElementById('pJenisPeriode').value; 
+      let inputNama = document.getElementById('pBulanNama'); 
+      let inputAngka = document.getElementById('pBulanAngka'); 
+      let tahun = document.getElementById('pTahun').value || new Date().getFullYear(); 
+      let nextBulanAngka = getSmartBulanAngka(); // Pakai mesin pintar!
+      
+      let boxInduk = document.getElementById('boxIndukPajak'); 
+      if (jenis === "Reguler") { boxInduk.classList.add("hidden"); } else { boxInduk.classList.remove("hidden"); }
+      
+      const namaBulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+      
+      if(jenis === "Reguler") { 
+          inputNama.value = namaBulan[nextBulanAngka] + " " + tahun; 
+          inputAngka.value = nextBulanAngka; 
+          document.getElementById('pHariKerja').value = ""; 
+          document.getElementById('pHariKerja6').value = ""; 
+      } else { 
+          inputNama.value = jenis + " " + tahun; 
+          inputAngka.value = (jenis === "THR") ? 14 : 13; 
+          document.getElementById('pHariKerja').value = 22; 
+          document.getElementById('pHariKerja6').value = 26; 
+      }
   }
 
   function sinkronHariKerja() { let namaInduk = document.getElementById('pIndukPajak').value; if(!namaInduk) return; let dataInduk = arrayPeriode.find(p => p.namaPeriode === namaInduk); if(dataInduk) { document.getElementById('pHariKerja').value = dataInduk.hariKerja; document.getElementById('pHariKerja6').value = dataInduk.hariKerja6; } }
@@ -2454,11 +2441,11 @@ async function muatDataPegawai(forceRefresh = false) {
   // =====================================
   let globalDataAkun = []; let currentAkunPage = 1; let akunRowsPerPage = 15;
 
-  // 1. FUNGSI MUAT DAFTAR AKUN (INSTAN)
+  // / 5. FUNGSI MUAT DAFTAR AKUN (INSTAN / NO LOADING)
   async function muatDaftarAkun(forceRefresh = false) {
     switchView('viewManajemenAkun'); 
     
-    // Jika data sudah ada di RAM dan tidak disuruh refresh, tampilkan 0 detik!
+    // Langsung keluarkan dari RAM jika data ada! 0 Detik.
     if (!forceRefresh && globalDataAkun && globalDataAkun.length > 0) {
       terapkanFilterAkun();
       return;
@@ -2470,6 +2457,14 @@ async function muatDataPegawai(forceRefresh = false) {
     
     if(data && !data.error) { 
       globalDataAkun = data; 
+      
+      // Update Cache LocalStorage secara diam-diam agar F5 juga tidak loading
+      try {
+          let currentCache = JSON.parse(localStorage.getItem('simTppCacheData') || "{}");
+          currentCache.akun = data;
+          localStorage.setItem('simTppCacheData', JSON.stringify(currentCache));
+      } catch(e) {}
+
       terapkanFilterAkun(); 
     } else { 
       alertError(data.pesan || "Gagal memuat daftar akun dari server!"); 
@@ -2823,18 +2818,21 @@ async function muatDataPegawai(forceRefresh = false) {
   // =======================================================
   // MESIN PENCARI BULAN KOSONG (SMART PERIODE)
   // =======================================================
+  // 1. MESIN PENCARI BULAN KOSONG
   function getSmartBulanAngka() {
-      if(!arrayPeriode || arrayPeriode.length === 0) return new Date().getMonth() + 1;
-      let reguler = arrayPeriode
-          .filter(p => p.jenisPeriode === "Reguler" || !p.jenisPeriode)
-          .map(p => parseInt(p.bulanAngka))
-          .filter(n => !isNaN(n));
+      let reguler = [];
+      if (arrayPeriode && arrayPeriode.length > 0) {
+          reguler = arrayPeriode
+              .filter(p => p.jenisPeriode === "Reguler" || !p.jenisPeriode)
+              .map(p => parseInt(p.bulanAngka))
+              .filter(n => !isNaN(n));
+      }
       
-      // Cari bulan ke 1 s/d 12 yang belum ada di database
+      // Cari bulan dari 1 s/d 12 yang KOSONG (Prioritas yang paling awal)
       for (let i = 1; i <= 12; i++) {
           if (!reguler.includes(i)) return i; 
       }
-      return 1; // Jika 12 bulan sudah penuh, kembali ke bulan 1
+      return 1; // Default jika seluruh 12 bulan penuh
   }
 
   // =======================================================

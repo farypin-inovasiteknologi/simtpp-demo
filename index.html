@@ -3181,10 +3181,14 @@ function startLoading(text) {
         } 
     }); 
 }
-function stopLoading() { clearInterval(loadingTimer); Swal.close(); }
-function alertSukses(pesan) { Swal.fire({ icon: 'success', title: 'Berhasil!', text: pesan, confirmButtonColor: '#198754' }); }
-function alertError(pesan) { Swal.fire({ icon: 'error', title: 'Oops...', text: pesan, confirmButtonColor: '#dc3545' }); }
-function alertPeringatan(pesan) { Swal.fire({ icon: 'warning', title: 'Perhatian', text: pesan, confirmButtonColor: '#ffc107' }); }
+  
+  function stopLoading() { clearInterval(loadingTimer); Swal.close(); }
+  function alertSukses(pesan) { Swal.fire({ icon: 'success', title: 'Berhasil!', text: pesan, confirmButtonColor: '#198754' }); }
+  function alertError(pesan) { Swal.fire({ icon: 'error', title: 'Oops...', text: pesan, confirmButtonColor: '#dc3545' }); }
+  function alertPeringatan(pesan) { Swal.fire({ icon: 'warning', title: 'Perhatian', text: pesan, confirmButtonColor: '#ffc107' }); }
+
+  window.addEventListener('scroll', function() { let btnScroll = document.getElementById('btnScrollTop'); if (window.scrollY > 200) { btnScroll.style.display = 'flex'; } else { btnScroll.style.display = 'none'; } });
+  function toggleTombolPegawaiHP(buka) { let btnP = document.getElementById('mNavPegawai'); if(btnP) { if(buka) btnP.classList.remove('disabled'); else btnP.classList.add('disabled'); } }
 
 function getGroupPPPK(golDasar) {
     const g = String(golDasar).trim().toUpperCase();

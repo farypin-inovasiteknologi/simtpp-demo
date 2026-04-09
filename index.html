@@ -1067,7 +1067,7 @@
         <div class="mb-2"><label>Nama Periode</label><input type="text" id="pBulanNama" class="form-control fw-bold text-danger" required></div>
         <input type="hidden" id="pBulanAngka">
         <div class="mb-2"><label class="fw-bold text-primary">Jenis Periode</label><select id="pJenisPeriode" class="form-select border-primary fw-bold" onchange="toggleIndukPajak()"><option value="Reguler">Bulan Reguler</option><option value="THR">Gaji 14 (THR)</option><option value="Gaji 13">Gaji 13</option></select></div>
-        <div class="mb-3 hidden" id="boxIndukPajak"><label class="fw-bold text-danger">Gabung Pajak TER ke Bulan?</label><select id="pIndukPajak" class="form-select border-danger fw-bold" onchange="sinkronHariKerja()"></select><small class="text-muted d-block mt-1">Pilih bulan reguler tempat THR/Gaji 13 ini dihitung komulatif pajaknya.</small></div>
+        <div class="mb-3 hidden" id="boxIndukPajak"><label class="fw-bold text-danger">Bulan pencairan gaji</label><select id="pIndukPajak" class="form-select border-danger fw-bold" onchange="sinkronHariKerja()"></select><small class="text-muted d-block mt-1">Pilih bulan reguler tempat Gaji 14 THR/Gaji 13 ini dicairkan.</small></div>
         <div class="row"><div class="col-6 mb-3"><label>HK (5 Hari Kerja)</label><input type="number" id="pHariKerja" class="form-control border-primary fw-bold" required></div><div class="col-6 mb-3"><label>HK (6 Hari Kerja)</label><input type="number" id="pHariKerja6" class="form-control border-primary fw-bold" required></div></div>
         <div class="form-check mb-3 p-3 bg-light border rounded"><input class="form-check-input" type="checkbox" id="pSalinPegawai" checked><label class="form-check-label fw-bold text-success" for="pSalinPegawai"><i class="bi bi-copy"></i> Salin data pegawai bulan sebelumnya</label></div>
         <button type="submit" class="btn btn-primary w-100 fw-bold">BUKA PERIODE BARU</button>
@@ -1261,9 +1261,6 @@
   function togglePassword(inputId, btn) { let inp = document.getElementById(inputId); let icon = btn.querySelector('i'); if(inp.type === "password") { inp.type = "text"; icon.classList.replace('bi-eye', 'bi-eye-slash'); } else { inp.type = "password"; icon.classList.replace('bi-eye-slash', 'bi-eye'); } }
 
   async function inisialisasiAplikasi() {
-    // 1. Tampilkan Pop-Up Loading agar layar tidak blank putih!
-    startLoading("Memuat Data Sistem...");
-
     let bAktif = sessionStorage.getItem('globalBulanAktif') || "";
     let jASN = sessionStorage.getItem('globalJenisASN') || "";
     let cUser = sessionStorage.getItem('isLoggedIn') === 'true' ? JSON.parse(sessionStorage.getItem('currentUser')) : null;
@@ -1273,15 +1270,45 @@
         payloadData = { bulanAktif: bAktif, roleUser: cUser.role, unitkerjaUser: cUser.unitkerja, jenisASN: jASN };
     }
 
-    // 2. Tarik SEMUA DATA sekaligus dalam 1 kali hit ke server (Super Cepat)
-    let dataInit = await fetchAPI("getInitialLoad", payloadData);
+    // 1. CEK CACHE LOKAL: Apakah data pernah didownload sebelumnya?
+    let cachedDataStr = localStorage.getItem('simTppCacheData');
+    let isCached = false;
     
-    if (!dataInit || dataInit.error) {
-        stopLoading();
-        return alertError("Gagal memuat data awal dari server.");
+    if (cachedDataStr) {
+        try {
+            let cachedData = JSON.parse(cachedDataStr);
+            // 2. MUNCULKAN INSTAN DALAM 0.1 DETIK (Layar loading tidak tampil lama)
+            terapkanDataInit(cachedData, cUser, bAktif, jASN);
+            isCached = true;
+        } catch(e) { console.log("Cache usang/rusak."); }
     }
 
-    // 3. Distribusikan data Setting
+    // Jika kosong (baru login di PC baru), baru tampilkan layar Loading besar
+    if (!isCached) {
+        startLoading("Memuat Data Sistem...");
+    }
+
+    // 3. TARIK DATA DI BACKGROUND (Tanpa menggangu user yang sedang melihat tabel)
+    fetchAPI("getInitialLoad", payloadData).then(dataInit => {
+        if (!isCached) stopLoading(); 
+        
+        if (dataInit && !dataInit.error) {
+            // Perbarui cache di hardisk browser untuk F5 berikutnya
+            localStorage.setItem('simTppCacheData', JSON.stringify(dataInit));
+            
+            // Perbarui UI secara diam-diam tanpa merestet ketikan user
+            terapkanDataInit(dataInit, cUser, bAktif, jASN, isCached); 
+        }
+    }).catch(err => {
+        if (!isCached) {
+            stopLoading();
+            alertError("Gagal terhubung ke server. Cek koneksi Anda.");
+        }
+    });
+  }
+
+  // FUNGSI PENDAMPING: Menerapkan data ke Tampilan HTML
+  function terapkanDataInit(dataInit, cUser, bAktif, jASN, isSilentUpdate = false) {
     let res = dataInit.setting;
     if(res) {
       document.getElementById('loginNamaInstansi').innerText = res.Nama_Instansi || "PEMERINTAH PROVINSI JAMBI"; 
@@ -1293,7 +1320,6 @@
       globalPotKorpri = parseFloat(res.Pot_Korpri) || 0; 
     }
 
-    // 4. Distribusikan Periode, Unit Kerja, dan Pergub
     renderDropdownPeriode(dataInit.periode);
     
     arrayUnitKerjaValid = dataInit.unitKerja || []; 
@@ -1301,9 +1327,8 @@
     if(list) { list.innerHTML = ""; arrayUnitKerjaValid.forEach(unit => { list.innerHTML += `<option value="${unit}">`; }); }
     
     globalDataPergub = dataInit.pergub || [];
-    terapkanFilterPergub();
+    if(!isSilentUpdate) terapkanFilterPergub(); // Jika update diam-diam, tidak usah refresh tabel yang sedang dibuka
 
-    // 5. Cek Status Login User
     if(cUser) {
       currentUser = cUser; 
       document.getElementById('navInfoRole').innerText = currentUser.unitkerja;
@@ -1330,31 +1355,34 @@
           document.getElementById('labelBulanAktif').innerText = globalBulanAktif + (globalJenisASN ? " (" + globalJenisASN + ")" : ""); 
           document.getElementById('labelHKAktif').innerText = globalHariKerja; 
           document.getElementById('btnMenuPegawai').disabled = false; 
-          updateFilterGolDropdown(); 
+          if(!isSilentUpdate) updateFilterGolDropdown(); 
       }
       
       let savedView = sessionStorage.getItem('currentView') || 'viewPilihBulan'; 
       if(savedView === 'viewManajemenASN') savedView = 'viewDaftarPegawai'; 
-      switchView(savedView); 
+      if(!isSilentUpdate) switchView(savedView); 
       
-      // Jika berada di view Pegawai, gunakan data pegawai yang ditarik bersamaan tadi
-      if(savedView === 'viewDaftarPegawai' && globalBulanAktif) { 
-          globalDataPegawai = dataInit.pegawai || [];
-          
+      // Load data pegawai instan
+      if(savedView === 'viewDaftarPegawai' && globalBulanAktif && dataInit.pegawai) { 
+          globalDataPegawai = dataInit.pegawai;
           let unitList = [...new Set(globalDataPegawai.map(item => item[5]).filter(Boolean))]; 
           let unitDropdown = document.getElementById('filterUnitKerja'); 
+          
+          // Simpan nilai dropdown filter user agar tidak kerest saat update diam-diam
+          let filterValue = unitDropdown.value; 
           unitDropdown.innerHTML = '<option value="">Semua Unit Kerja</option>'; 
           unitList.forEach(s => unitDropdown.innerHTML += `<option value="${s}">${s}</option>`); 
-          
+          unitDropdown.value = filterValue;
+
           terapkanFilter();
       }
     } else {
-      document.getElementById('viewLanding').classList.add('hidden'); 
-      document.getElementById('viewLogin').classList.remove('hidden'); 
-      document.body.classList.add('bg-gradient-login');
+      if(!isSilentUpdate) {
+          document.getElementById('viewLanding').classList.add('hidden'); 
+          document.getElementById('viewLogin').classList.remove('hidden'); 
+          document.body.classList.add('bg-gradient-login');
+      }
     }
-
-    stopLoading(); // Tutup Pop-Up Loading
   }
 
   async function doLogin(e) {
@@ -1504,23 +1532,79 @@
   // 4. PERIODE (BULAN)
   // =====================================
   function bukaModalTambahPeriode() {
-    let nextTahun = new Date().getFullYear(); let nextBulanAngka = 1;
-    if(arrayPeriode.length > 0) { let lastReguler = [...arrayPeriode].reverse().find(p => p.jenisPeriode === "Reguler" || !p.jenisPeriode); if(lastReguler) { if(lastReguler.bulanAngka == 12) { nextTahun = parseInt(lastReguler.tahun) + 1; nextBulanAngka = 1; } else { nextTahun = parseInt(lastReguler.tahun); nextBulanAngka = parseInt(lastReguler.bulanAngka) + 1; } } else { let last = arrayPeriode[arrayPeriode.length - 1]; nextTahun = parseInt(last.tahun); nextBulanAngka = parseInt(last.bulanAngka); } }
+    let nextTahun = new Date().getFullYear(); 
+    let nextBulanAngka = new Date().getMonth() + 1; // Default ke bulan saat ini
+    
+    if(arrayPeriode && arrayPeriode.length > 0) { 
+      let lastReguler = [...arrayPeriode].reverse().find(p => p.jenisPeriode === "Reguler" || !p.jenisPeriode); 
+      if(lastReguler && !isNaN(lastReguler.bulanAngka)) { 
+        if(lastReguler.bulanAngka == 12) { 
+          nextTahun = parseInt(lastReguler.tahun) + 1; nextBulanAngka = 1; 
+        } else { 
+          nextTahun = parseInt(lastReguler.tahun); nextBulanAngka = parseInt(lastReguler.bulanAngka) + 1; 
+        } 
+      } 
+    } 
+    
+    // Keamanan ekstra agar tidak undefined
+    if(isNaN(nextBulanAngka) || nextBulanAngka < 1 || nextBulanAngka > 12) nextBulanAngka = 1;
+    if(isNaN(nextTahun)) nextTahun = new Date().getFullYear();
+
     const namaBulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-    document.getElementById('pTahun').value = nextTahun; document.getElementById('pBulanAngka').value = nextBulanAngka; document.getElementById('pBulanNama').value = namaBulan[nextBulanAngka] + " " + nextTahun; document.getElementById('pHariKerja').value = ""; document.getElementById('pHariKerja6').value = ""; document.getElementById('pJenisPeriode').value = "Reguler"; toggleIndukPajak();
-    let selInduk = document.getElementById('pIndukPajak'); selInduk.innerHTML = ""; arrayPeriode.forEach(p => { if(p.jenisPeriode === "Reguler" || !p.jenisPeriode) { selInduk.innerHTML += `<option value="${p.namaPeriode}">${p.namaPeriode}</option>`; } });
+    
+    document.getElementById('pTahun').value = nextTahun; 
+    document.getElementById('pBulanAngka').value = nextBulanAngka; 
+    document.getElementById('pBulanNama').value = namaBulan[nextBulanAngka] + " " + nextTahun; 
+    document.getElementById('pHariKerja').value = ""; 
+    document.getElementById('pHariKerja6').value = ""; 
+    document.getElementById('pJenisPeriode').value = "Reguler"; 
+    
+    toggleIndukPajak();
+    
+    let selInduk = document.getElementById('pIndukPajak'); 
+    selInduk.innerHTML = ""; 
+    if(arrayPeriode) {
+        arrayPeriode.forEach(p => { 
+          if(p.jenisPeriode === "Reguler" || !p.jenisPeriode) { 
+              selInduk.innerHTML += `<option value="${p.namaPeriode}">${p.namaPeriode}</option>`; 
+          } 
+        });
+    }
     
     let modalObj = bootstrap.Modal.getInstance(document.getElementById('modalTambahPeriode')) || new bootstrap.Modal(document.getElementById('modalTambahPeriode'));
     modalObj.show();
   }
 
   function toggleIndukPajak() {
-    let jenis = document.getElementById('pJenisPeriode').value; let inputNama = document.getElementById('pBulanNama'); let inputAngka = document.getElementById('pBulanAngka'); let tahun = document.getElementById('pTahun').value; let nextBulanAngka = 1;
-    let boxInduk = document.getElementById('boxIndukPajak'); if (jenis === "Reguler") { boxInduk.classList.add("hidden"); } else { boxInduk.classList.remove("hidden"); }
-    if(arrayPeriode.length > 0) { let lastReguler = [...arrayPeriode].reverse().find(p => p.jenisPeriode === "Reguler" || !p.jenisPeriode); if(lastReguler) { nextBulanAngka = lastReguler.bulanAngka == 12 ? 1 : parseInt(lastReguler.bulanAngka) + 1; } }
+    let jenis = document.getElementById('pJenisPeriode').value; 
+    let inputNama = document.getElementById('pBulanNama'); 
+    let inputAngka = document.getElementById('pBulanAngka'); 
+    let tahun = document.getElementById('pTahun').value || new Date().getFullYear(); 
+    let nextBulanAngka = new Date().getMonth() + 1;
+    
+    let boxInduk = document.getElementById('boxIndukPajak'); 
+    if (jenis === "Reguler") { boxInduk.classList.add("hidden"); } else { boxInduk.classList.remove("hidden"); }
+    
+    if(arrayPeriode && arrayPeriode.length > 0) { 
+      let lastReguler = [...arrayPeriode].reverse().find(p => p.jenisPeriode === "Reguler" || !p.jenisPeriode); 
+      if(lastReguler && !isNaN(lastReguler.bulanAngka)) { 
+          nextBulanAngka = lastReguler.bulanAngka == 12 ? 1 : parseInt(lastReguler.bulanAngka) + 1; 
+      } 
+    }
+    
     const namaBulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-    if(jenis === "Reguler") { inputNama.value = namaBulan[nextBulanAngka] + " " + tahun; inputAngka.value = nextBulanAngka; document.getElementById('pHariKerja').value = ""; document.getElementById('pHariKerja6').value = ""; } 
-    else { inputNama.value = jenis + " " + tahun; inputAngka.value = (jenis === "THR") ? 14 : 13; document.getElementById('pHariKerja').value = 22; document.getElementById('pHariKerja6').value = 26; }
+    
+    if(jenis === "Reguler") { 
+      inputNama.value = namaBulan[nextBulanAngka] + " " + tahun; 
+      inputAngka.value = nextBulanAngka; 
+      document.getElementById('pHariKerja').value = ""; 
+      document.getElementById('pHariKerja6').value = ""; 
+    } else { 
+      inputNama.value = jenis + " " + tahun; 
+      inputAngka.value = (jenis === "THR") ? 14 : 13; 
+      document.getElementById('pHariKerja').value = 22; 
+      document.getElementById('pHariKerja6').value = 26; 
+    }
   }
 
   function sinkronHariKerja() { let namaInduk = document.getElementById('pIndukPajak').value; if(!namaInduk) return; let dataInduk = arrayPeriode.find(p => p.namaPeriode === namaInduk); if(dataInduk) { document.getElementById('pHariKerja').value = dataInduk.hariKerja; document.getElementById('pHariKerja6').value = dataInduk.hariKerja6; } }

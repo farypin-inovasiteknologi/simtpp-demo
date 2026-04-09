@@ -1364,12 +1364,14 @@
       let iconMasterHP = document.querySelector('i[onclick="switchView(\'viewMasterPergub\')"]');
       let iconAkunHP = document.querySelector('i[onclick="muatDaftarAkun()"]');
 
+      // UBAH BAGIAN INI (Hapus isSubUnit dari dalam kurung)
       if(isSuper || isOpd) { 
           document.getElementById('btnTambahBulan').classList.remove('hidden'); 
           document.getElementById('btnKelolaBulan').classList.remove('hidden'); 
-          if(iconMasterHP) iconMasterHP.classList.remove('hidden');
+          if(iconMasterHP && (isSuper || isOpd)) iconMasterHP.classList.remove('hidden'); else if(iconMasterHP) iconMasterHP.classList.add('hidden');
           if(iconAkunHP && isSuper) iconAkunHP.classList.remove('hidden'); else if(iconAkunHP) iconAkunHP.classList.add('hidden');
       } else { 
+          // Admin Sub Unit akan jatuh ke sini (Tombol Admin disembunyikan)
           document.getElementById('btnTambahBulan').classList.add('hidden'); 
           document.getElementById('btnKelolaBulan').classList.add('hidden'); 
           if(iconMasterHP) iconMasterHP.classList.add('hidden');
@@ -1486,12 +1488,13 @@
     document.getElementById('btnMenuPegawai').disabled = false; 
     toggleTombolPegawaiHP(true);
     
-    if (globalStatusLock === "Kunci" || currentUser.role === "Operator") { 
+    // UBAH BAGIAN INI:
+    if (globalStatusLock === "Kunci" || currentUser.role === "Operator" || currentUser.role === "Admin Sub Unit/UPTD") { 
       document.getElementById('warningLock').classList.remove('hidden'); 
-      if(currentUser.role === "Operator") {
-         document.getElementById('warningLock').innerHTML = "<i class='bi bi-info-circle'></i> Hanya Admin OPD yang dapat menambah/import Pegawai.";
+      if(currentUser.role === "Operator" || currentUser.role === "Admin Sub Unit/UPTD") {
+         document.getElementById('warningLock').innerHTML = "<i class='bi bi-info-circle'></i> Hanya Admin OPD yang dapat menambah/import Pegawai baru.";
       } else {
-         document.getElementById('warningLock').innerHTML = "<i class='bi bi-lock-fill'></i> PERIODE INI SUDAH DIKUNCI OLEH ADMIN <br> <span class='small text-dark'>Data hanya dapat dilihat dan dicetak.</span>";
+         document.getElementById('warningLock').innerHTML = "<i class='bi bi-lock-fill'></i> PERIODE INI SUDAH DIKUNCI <br> <span class='small text-dark'>Data hanya dapat dilihat dan dicetak.</span>";
       }
       document.getElementById('btnTambahPegawai').classList.add('hidden'); 
       if(document.getElementById('boxImportExcel')) document.getElementById('boxImportExcel').classList.add('hidden'); 
@@ -2678,12 +2681,14 @@
       let iconAkunHP = document.querySelector('i[onclick="muatDaftarAkun()"]');
 
       // Admin Sub Unit DIBERIKAN HAK BUKA PERIODE & SETTING, tapi tidak bisa Master TPP
-      if(isSuper || isOpd || isSubUnit) { 
+      // UBAH BAGIAN INI (Hapus isSubUnit dari dalam kurung)
+      if(isSuper || isOpd) { 
           document.getElementById('btnTambahBulan').classList.remove('hidden'); 
           document.getElementById('btnKelolaBulan').classList.remove('hidden'); 
           if(iconMasterHP && (isSuper || isOpd)) iconMasterHP.classList.remove('hidden'); else if(iconMasterHP) iconMasterHP.classList.add('hidden');
           if(iconAkunHP && isSuper) iconAkunHP.classList.remove('hidden'); else if(iconAkunHP) iconAkunHP.classList.add('hidden');
       } else { 
+          // Admin Sub Unit akan jatuh ke sini (Tombol Admin disembunyikan)
           document.getElementById('btnTambahBulan').classList.add('hidden'); 
           document.getElementById('btnKelolaBulan').classList.add('hidden'); 
           if(iconMasterHP) iconMasterHP.classList.add('hidden');
@@ -2972,12 +2977,13 @@
         inpInstansi.readOnly = true; inpInstansi.classList.add('readonly-field', 'bg-light');
         btnLogoInstansi.classList.add('hidden'); btnHapusLogoInstansi.classList.add('hidden');
     } 
-    else if (role === "Operator") {
-        boxSub.classList.remove('hidden'); // Munculkan Sub Dinas khusus Operator
-        labelSub.innerText = "Unit Kerja"; // Ubah namanya
-        inpSubDinas.value = currentUser.unitkerja; // Isi otomatis dengan unit kerjanya
+    // UBAH MENJADI SEPERTI INI:
+    else if (role === "Operator" || role === "Admin Sub Unit/UPTD") {
+        boxSub.classList.remove('hidden'); 
+        labelSub.innerText = role === "Operator" ? "Unit Kerja" : "Sub Unit / UPTD"; 
+        inpSubDinas.value = currentUser.unitkerja; 
         
-        // Kunci semua kecuali Kepala & Bendahara
+        // Kunci semua form Kop Surat agar tidak bisa diubah
         [inpInstansi, inpDinas, inpSubDinas, inpRek, inpPot].forEach(el => {
             el.readOnly = true; el.classList.add('readonly-field', 'bg-light');
         });
@@ -3307,15 +3313,26 @@ async function fetchDataLaporan(format, e, funcExcel, funcPdf) {
     let fUnit = document.getElementById('filterUnitKerja').value; 
     
     startLoading(`Menyusun Data Laporan ${format.toUpperCase()}...`); 
-    let payload = { bulanAktif: globalBulanAktif, jenisASN: globalJenisASN, roleUser: currentUser.role, unitkerjaUser: currentUser.unitkerja, filterUnit: fUnit };
-    let res = await fetchAPI("getJsonLaporanLengkap", payload); 
-    stopLoading(); 
+    
+    try {
+        let payload = { bulanAktif: globalBulanAktif, jenisASN: globalJenisASN, roleUser: currentUser.role, unitkerjaUser: currentUser.unitkerja, filterUnit: fUnit };
+        let res = await fetchAPI("getJsonLaporanLengkap", payload); 
+        
+        stopLoading(); // Wajib panggil ini duluan agar loading hilang
 
-    if(res && res.error) return alertError("❌ " + res.error); 
-    if (res && res.status === "sukses") {
-        if(format === 'excel') funcExcel(res);
-        else if (format === 'pdf') funcPdf(res); // Panggil fungsi PDF
-    } else { alertError("❌ Gagal mengambil data."); } 
+        if(res && res.error) {
+            return alertError("❌ " + res.error); 
+        } else if (res && res.status === "sukses") {
+            if(format === 'excel') funcExcel(res);
+            else if (format === 'pdf') funcPdf(res); 
+        } else { 
+            alertError("❌ Gagal mengambil data dari server."); 
+        } 
+    } catch (err) {
+        stopLoading(); // Pastikan loading tertutup meski sistem error
+        alertError("Terjadi kesalahan sistem saat membuat file: " + err.message);
+        console.error(err);
+    }
 }
 
 // Mapping Tombol

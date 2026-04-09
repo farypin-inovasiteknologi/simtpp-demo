@@ -2040,16 +2040,73 @@
   }
 
   async function submitPegawai(e) {
-    e.preventDefault(); let aksi = document.getElementById('mAksi').value; let nipCek = document.getElementById('mNip').value.trim(); if (!/^\d{18}$/.test(nipCek)) { return alertPeringatan("Gagal menyimpan! NIP belum valid (Wajib 18 digit angka). Silakan perbaiki NIP terlebih dahulu."); } let s = document.getElementById('mUnitKerja').value.trim(); if(currentUser.role === 'Admin' && !arrayUnitKerjaValid.includes(s)) { return alertPeringatan("Unit Kerja tidak valid! Silakan hapus dan pilih dari daftar dropdown."); } let j = document.getElementById('mJabatan').value.trim(); if(!arrayJabatanValid.includes(j)) { return alertPeringatan("Jabatan tidak valid! Silakan ketik dan pilih dari daftar dropdown jabatan."); }
+    e.preventDefault(); 
+    let aksi = document.getElementById('mAksi').value; 
+    let nipCek = document.getElementById('mNip').value.trim(); 
+    if (!/^\d{18}$/.test(nipCek)) { return alertPeringatan("Gagal menyimpan! NIP belum valid (Wajib 18 digit angka). Silakan perbaiki NIP terlebih dahulu."); } 
+    
+    let s = document.getElementById('mUnitKerja').value.trim(); 
+    if(currentUser.role === 'Admin' && !arrayUnitKerjaValid.includes(s)) { return alertPeringatan("Unit Kerja tidak valid! Silakan hapus dan pilih dari daftar dropdown."); } 
+    
+    let j = document.getElementById('mJabatan').value.trim(); 
+    if(!arrayJabatanValid.includes(j)) { return alertPeringatan("Jabatan tidak valid! Silakan ketik dan pilih dari daftar dropdown jabatan."); }
+    
     startLoading("Menyimpan Pegawai..."); 
+    
     const d = { 
-      nipLama: document.getElementById('mNipLama').value, nip: document.getElementById('mNip').value, nama: document.getElementById('mNama').value, tglLahir: document.getElementById('mTglLahir').value, golongan: document.getElementById('mGolongan').value, 
-      unorInduk: document.getElementById('mUnorInduk').value, // <--- BARU
-      unitkerja: document.getElementById('mUnitKerja').value, namaJabatan: document.getElementById('mJabatan').value, jenisJab: document.getElementById('mJenis').value, statusKawin: document.getElementById('mStatus').value, gapok: document.getElementById('mGapok').value, tjJab: document.getElementById('mTjJab').value, rekening: document.getElementById('mRekening').value, 
-      skp: document.getElementById('mSkp').value, // <--- BARU
-      bulan: globalBulanAktif, statusPegawai: globalJenisASN, uuid: document.getElementById('mUuid').value, roleUser: currentUser.role, unitkerjaUser: currentUser.unitkerja  
+      nipLama: document.getElementById('mNipLama').value, 
+      nip: nipCek, 
+      nama: document.getElementById('mNama').value, 
+      tglLahir: document.getElementById('mTglLahir').value, 
+      golongan: document.getElementById('mGolongan').value, 
+      unorInduk: document.getElementById('mUnorInduk').value, 
+      unitkerja: s, 
+      namaJabatan: j, 
+      jenisJab: document.getElementById('mJenis').value, 
+      statusKawin: document.getElementById('mStatus').value, 
+      gapok: document.getElementById('mGapok').value, 
+      tjJab: document.getElementById('mTjJab').value, 
+      rekening: document.getElementById('mRekening').value, 
+      skp: document.getElementById('mSkp').value, 
+      bulan: globalBulanAktif, 
+      statusPegawai: globalJenisASN, 
+      uuid: document.getElementById('mUuid').value || Utilities.getUuid(), // Siapkan UUID untuk lokal
+      roleUser: currentUser.role, 
+      unitkerjaUser: currentUser.unitkerja  
     };
-    let res = await fetchAPI(aksi === 'edit' ? "updatePegawai" : "simpanPegawai", d); stopLoading(); let pesan = String(res).toLowerCase(); if (pesan.includes("gagal") || pesan.includes("error")) { alertError(res.pesan || res); } else { alertSukses(res); bootstrap.Modal.getInstance(document.getElementById('modalKelolaPegawai')).hide(); document.getElementById('formPegawai').reset(); muatDataPegawai(true); muatDataUnitKerja(); }
+
+    let res = await fetchAPI(aksi === 'edit' ? "updatePegawai" : "simpanPegawai", d); 
+    stopLoading(); 
+    
+    let pesan = String(res).toLowerCase(); 
+    if (pesan.includes("gagal") || pesan.includes("error")) { 
+        alertError(res.pesan || res); 
+    } else { 
+        alertSukses(res); 
+        bootstrap.Modal.getInstance(document.getElementById('modalKelolaPegawai')).hide(); 
+        document.getElementById('formPegawai').reset(); 
+        
+        // 👇 UPDATE LOKAL (INSTAN 0 DETIK) TANPA HARUS RELOAD DARI SERVER 👇
+        let formatTanggalLahirLokal = d.tglLahir ? d.tglLahir : "";
+        let dataPegawaiBaruLokal = [
+            d.nip, d.nama, formatTanggalLahirLokal, d.golongan, d.unorInduk, d.unitkerja, d.namaJabatan, 
+            d.jenisJab, d.statusKawin, parseFloat(d.gapok), parseFloat(d.tjJab), d.rekening, d.skp, 
+            d.bulan, d.statusPegawai, d.uuid, "SistemLokal", new Date().toISOString()
+        ];
+
+        if (aksi === 'edit') {
+            // Cari dan Timpa data di Super Cache Lokal
+            let idx = window.cacheDataPegawaiAll.findIndex(p => p[0] === d.nipLama && p[13].toLowerCase() === globalBulanAktif.toLowerCase());
+            if(idx !== -1) window.cacheDataPegawaiAll[idx] = dataPegawaiBaruLokal;
+        } else {
+            // Tambahkan data baru ke ujung atas Super Cache Lokal
+            if(window.cacheDataPegawaiAll) window.cacheDataPegawaiAll.unshift(dataPegawaiBaruLokal);
+        }
+
+        // Terapkan filter & render ulang HALAMAN INI SAJA (Bukan narik dari server)
+        globalDataPegawai = window.cacheDataPegawaiAll.filter(p => String(p[14] || "PNS").toUpperCase() === globalJenisASN);
+        terapkanFilter(); 
+    }
   }
 
   function hapusPegawai(nip, nama, uuid) { 
@@ -2066,9 +2123,22 @@
         startLoading("Menghapus Pegawai..."); 
         let res = await fetchAPI("hapusPegawai", {nip: nip, bulan: globalBulanAktif, uuid: uuid}); 
         stopLoading(); 
+        
         let pesan = String(res).toLowerCase(); 
-        if (pesan.includes("gagal") || pesan.includes("error")) { alertError(res.pesan || res); } 
-        else { alertSukses(res); muatDataPegawai(true); }
+        if (pesan.includes("gagal") || pesan.includes("error")) { 
+            alertError(res.pesan || res); 
+        } else { 
+            alertSukses(res); 
+            
+            // 👇 HAPUS DATA LOKAL (INSTAN) 👇
+            if(window.cacheDataPegawaiAll) {
+                window.cacheDataPegawaiAll = window.cacheDataPegawaiAll.filter(p => !(p[0] === nip && p[13].toLowerCase() === globalBulanAktif.toLowerCase()));
+            }
+            globalDataPegawai = window.cacheDataPegawaiAll.filter(p => String(p[14] || "PNS").toUpperCase() === globalJenisASN);
+            
+            // Render ulang halaman saat ini (0 Detik)
+            terapkanFilter(); 
+        }
       }
     });
   }
@@ -3941,8 +4011,9 @@ function gambarTtdPdf(doc, finalY, setting, orientation = 'l') {
     }
 
     let pageWidth = doc.internal.pageSize.width;
-    let marginKanan = 20;
-    let marginKiri = 20;
+    // Semakin besar angkanya, semakin ke tengah posisinya
+    let marginKanan = 40; 
+    let marginKiri = 55;
 
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");

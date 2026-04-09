@@ -750,7 +750,7 @@
                                                 <input type="number" id="vTL3" min="0" class="form-control input-absen mx-auto border-warning" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()">
                                             </div>
                                             <div>
-                                                <label class="small fw-bold">TL4 (1.5%)</label>
+                                                <label class="small fw-bold">TL4 (1.55%)</label>
                                                 <input type="number" id="vTL4" min="0" class="form-control input-absen mx-auto border-warning" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()">
                                             </div>
                                         </div>
@@ -776,7 +776,7 @@
                                                 <input type="number" id="vCP3" min="0" class="form-control input-absen mx-auto border-success" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()">
                                             </div>
                                             <div>
-                                                <label class="small fw-bold">CP4 (1.5%)</label>
+                                                <label class="small fw-bold">CP4 (1.55%)</label>
                                                 <input type="number" id="vCP4" min="0" class="form-control input-absen mx-auto border-success" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()">
                                             </div>
                                         </div>
@@ -2247,19 +2247,153 @@ async function muatDataPegawai(forceRefresh = false) {
   }
 
   function hitungAmprah(isManualPajak = false) {
-    let gapok = parseFloat(document.getElementById('aGapok')?.value) || 0; let tjJab = parseFloat(document.getElementById('aTjJab')?.value) || 0; let statTer = statusTERAktif || "TK/0 = 1"; let isKawin = statTer.startsWith("K"); let jmlJiwa = parseInt(statTer.split("=")[1]) || 1; let jmlAnak = jmlJiwa - 1 - (isKawin ? 1 : 0); if(jmlAnak < 0) jmlAnak = 0;
-    let tjIstri = Math.round(isKawin ? (gapok * 0.10) : 0); let tjAnak = Math.round(gapok * 0.02 * jmlAnak); let jmlKeluarga = gapok + tjIstri + tjAnak; let tjBeras = Math.round(72420 * jmlJiwa); let basisBPJS = jmlKeluarga + tjJab; let tjBPJS4 = Math.round(basisBPJS * 0.04); let tjJKK = Math.round(gapok * 0.0024); let tjJKM = Math.round(gapok * 0.0072); 
+    let gapok = parseFloat(document.getElementById('aGapok')?.value) || 0; 
+    let tjJab = parseFloat(document.getElementById('aTjJab')?.value) || 0; 
+    let statTer = statusTERAktif || "TK/0 = 1"; 
+    let isKawin = statTer.startsWith("K"); 
+    let jmlJiwa = parseInt(statTer.split("=")[1]) || 1; 
+    let jmlAnak = jmlJiwa - 1 - (isKawin ? 1 : 0); 
+    if(jmlAnak < 0) jmlAnak = 0;
+    
+    let tjIstri = Math.round(isKawin ? (gapok * 0.10) : 0); 
+    let tjAnak = Math.round(gapok * 0.02 * jmlAnak); 
+    let jmlKeluarga = gapok + tjIstri + tjAnak; 
+    
+    // 👇 PERBAIKAN 1: Tunjangan Beras akan 0 jika Gaji Pokok 0 👇
+    let tjBeras = (gapok > 0) ? Math.round(72420 * jmlJiwa) : 0; 
+    
+    let basisBPJS = jmlKeluarga + tjJab; 
+    let tjBPJS4 = Math.round(basisBPJS * 0.04); 
+    let tjJKK = Math.round(gapok * 0.0024); 
+    let tjJKM = Math.round(gapok * 0.0072); 
+    
     if (globalJenisPeriode !== "Reguler") { tjBPJS4 = 0; tjJKK = 0; tjJKM = 0; }
+    
     if (!isManualPajak) {
-      let dppTER = gapok + tjIstri + tjAnak + tjJab + tjBeras + tjBPJS4 + tjJKK + tjJKM; let statusKawinShort = (isKawin ? "K/" : "TK/") + jmlAnak; let katTER = "A"; if(["TK/0", "TK/1", "K/0"].includes(statusKawinShort)) katTER = "A"; else if(["TK/2", "TK/3", "K/1", "K/2"].includes(statusKawinShort)) katTER = "B"; else if(["K/3"].includes(statusKawinShort)) katTER = "C";
-      const terA = [[5400000,0],[5650000,0.25],[5950000,0.5],[6300000,0.75],[6750000,1],[7500000,1.25],[8550000,1.5],[9650000,1.75],[10050000,2],[10350000,2.25],[10700000,2.5],[11050000,3],[11600000,3.5],[12500000,4],[13750000,5],[15100000,6],[16950000,7],[19750000,8],[24100000,9],[26450000,10]]; const terB = [[6200000,0],[6500000,0.25],[6850000,0.5],[7300000,0.75],[9200000,1],[10750000,1.5],[11250000,2],[11600000,2.5],[12600000,3],[13600000,4],[14950000,5],[16400000,6],[18450000,7],[21850000,8],[26000000,9],[27700000,10]]; const terC = [[6600000,0],[6950000,0.25],[7350000,0.5],[7800000,0.75],[8850000,1],[9800000,1.25],[10950000,1.5],[11200000,2],[11600000,2.5],[12050000,3],[13200000,4],[14400000,5],[15900000,6],[17950000,7],[21200000,8],[25850000,9]];
-      let tabelPilihan = katTER === "A" ? terA : (katTER === "B" ? terB : terC); let pctTER = 0; for(let i=0; i<tabelPilihan.length; i++) { if(dppTER <= tabelPilihan[i][0]) { pctTER = tabelPilihan[i][1]; break; } }
-      let tjPajakOtomatis = Math.round(dppTER * (pctTER / 100)); if(document.getElementById('aTjPajak')) { document.getElementById('aTjPajak').value = tjPajakOtomatis; document.getElementById('aPotPajak').value = tjPajakOtomatis; }
+      let dppTER = gapok + tjIstri + tjAnak + tjJab + tjBeras + tjBPJS4 + tjJKK + tjJKM; 
+      let statusKawinShort = (isKawin ? "K/" : "TK/") + jmlAnak; 
+      let katTER = "A"; 
+      if(["TK/0", "TK/1", "K/0"].includes(statusKawinShort)) katTER = "A"; 
+      else if(["TK/2", "TK/3", "K/1", "K/2"].includes(statusKawinShort)) katTER = "B"; 
+      else if(["K/3"].includes(statusKawinShort)) katTER = "C";
+      
+      const terA = [[5400000,0],[5650000,0.25],[5950000,0.5],[6300000,0.75],[6750000,1],[7500000,1.25],[8550000,1.5],[9650000,1.75],[10050000,2],[10350000,2.25],[10700000,2.5],[11050000,3],[11600000,3.5],[12500000,4],[13750000,5],[15100000,6],[16950000,7],[19750000,8],[24100000,9],[26450000,10]]; 
+      const terB = [[6200000,0],[6500000,0.25],[6850000,0.5],[7300000,0.75],[9200000,1],[10750000,1.5],[11250000,2],[11600000,2.5],[12600000,3],[13600000,4],[14950000,5],[16400000,6],[18450000,7],[21850000,8],[26000000,9],[27700000,10]]; 
+      const terC = [[6600000,0],[6950000,0.25],[7350000,0.5],[7800000,0.75],[8850000,1],[9800000,1.25],[10950000,1.5],[11200000,2],[11600000,2.5],[12050000,3],[13200000,4],[14400000,5],[15900000,6],[17950000,7],[21200000,8],[25850000,9]];
+      
+      let tabelPilihan = katTER === "A" ? terA : (katTER === "B" ? terB : terC); 
+      let pctTER = 0; 
+      for(let i=0; i<tabelPilihan.length; i++) { 
+        if(dppTER <= tabelPilihan[i][0]) { pctTER = tabelPilihan[i][1]; break; } 
+      }
+      let tjPajakOtomatis = Math.round(dppTER * (pctTER / 100)); 
+      if(document.getElementById('aTjPajak')) { 
+        document.getElementById('aTjPajak').value = tjPajakOtomatis; 
+        document.getElementById('aPotPajak').value = tjPajakOtomatis; 
+      }
     }
-    let tjPajak = parseFloat(document.getElementById('aTjPajak')?.value) || 0; let potPajak = parseFloat(document.getElementById('aPotPajak')?.value) || 0; let potIWP8 = Math.round(jmlKeluarga * 0.08); let potIWP1 = Math.round(basisBPJS * 0.01); let potJKK = tjJKK; let potJKM = tjJKM; 
+    
+    let tjPajak = parseFloat(document.getElementById('aTjPajak')?.value) || 0; 
+    let potPajak = parseFloat(document.getElementById('aPotPajak')?.value) || 0; 
+    let potIWP8 = Math.round(jmlKeluarga * 0.08); 
+    let potIWP1 = Math.round(basisBPJS * 0.01); 
+    let potJKK = tjJKK; 
+    let potJKM = tjJKM; 
+    
     if (globalJenisPeriode !== "Reguler") { potIWP8 = 0; potIWP1 = 0; potJKK = 0; potJKM = 0; }
-    let totalPotongan = potIWP8 + potIWP1 + tjBPJS4 + potJKK + potJKM + potPajak; let kotorSementara = gapok + tjIstri + tjAnak + tjJab + tjBeras + tjBPJS4 + tjJKK + tjJKM + tjPajak; let bersihSementara = kotorSementara - totalPotongan; let sisa = bersihSementara % 100; let pembulatan = (sisa > 0) ? (100 - sisa) : 0; let jmlKotor = kotorSementara + pembulatan; let gajiBersih = jmlKotor - totalPotongan;
-    if(document.getElementById('aJmlKeluarga')) { document.getElementById('aJmlKeluarga').value = jmlKeluarga; document.getElementById('aTjIstri').value = tjIstri; document.getElementById('aTjAnak').value = tjAnak; document.getElementById('aTjBeras').value = tjBeras; document.getElementById('aTjBPJS4').value = tjBPJS4; document.getElementById('aTjJKK').value = tjJKK; document.getElementById('aTjJKM').value = tjJKM; document.getElementById('aPotJKK').value = potJKK; document.getElementById('aPotJKM').value = potJKM; document.getElementById('aPotBPJS4').value = tjBPJS4; document.getElementById('aPotIWP1').value = potIWP1; document.getElementById('aPotIWP8').value = potIWP8; document.getElementById('aBulat').value = pembulatan; document.getElementById('aJmlKotor').value = jmlKotor; document.getElementById('aJmlPotongan').value = totalPotongan; document.getElementById('aJmlBersih').value = gajiBersih; }
+    
+    let totalPotongan = potIWP8 + potIWP1 + tjBPJS4 + potJKK + potJKM + potPajak; 
+    let kotorSementara = gapok + tjIstri + tjAnak + tjJab + tjBeras + tjBPJS4 + tjJKK + tjJKM + tjPajak; 
+    let bersihSementara = kotorSementara - totalPotongan; 
+    let sisa = bersihSementara % 100; 
+    let pembulatan = (sisa > 0) ? (100 - sisa) : 0; 
+    let jmlKotor = kotorSementara + pembulatan; 
+    let gajiBersih = jmlKotor - totalPotongan;
+    
+    if(document.getElementById('aJmlKeluarga')) { 
+      document.getElementById('aJmlKeluarga').value = jmlKeluarga; 
+      document.getElementById('aTjIstri').value = tjIstri; 
+      document.getElementById('aTjAnak').value = tjAnak; 
+      document.getElementById('aTjBeras').value = tjBeras; 
+      document.getElementById('aTjBPJS4').value = tjBPJS4; 
+      document.getElementById('aTjJKK').value = tjJKK; 
+      document.getElementById('aTjJKM').value = tjJKM; 
+      document.getElementById('aPotJKK').value = potJKK; 
+      document.getElementById('aPotJKM').value = potJKM; 
+      document.getElementById('aPotBPJS4').value = tjBPJS4; 
+      document.getElementById('aPotIWP1').value = potIWP1; 
+      document.getElementById('aPotIWP8').value = potIWP8; 
+      document.getElementById('aBulat').value = pembulatan; 
+      document.getElementById('aJmlKotor').value = jmlKotor; 
+      document.getElementById('aJmlPotongan').value = totalPotongan; 
+      document.getElementById('aJmlBersih').value = gajiBersih; 
+    }
+  }
+
+  function hitungMatriksTPP() {
+    if(!baseTPP || typeof baseTPP.bk === 'undefined') return; 
+    const fR = (val) => Math.round(val).toLocaleString('id-ID'); 
+    const getV = (id) => parseFloat(document.getElementById(id).value) || 0;
+    
+    let hk = parseInt(document.getElementById('inpHariKerja').value) || 0; 
+    let totalTidakMasuk = getV('vDL') + getV('vS') + getV('vC') + getV('vKP') + getV('vTK'); 
+    let totalMasuk = hk - totalTidakMasuk; 
+    if(totalMasuk < 0) totalMasuk = 0; 
+    document.getElementById('txtHariTidakMasuk').innerText = totalTidakMasuk + " Hari"; 
+    document.getElementById('txtHariMasuk').innerText = totalMasuk + " Hari";
+    
+    // 👇 PERBAIKAN 2: TL4 dan CP4 diubah pengalinya menjadi 0.0155 👇
+    let pctAbsPK = (getV('vS')*0.03) + (getV('vC')*0.03) + (getV('vTK')*0.03) + (getV('vTL1')*0.005) + (getV('vTL2')*0.01) + (getV('vTL3')*0.0125) + (getV('vTL4')*0.0155) + (getV('vCP1')*0.005) + (getV('vCP2')*0.01) + (getV('vCP3')*0.0125) + (getV('vCP4')*0.0155); 
+    if(pctAbsPK > 1) pctAbsPK = 1; 
+    
+    let asubV = getV('vASUB'); 
+    let pctASUB = (asubV < 28) ? (asubV * 0.02) : 1.0; 
+    if (asubV === 0) pctASUB = 0; 
+    let pctAbsDK = pctAbsPK + pctASUB; 
+    if(pctAbsDK > 1) pctAbsDK = 1;
+    
+    let skp = document.getElementById('inpSKP').value; 
+    let isChecked = document.getElementById('chkTidakMenilai').checked; 
+    let bobotSKP = 100; 
+    if(skp === "Sangat Baik" || skp === "Baik") bobotSKP = 100; 
+    else if(skp === "Cukup") bobotSKP = 90; 
+    else if(skp === "Kurang") bobotSKP = 75; 
+    else if(skp === "Sangat Kurang") bobotSKP = 50; 
+    else if(skp === "Tidak Buat") bobotSKP = 40; 
+    
+    if (isChecked) bobotSKP -= 5; 
+    let rasioSKP = bobotSKP / 100; 
+    
+    document.getElementById('txtSkp').innerText = bobotSKP + "%"; 
+    document.getElementById('txtAbsPk').innerText = (pctAbsPK*100).toFixed(2) + "%"; 
+    document.getElementById('txtAbsDk').innerText = (pctAbsDK*100).toFixed(2) + "%";
+    
+    const keys = ['bk', 'pk', 'kk', 'tb', 'kp', 'total'];
+    keys.forEach(k => { 
+      let kotor = baseTPP[k] || 0; 
+      let bPK = kotor * 0.60; 
+      let nSKP = bPK * rasioSKP; 
+      let pAbsPK = nSKP * pctAbsPK; 
+      let akhPK = nSKP - pAbsPK; 
+      let bDK = kotor * 0.40; 
+      let pAbsDK = bDK * pctAbsDK; 
+      let akhDK = bDK - pAbsDK; 
+      let totKotor = kotor; 
+      let totPot = pAbsPK + pAbsDK; 
+      let hasilAkhir = akhPK + akhDK; 
+      
+      if(document.getElementById('mKotor_'+k)) document.getElementById('mKotor_'+k).innerText = fR(kotor); 
+      if(document.getElementById('mBpk_'+k)) document.getElementById('mBpk_'+k).innerText = fR(bPK); 
+      if(document.getElementById('mNskp_'+k)) document.getElementById('mNskp_'+k).innerText = fR(nSKP); 
+      if(document.getElementById('mPabspk_'+k)) document.getElementById('mPabspk_'+k).innerText = fR(pAbsPK); 
+      if(document.getElementById('mAkhpk_'+k)) document.getElementById('mAkhpk_'+k).innerText = fR(akhPK); 
+      if(document.getElementById('mBdk_'+k)) document.getElementById('mBdk_'+k).innerText = fR(bDK); 
+      if(document.getElementById('mPabsdk_'+k)) document.getElementById('mPabsdk_'+k).innerText = fR(pAbsDK); 
+      if(document.getElementById('mAkhdk_'+k)) document.getElementById('mAkhdk_'+k).innerText = fR(akhDK); 
+      if(document.getElementById('mTotKotor_'+k)) document.getElementById('mTotKotor_'+k).innerText = fR(totKotor); 
+      if(document.getElementById('mTotPot_'+k)) document.getElementById('mTotPot_'+k).innerText = fR(totPot); 
+      if(document.getElementById('mHasil_'+k)) document.getElementById('mHasil_'+k).innerText = fR(hasilAkhir); 
+    });
   }
 
   async function submitGaji(e) {
@@ -2270,16 +2404,6 @@ async function muatDataPegawai(forceRefresh = false) {
   }
 
   function ubahPolaHK() { let pola = document.getElementById('inpPolaHK').value; document.getElementById('inpHariKerja').value = (pola === "5") ? globalHariKerja : globalHariKerja6; hitungMatriksTPP(); }
-
-  function hitungMatriksTPP() {
-    if(!baseTPP || typeof baseTPP.bk === 'undefined') return; const fR = (val) => Math.round(val).toLocaleString('id-ID'); const getV = (id) => parseFloat(document.getElementById(id).value) || 0;
-    let hk = parseInt(document.getElementById('inpHariKerja').value) || 0; let totalTidakMasuk = getV('vDL') + getV('vS') + getV('vC') + getV('vKP') + getV('vTK'); let totalMasuk = hk - totalTidakMasuk; if(totalMasuk < 0) totalMasuk = 0; document.getElementById('txtHariTidakMasuk').innerText = totalTidakMasuk + " Hari"; document.getElementById('txtHariMasuk').innerText = totalMasuk + " Hari";
-    let pctAbsPK = (getV('vS')*0.03) + (getV('vC')*0.03) + (getV('vTK')*0.03) + (getV('vTL1')*0.005) + (getV('vTL2')*0.01) + (getV('vTL3')*0.0125) + (getV('vTL4')*0.015) + (getV('vCP1')*0.005) + (getV('vCP2')*0.01) + (getV('vCP3')*0.0125) + (getV('vCP4')*0.015); if(pctAbsPK > 1) pctAbsPK = 1; let asubV = getV('vASUB'); let pctASUB = (asubV < 28) ? (asubV * 0.02) : 1.0; if (asubV === 0) pctASUB = 0; let pctAbsDK = pctAbsPK + pctASUB; if(pctAbsDK > 1) pctAbsDK = 1;
-    let skp = document.getElementById('inpSKP').value; let isChecked = document.getElementById('chkTidakMenilai').checked; let bobotSKP = 100; if(skp === "Sangat Baik" || skp === "Baik") bobotSKP = 100; else if(skp === "Cukup") bobotSKP = 90; else if(skp === "Kurang") bobotSKP = 75; else if(skp === "Sangat Kurang") bobotSKP = 50; else if(skp === "Tidak Buat") bobotSKP = 40; if (isChecked) bobotSKP -= 5; let rasioSKP = bobotSKP / 100; 
-    document.getElementById('txtSkp').innerText = bobotSKP + "%"; document.getElementById('txtAbsPk').innerText = (pctAbsPK*100).toFixed(2) + "%"; document.getElementById('txtAbsDk').innerText = (pctAbsDK*100).toFixed(2) + "%";
-    const keys = ['bk', 'pk', 'kk', 'tb', 'kp', 'total'];
-    keys.forEach(k => { let kotor = baseTPP[k] || 0; let bPK = kotor * 0.60; let nSKP = bPK * rasioSKP; let pAbsPK = nSKP * pctAbsPK; let akhPK = nSKP - pAbsPK; let bDK = kotor * 0.40; let pAbsDK = bDK * pctAbsDK; let akhDK = bDK - pAbsDK; let totKotor = kotor; let totPot = pAbsPK + pAbsDK; let hasilAkhir = akhPK + akhDK; if(document.getElementById('mKotor_'+k)) document.getElementById('mKotor_'+k).innerText = fR(kotor); if(document.getElementById('mBpk_'+k)) document.getElementById('mBpk_'+k).innerText = fR(bPK); if(document.getElementById('mNskp_'+k)) document.getElementById('mNskp_'+k).innerText = fR(nSKP); if(document.getElementById('mPabspk_'+k)) document.getElementById('mPabspk_'+k).innerText = fR(pAbsPK); if(document.getElementById('mAkhpk_'+k)) document.getElementById('mAkhpk_'+k).innerText = fR(akhPK); if(document.getElementById('mBdk_'+k)) document.getElementById('mBdk_'+k).innerText = fR(bDK); if(document.getElementById('mPabsdk_'+k)) document.getElementById('mPabsdk_'+k).innerText = fR(pAbsDK); if(document.getElementById('mAkhdk_'+k)) document.getElementById('mAkhdk_'+k).innerText = fR(akhDK); if(document.getElementById('mTotKotor_'+k)) document.getElementById('mTotKotor_'+k).innerText = fR(totKotor); if(document.getElementById('mTotPot_'+k)) document.getElementById('mTotPot_'+k).innerText = fR(totPot); if(document.getElementById('mHasil_'+k)) document.getElementById('mHasil_'+k).innerText = fR(hasilAkhir); });
-  }
 
   async function submitPerhitunganTPP(e) {
     e.preventDefault(); const getV = (id) => document.getElementById(id).value; startLoading("Menyimpan Kehadiran..."); let statusMenilai = document.getElementById('chkTidakMenilai').checked ? "Tidak Menilai" : "Menilai"; let gabunganSKP = getV('inpSKP') + "|" + statusMenilai; let hkDB = document.getElementById('inpHariKerja').value; const d = { nip: asNIPAktif, bulan: globalBulanAktif, hariKerja: hkDB, skp: gabunganSKP, dl: getV('vDL'), s: getV('vS'), c: getV('vC'), kp: getV('vKP'), tk: getV('vTK'), asub: getV('vASUB'), tl1: getV('vTL1'), tl2: getV('vTL2'), tl3: getV('vTL3'), tl4: getV('vTL4'), cp1: getV('vCP1'), cp2: getV('vCP2'), cp3: getV('vCP3'), cp4: getV('vCP4') };

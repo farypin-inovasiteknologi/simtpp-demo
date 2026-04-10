@@ -290,6 +290,9 @@ const listOPD = [
 
   function sinkronHariKerja() { let namaInduk = document.getElementById('pIndukPajak').value; if(!namaInduk) return; let dataInduk = arrayPeriode.find(p => p.namaPeriode === namaInduk); if(dataInduk) { document.getElementById('pHariKerja').value = dataInduk.hariKerja; document.getElementById('pHariKerja6').value = dataInduk.hariKerja6; } }
 
+  // =========================================================
+  // FUNGSI: TAMBAH PERIODE (SALIN/KOSONG/IMPORT) - AUTO REFRESH
+  // =========================================================
   async function simpanPeriodeLanjut(e) {
       e.preventDefault();
       let btnSubmit = e.target.querySelector('button[type="submit"]');
@@ -314,7 +317,7 @@ const listOPD = [
           }
       }
 
-      startLoading("Membuka Periode Baru...");
+      startLoading("Membuka Periode Baru & Menyinkronkan Data...");
 
       const d = {
           tahun: tahunInput, bulanAngka: document.getElementById('pBulanAngka').value, namaPeriode: namaPeriode, hariKerja: document.getElementById('pHariKerja').value, hariKerja6: document.getElementById('pHariKerja6').value,
@@ -330,96 +333,29 @@ const listOPD = [
       }
 
       if (sumber === 'import') {
-          Swal.getHtmlContainer().innerHTML = "Menganalisa File Excel SKP BKD...";
-          let file = fileInput.files[0];
-          
-          try {
-              let arrayBuffer = await file.arrayBuffer();
-              const wb = new ExcelJS.Workbook();
-              await wb.xlsx.load(arrayBuffer);
-              const worksheet = wb.worksheets[0];
-              
-              let data2D = [];
-              worksheet.eachRow({ includeEmpty: true }, function(row, rowNumber) {
-                  let r = [];
-                  for(let i = 1; i <= Math.max(row.cellCount, 40); i++) {
-                      let cell = row.getCell(i);
-                      let val = cell.value;
-                      if(val && typeof val === 'object') {
-                          if(val.result !== undefined) val = val.result;
-                          else if(val.richText) val = val.richText.map(t => t.text).join("");
-                      }
-                      r.push(val === null || val === undefined ? "" : val);
-                  }
-                  data2D.push(r);
-              });
-
-              if(data2D.length === 0) {
-                  stopLoading(); btnSubmit.disabled = false;
-                  return alertError("File Excel kosong atau format tidak sesuai!");
-              }
-
-              let payload = [];
-              for(let i = 1; i < data2D.length; i++) {
-                  let row = data2D[i];
-                  let nipVal = row[3]; 
-                  if(!nipVal) continue; 
-
-                  let nipBersih = String(nipVal).replace(/[\s-']/g, '');
-                  if(!/^\d{18}$/.test(nipBersih)) continue; 
-
-                  let jenisPegawaiRaw = String(row[31] || "").trim().toUpperCase();
-                  let statusPegawaiVal = "PNS"; 
-                  if (jenisPegawaiRaw.includes("PPPK") || jenisPegawaiRaw.includes("P3K")) { statusPegawaiVal = "PPPK"; }
-
-                  payload.push({
-                      nip: nipBersih, 
-                      nama: String(row[4] || "").trim(),          
-                      unitkerja: String(row[8] || "").trim(),      
-                      unorInduk: String(row[10] || "").trim(),    
-                      skp: String(row[16] || "").trim(),          
-                      
-                      // 👇 PERBAIKAN: STRICT AMBIL KOLOM AE (Index 30) 👇
-                      golongan: String(row[30] || "").trim(),      
-                      
-                      statusPegawai: statusPegawaiVal,             
-                      tglLahir: "", 
-                      namaJabatan: "", 
-                      jenisJab: "Struktural", 
-                      statusKawin: "TK/0 = 1", 
-                      gapok: 0, 
-                      tjJab: 0, 
-                      rekening: ""
-                  });
-              }
-
-              if(payload.length === 0) {
-                  stopLoading(); btnSubmit.disabled = false;
-                  return alertPeringatan("Periode dibuka, tapi tidak ada data NIP valid (18 Digit) di Kolom D (NIP).");
-              }
-
-              Swal.getHtmlContainer().innerHTML = `Menyimpan ${payload.length} Pegawai ke Database...`;
-              let resImport = await fetchAPI("importPegawaiMassal", {payload: payload, bulanAktif: namaPeriode});
-              
-              stopLoading(); btnSubmit.disabled = false;
-              if(String(resImport).includes("Error")) { alertError(resImport.pesan || resImport); }
-              else { alertSukses(`Periode ${namaPeriode} Terbuka & Data SKP BKD berhasil diimpor!`); }
-
-              bootstrap.Modal.getInstance(document.getElementById('modalTambahPeriode')).hide();
-              renderDropdownPeriode(res.dataTerbaru);
-              document.getElementById('formTambahPeriode').reset();
-              toggleSumberData();
-              
-          } catch(e) {
-              stopLoading(); btnSubmit.disabled = false;
-              alertError("Gagal memproses file Excel: " + e.message);
-          }
+          // Jika sumbernya Import, kita panggil fungsi import yang sudah diperbaiki
+          prosesImportExcel(fileInput, namaPeriode, res.dataTerbaru, btnSubmit);
       } 
       else {
+          // Jika Salin / Kosong
           stopLoading(); btnSubmit.disabled = false;
           alertSukses(res.pesan);
+          
           bootstrap.Modal.getInstance(document.getElementById('modalTambahPeriode')).hide();
+          
+          // 1. Render ulang dropdown dengan data baru
           renderDropdownPeriode(res.dataTerbaru);
+          
+          // 2. Set dropdown ke bulan yang baru saja dibuat
+          document.getElementById('pilihPeriodeUtama').value = namaPeriode;
+          
+          // 3. Hancurkan memori cache lama agar aplikasi sadar ada data baru
+          window.cacheDataPegawaiAll = null; 
+          globalBulanAktif = namaPeriode;
+          sessionStorage.setItem('globalBulanAktif', globalBulanAktif);
+          
+          // 4. Paksa masuk dan tarik data terbaru dari server
+          masukAplikasi(); 
       }
   }
 
@@ -1198,14 +1134,21 @@ const listOPD = [
     let ws = XLSX.utils.aoa_to_sheet(wsData); XLSX.utils.book_append_sheet(wb, ws, sheetName); XLSX.writeFile(wb, fileName);
   }
 
-  async function prosesImportExcel() {
-      let fileInput = document.getElementById('fileImport'); 
+  // =========================================================
+  // FUNGSI 2: IMPORT EXCEL BKD - AUTO REFRESH
+  // =========================================================
+  async function prosesImportExcel(fileInputElemen = null, periodeTarget = null, periodeDataTerbaru = null, btnSubmitModal = null) {
+      let fileInput = fileInputElemen || document.getElementById('fileImport'); 
       if(!fileInput.files[0]) return alertPeringatan("Pilih file Excel terlebih dahulu!");
       
       let jenis = document.getElementById('importJenis').value; 
       let file = fileInput.files[0]; 
       
-      startLoading("Membaca & Menganalisa File Excel...");
+      // Jika dipanggil dari Modal Tambah Periode
+      if (periodeTarget) jenis = 'pegawai';
+      let bulanTarget = periodeTarget || globalBulanAktif;
+
+      startLoading("Membaca File Excel & Mengirim ke Database...");
       
       try {
           let arrayBuffer = await file.arrayBuffer();
@@ -1229,63 +1172,84 @@ const listOPD = [
           });
 
           if(data2D.length === 0) {
-              stopLoading(); return alertError("File Excel kosong atau format tidak sesuai!");
+              stopLoading(); 
+              if(btnSubmitModal) btnSubmitModal.disabled = false;
+              return alertError("File Excel kosong atau format tidak sesuai!");
           }
 
           let payload = [];
 
           if(jenis === 'pegawai') {
-              if(!globalBulanAktif) { stopLoading(); return alertError("Pilih Periode Bulan terlebih dahulu!"); }
+              if(!bulanTarget) { stopLoading(); return alertError("Pilih Periode Bulan terlebih dahulu!"); }
 
-              // LOOPING BACA DATA BKD (Mulai dari baris ke-2 / index 1)
               for(let i = 1; i < data2D.length; i++) {
                   let row = data2D[i];
-                  let nipVal = row[3]; // Kolom D
+                  let nipVal = row[3]; 
                   if(!nipVal) continue; 
 
                   let nipBersih = String(nipVal).replace(/[\s-']/g, '');
                   if(!/^\d{18}$/.test(nipBersih)) continue; 
 
-                  let jenisPegawaiRaw = String(row[31] || "").trim().toUpperCase(); // Kolom AF
+                  let jenisPegawaiRaw = String(row[31] || "").trim().toUpperCase();
                   let statusPegawaiVal = "PNS"; 
                   if (jenisPegawaiRaw.includes("PPPK") || jenisPegawaiRaw.includes("P3K")) { statusPegawaiVal = "PPPK"; }
 
                   payload.push({
                       nip: nipBersih, 
-                      nama: String(row[4] || "").trim(),          // Kolom E
-                      unitkerja: String(row[8] || "").trim(),     // Kolom I 
-                      unorInduk: String(row[10] || "").trim(),    // Kolom K
-                      skp: String(row[16] || "").trim(),          // Kolom Q
-                      
-                      // 👇 PERBAIKAN: STRICT AMBIL KOLOM AE (Index 30) 👇
+                      nama: String(row[4] || "").trim(),          
+                      unitkerja: String(row[8] || "").trim(),     
+                      unorInduk: String(row[10] || "").trim(),    
+                      skp: String(row[16] || "").trim(),          
                       golongan: String(row[30] || "").trim(),      
-                      
                       statusPegawai: statusPegawaiVal,             
-                      tglLahir: "", 
-                      namaJabatan: "", 
-                      jenisJab: "Struktural", 
-                      statusKawin: "TK/0 = 1", 
-                      gapok: 0, 
-                      tjJab: 0, 
-                      rekening: ""
+                      tglLahir: "", namaJabatan: "", jenisJab: "Struktural", statusKawin: "TK/0 = 1", gapok: 0, tjJab: 0, rekening: ""
                   });
               }
 
               if(payload.length === 0) {
                   stopLoading(); 
-                  return alertPeringatan("Tidak ada data NIP valid (18 Digit) di Kolom D.");
+                  if(btnSubmitModal) btnSubmitModal.disabled = false;
+                  return alertPeringatan("Tidak ada data NIP valid (18 Digit) di Kolom D (Excel).");
               }
 
-              let resImport = await fetchAPI("importPegawaiMassal", {payload: payload, bulanAktif: globalBulanAktif});
+              Swal.getHtmlContainer().innerHTML = `Menyimpan ${payload.length} Pegawai ke Server...`;
+              let resImport = await fetchAPI("importPegawaiMassal", {payload: payload, bulanAktif: bulanTarget});
               
               stopLoading(); 
-              if(String(resImport).includes("Error")) { alertError(resImport.pesan || resImport); }
-              else { alertSukses(`Data SKP BKD berhasil diimpor!`); }
+              if(btnSubmitModal) btnSubmitModal.disabled = false;
+              
+              if(String(resImport).includes("Error")) { 
+                  alertError(resImport.pesan || resImport); 
+              } else { 
+                  alertSukses(`Data SKP berhasil diimpor ke bulan ${bulanTarget}!`); 
+              }
 
-              let modalObj = bootstrap.Modal.getInstance(document.getElementById('modalImportExcel'));
-              if(modalObj) modalObj.hide();
-              muatDataPegawai(); 
-          } 
+              // JIKA BERASAL DARI MODAL TAMBAH PERIODE
+              if (periodeTarget && periodeDataTerbaru) {
+                  let modalObj = bootstrap.Modal.getInstance(document.getElementById('modalTambahPeriode'));
+                  if(modalObj) modalObj.hide();
+                  
+                  renderDropdownPeriode(periodeDataTerbaru);
+                  document.getElementById('pilihPeriodeUtama').value = bulanTarget;
+                  document.getElementById('formTambahPeriode').reset();
+                  toggleSumberData();
+                  
+                  // Paksa Cache Hancur & Pindah Halaman
+                  window.cacheDataPegawaiAll = null; 
+                  globalBulanAktif = bulanTarget;
+                  sessionStorage.setItem('globalBulanAktif', globalBulanAktif);
+                  masukAplikasi();
+              } 
+              // JIKA BERASAL DARI MENU IMPORT BIASA
+              else {
+                  let modalObj = bootstrap.Modal.getInstance(document.getElementById('modalImportExcel'));
+                  if(modalObj) modalObj.hide();
+                  
+                  // Paksa Muat Ulang Data dari Server Tanpa Cache!
+                  muatDataPegawai(true); 
+              }
+          }
+
           else if(jenis === 'pergub') {
               for(let i = 1; i < data2D.length; i++) { 
                   let row = data2D[i]; 

@@ -1,7 +1,7 @@
 const listOPD = [
       { nama: "Badan Kepegawaian Daerah", url: "https://script.google.com/macros/s/AKfycbw4PkelgARfgw65YLreJJ9GG7OynQDnEYtmYqz1fpoSnRLgH0cbltEBSpzciq0pPOXk9w/exec" },
       { nama: "Dinas Pendidikan", url: "https://script.google.com/macros/s/AKfycbwdAwCvzT3TBmxCc6uaTfD-7IE3f7iByNGgHCKW8Asnbo5zyDhj6m-bRJIcMS74-LfyZA/exec" },
-      { nama: "Uji Coba", url: "https://script.google.com/macros/s/AKfycbwFPHoMeSpBESHfqhF2tenNezvCU6vA9mJWmwlytKKUhrw3DqYETj5NwrdP7wQtmhL4/exec"}
+      { nama: "Uji Coba", url: "https://script.google.com/macros/s/AKfycbxxUMPhZztUE6JzrpcmKEQNoRTdGLLY4pZJWOda8vyks8kAqoAT6z5ZySgJsv7ZQkzq/exec"}
   ];
 
   let API_URL = ""; 

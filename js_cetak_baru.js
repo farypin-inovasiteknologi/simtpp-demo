@@ -64,13 +64,24 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
       if(barEl) barEl.style.width = `${Math.round((current / total) * 100)}%`;
   }
 
+
   // ==============================================================
-  // TRIGGER DOWNLOAD
+  // TRIGGER DOWNLOAD (SUDAH DIPERBAIKI ANTI-FREEZE)
   // ==============================================================
   async function fetchDataLaporan(format, e, funcExcel, funcPdf) {
       if(e) e.preventDefault(); 
       if(!globalBulanAktif) return alertPeringatan("Pilih bulan terlebih dahulu!"); 
       
+      // 1. BLOKIR CETAK PDF MASSAL DARI AWAL
+      if (format.toLowerCase() === 'pdf') {
+          return Swal.fire({
+              icon: 'info',
+              title: 'PDF Massal Dinonaktifkan',
+              text: 'Format tabel ini terlalu lebar (banyak kolom) untuk dijadikan PDF secara otomatis. Silakan unduh format Excel, lalu "Save As PDF" secara manual melalui aplikasi Microsoft Excel di laptop Anda.',
+              confirmButtonColor: '#0d6efd'
+          });
+      }
+
       let fUnit = document.getElementById('filterUnitKerja').value; 
       
       showLoadingPhase1(); 
@@ -93,25 +104,30 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
                   Swal.close(); 
                   Swal.fire({
                       title: 'Ada Data Belum Lengkap!',
-                      text: 'Ditemukan pegawai yang data Gaji-nya belum tersimpan (angkanya Rp 0). Yakin ingin lanjut mencetak?',
+                      text: 'Ditemukan pegawai yang data Gaji-nya belum tersimpan (angkanya Rp 0). Yakin ingin lanjut mencetak Excel?',
                       icon: 'warning', showCancelButton: true, confirmButtonColor: '#3085d6', cancelButtonColor: '#d33',
                       confirmButtonText: 'Ya, Lanjut Cetak!', cancelButtonText: 'Batal'
                   }).then(async (result) => {
                       if (result.isConfirmed) {
                           showLoadingPhase1(); 
-                          if(format === 'excel') { 
-                              switchToPhase2(res.data.length); 
-                              await new Promise(r => setTimeout(r, 100)); // Napas buatan untuk UI
+                          switchToPhase2(res.data.length); 
+                          await new Promise(r => setTimeout(r, 100)); // Napas buatan untuk UI
+                          
+                          try {
                               await funcExcel(res); 
-                          } else { funcPdf(res); } 
+                          } catch(excelErr) {
+                              Swal.close(); alertError("Terjadi error sistem saat menyusun Excel: " + excelErr.message);
+                          }
                       }
                   });
               } else {
-                  if(format === 'excel') { 
-                      switchToPhase2(res.data.length); 
-                      await new Promise(r => setTimeout(r, 100)); // Napas buatan untuk UI
+                  switchToPhase2(res.data.length); 
+                  await new Promise(r => setTimeout(r, 100)); // Napas buatan untuk UI
+                  try {
                       await funcExcel(res); 
-                  } else { funcPdf(res); } 
+                  } catch(excelErr) {
+                      Swal.close(); alertError("Terjadi error sistem saat menyusun Excel: " + excelErr.message);
+                  }
               }
           } else { Swal.close(); alertError("❌ Gagal mengambil data dari server. Periksa koneksi."); } 
       } catch (err) { Swal.close(); alertError("Terjadi kesalahan sistem: " + err.message); }

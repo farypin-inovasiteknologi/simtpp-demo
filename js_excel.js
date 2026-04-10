@@ -1,8 +1,6 @@
 function showDownloadModal(url) { let modalEl = document.getElementById('modalDownloadReady'); if(modalEl) { document.getElementById('btnRealDownload').href = url; let modalObj = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl); modalObj.show(); } else { window.open(url, '_blank'); } }
   function tutupModalDownload() { setTimeout(() => { let modalEl = document.getElementById('modalDownloadReady'); let modal = bootstrap.Modal.getInstance(modalEl); if(modal) modal.hide(); }, 1000); }
 
-  async function downloadLaporan(jenis, format, e) { if(e) e.preventDefault(); if(!globalBulanAktif) return alertPeringatan("Pilih bulan terlebih dahulu!"); startLoading("Menyiapkan File..."); let urls = await fetchAPI("cetakKeSheet", {jenis: jenis, bulanAktif: globalBulanAktif}); stopLoading(); if(urls && urls[format.toLowerCase()]) { showDownloadModal(urls[format.toLowerCase()]); } else { alertError("❌ Gagal."); } }
-
   function cetakPDFPerorangan(tabId, namaFile) { window.scrollTo(0, 0); let element = document.getElementById('viewManajemenASN'); let navPills = element.querySelector('.nav-pills'); let actionBtns = element.querySelectorAll('button'); let origPillsDisplay = navPills ? navPills.style.display : ''; if(navPills) navPills.style.display = 'none'; actionBtns.forEach(b => { b.dataset.origDisplay = b.style.display; b.style.display = 'none'; }); let tables = element.querySelectorAll('.table-responsive'); tables.forEach(t => { t.style.overflow = 'visible'; }); let selects = element.querySelectorAll('.form-select'); selects.forEach(s => { s.dataset.origBg = s.style.backgroundImage; s.style.backgroundImage = 'none'; }); startLoading("Menyusun PDF..."); let opt = { margin: 0.3, filename: `${namaFile}_${asNIPAktif}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, scrollY: 0, scrollX: 0 }, jsPDF: { unit: 'in', format: 'legal', orientation: 'portrait' } }; html2pdf().set(opt).from(element).save().then(() => { stopLoading(); if(navPills) navPills.style.display = origPillsDisplay; actionBtns.forEach(b => { b.style.display = b.dataset.origDisplay; }); tables.forEach(t => { t.style.overflow = ''; }); selects.forEach(s => { s.style.backgroundImage = s.dataset.origBg; }); setTimeout(() => { alertSukses("File PDF Perorangan berhasil diunduh!"); }, 500); }).catch(err => { stopLoading(); if(navPills) navPills.style.display = origPillsDisplay; actionBtns.forEach(b => { b.style.display = b.dataset.origDisplay; }); tables.forEach(t => { t.style.overflow = ''; }); selects.forEach(s => { s.style.backgroundImage = s.dataset.origBg; }); setTimeout(() => { alertError("Gagal memproses PDF: " + err); }, 500); }); }
 
   function cetakTTD(sheet, startRow, setting, colMax = null) {
@@ -38,10 +36,12 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
   function showLoadingPhase1() {
       Swal.fire({ 
           title: 'Menyiapkan Laporan...', 
-          html: `<div id="loadStatus" class="fw-bold text-primary mb-2 fs-6">1. Menarik data dari Server... (Mohon tunggu)</div>
-                 <h4 class="text-success fw-bold hidden mt-3" id="progressCounter">Memproses: 0 / 0</h4>
-                 <div class="progress mt-2 hidden shadow-sm" id="progressContainer" style="height: 18px; border-radius: 10px; background-color: #e9ecef;">
-                    <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" style="width: 0%"></div>
+          html: `<div id="loadStatus" class="fw-bold text-primary mb-2 fs-6">1. Menarik data dari Server...</div>
+                 <div id="boxProgress" class="hidden mt-3">
+                    <h5 class="text-success fw-bold" id="progressCounter">Memproses: 0 / 0</h5>
+                    <div class="progress shadow-sm" style="height: 18px; border-radius: 10px; background-color: #e9ecef;">
+                        <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" style="width: 0%"></div>
+                    </div>
                  </div>`, 
           allowOutsideClick: false, showConfirmButton: false, didOpen: () => { Swal.showLoading(); } 
       });
@@ -52,8 +52,7 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
       if(statusEl) {
           statusEl.innerText = "2. Menyusun File Excel...";
           statusEl.className = "fw-bold text-success mb-2 fs-6";
-          document.getElementById('progressCounter').classList.remove('hidden');
-          document.getElementById('progressContainer').classList.remove('hidden');
+          document.getElementById('boxProgress').classList.remove('hidden');
           document.getElementById('progressCounter').innerText = `Memproses: 0 / ${totalData}`;
       }
   }
@@ -72,21 +71,22 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
       if(e) e.preventDefault(); 
       if(!globalBulanAktif) return alertPeringatan("Pilih bulan terlebih dahulu!"); 
       
-      // Jika PDF Kolektif diklik, berikan peringatan karena format tabel terlalu lebar
-      if (format === 'pdf' && funcPdf === null) {
-          return alertPeringatan("Fitur PDF massal dinonaktifkan karena jumlah kolom terlalu banyak untuk muat di kertas. Silakan unduh format Excel.");
-      }
-
       let fUnit = document.getElementById('filterUnitKerja').value; 
       
       showLoadingPhase1(); 
       try {
+          let actionName = (funcExcel === buatExcelNominatifJS) ? "getJsonNominatif" : "getJsonLaporanLengkap";
           let payload = { bulanAktif: globalBulanAktif, jenisASN: globalJenisASN, roleUser: currentUser.role, unitkerjaUser: currentUser.unitkerja, filterUnit: fUnit };
-          let res = await fetchAPI(funcExcel === buatExcelNominatifJS ? "getJsonNominatif" : "getJsonLaporanLengkap", payload); 
+          
+          let res = await fetchAPI(actionName, payload); 
           
           if(res && res.error) {
               Swal.close(); return alertError("❌ " + res.error); 
           } else if (res && res.status === "sukses") {
+              
+              // Jeda sejenak agar browser sempat mempersiapkan UI
+              await new Promise(r => setTimeout(r, 100));
+
               let adaBelumSimpan = res.data.some(c => (c.gajiKotor === 0 || c.gajiKotorTER === 0));
               
               if (adaBelumSimpan) {
@@ -99,16 +99,22 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
                   }).then(async (result) => {
                       if (result.isConfirmed) {
                           showLoadingPhase1(); 
-                          if(format === 'excel') { switchToPhase2(res.data.length); await funcExcel(res); } 
-                          else { funcPdf(res); } 
+                          if(format === 'excel') { 
+                              switchToPhase2(res.data.length); 
+                              await new Promise(r => setTimeout(r, 100)); // Napas buatan untuk UI
+                              await funcExcel(res); 
+                          } else { funcPdf(res); } 
                       }
                   });
               } else {
-                  if(format === 'excel') { switchToPhase2(res.data.length); await funcExcel(res); } 
-                  else { funcPdf(res); } 
+                  if(format === 'excel') { 
+                      switchToPhase2(res.data.length); 
+                      await new Promise(r => setTimeout(r, 100)); // Napas buatan untuk UI
+                      await funcExcel(res); 
+                  } else { funcPdf(res); } 
               }
-          } else { Swal.close(); alertError("❌ Gagal mengambil data dari server."); } 
-      } catch (err) { Swal.close(); alertError("Terjadi kesalahan: " + err.message); }
+          } else { Swal.close(); alertError("❌ Gagal mengambil data dari server. Periksa koneksi."); } 
+      } catch (err) { Swal.close(); alertError("Terjadi kesalahan sistem: " + err.message); }
   }
 
   function unduhNominatifKolektif(format, e) { fetchDataLaporan(format, e, buatExcelNominatifJS, null); } 
@@ -125,26 +131,53 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
       const wb = new ExcelJS.Workbook();
       const sheet = wb.addWorksheet('Daftar Nominatif', { pageSetup: { paperSize: 5, orientation: 'landscape', margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4 } } });
 
-      sheet.columns = [ { width: 5 }, { width: 35 }, { width: 12 }, { width: 25 }, { width: 15 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 15 }, { width: 12 }, { width: 15 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 15 }, { width: 18 } ];
+      // 1. ATUR LEBAR KOLOM EKSPLISIT (Sesuai Panjang Data)
+      sheet.getColumn(1).width = 5;   // No
+      sheet.getColumn(2).width = 38;  // Nama/NIP
+      sheet.getColumn(3).width = 15;  // Status
+      sheet.getColumn(4).width = 30;  // Jabatan
+      sheet.getColumn(5).width = 15;  // Gaji Kotor
+      for(let i=6; i<=10; i++) sheet.getColumn(i).width = 11; // BK, PK, KK, TB, KP
+      sheet.getColumn(11).width = 14; // Jumlah TPP
+      sheet.getColumn(12).width = 12; // BPJS 4%
+      sheet.getColumn(13).width = 15; // Total TPP Netto
+      sheet.getColumn(14).width = 12; // IWP 1%
+      sheet.getColumn(15).width = 12; // PPh 21
+      sheet.getColumn(16).width = 12; // BPJS 4% Potongan
+      sheet.getColumn(17).width = 14; // Total Potongan
+      sheet.getColumn(18).width = 18; // TPP Bersih
 
-      sheet.mergeCells('A1:R1'); sheet.getCell('A1').value = `DAFTAR NOMINATIF TPP ${res.setting.Nama_Dinas} PEMERINTAH PROVINSI JAMBI`;
-      sheet.mergeCells('A2:R2'); sheet.getCell('A2').value = `${res.jenisASN} ${res.unitCetak}`;
-      sheet.mergeCells('A3:R3'); sheet.getCell('A3').value = `PERIODE BULAN: ${res.bulanBesar}`;
-      for(let i=1; i<=3; i++) { sheet.getCell(`A${i}`).font = { bold: true, size: i===1?14:12 }; sheet.getCell(`A${i}`).alignment = { horizontal: 'center' }; }
+      // 2. MERGE CELL JUDUL UTAMA & CENTER
+      sheet.mergeCells('A1:R1'); 
+      sheet.getCell('A1').value = `DAFTAR NOMINATIF TPP ${res.setting.Nama_Dinas} PEMERINTAH PROVINSI JAMBI`;
+      sheet.mergeCells('A2:R2'); 
+      sheet.getCell('A2').value = `${res.jenisASN} ${res.unitCetak}`;
+      sheet.mergeCells('A3:R3'); 
+      sheet.getCell('A3').value = `PERIODE BULAN: ${res.bulanBesar}`;
+      
+      for(let i=1; i<=3; i++) { 
+          sheet.getCell(`A${i}`).font = { bold: true, size: i===1?14:12 }; 
+          sheet.getCell(`A${i}`).alignment = { horizontal: 'center', vertical: 'middle' }; 
+      }
 
+      // 3. MERGE CELL JUDUL KOLOM BERTINGKAT
       sheet.mergeCells('A5:A6'); sheet.getCell('A5').value = "No.";
       sheet.mergeCells('B5:B6'); sheet.getCell('B5').value = "Nama / Tgl Lahir / NIP / Gol.";
       sheet.mergeCells('C5:C6'); sheet.getCell('C5').value = "Status / Jiwa";
       sheet.mergeCells('D5:D6'); sheet.getCell('D5').value = "Jabatan";
       sheet.mergeCells('E5:E6'); sheet.getCell('E5').value = "Gaji Kotor";
+      
       sheet.mergeCells('F5:M5'); sheet.getCell('F5').value = "PERHITUNGAN TPP (NETTO)";
       ['BK','PK','KK','TB','KP','Jumlah TPP','BPJS 4%','Total TPP Netto'].forEach((txt, i) => sheet.getCell(numToLet(5+i) + '6').value = txt);
+      
       sheet.mergeCells('N5:Q5'); sheet.getCell('N5').value = "PENGURANGAN TPP";
       ['IWP 1%','PPh 21','BPJS 4%','TOTAL POT.'].forEach((txt, i) => sheet.getCell(numToLet(13+i) + '6').value = txt);
+      
       sheet.mergeCells('R5:R6'); sheet.getCell('R5').value = "TPP BERSIH DITERIMA";
 
       for(let i=1; i<=18; i++) { sheet.getCell(numToLet(i-1) + '7').value = i.toString(); }
 
+      // Styling Header Kolom
       for (let i = 5; i <= 7; i++) {
           sheet.getRow(i).eachCell({ includeEmpty: true }, (cell, colN) => {
               cell.font = { bold: i!==7, italic: i===7, size: i===7 ? 8 : 10 };
@@ -191,9 +224,8 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
                   });
                   currentRow++; progressCount++;
                   
-                  // UPDATE COUNTER & YIELD KE BROWSER SETIAP 2 DATA (AGAR ANIMASI TIDAK FREEZE)
                   updateProgress(progressCount, totalData); 
-                  if (progressCount % 2 === 0 || progressCount === totalData) { await new Promise(r => setTimeout(r, 0)); }
+                  if (progressCount % 10 === 0 || progressCount === totalData) { await new Promise(r => setTimeout(r, 0)); }
               }
 
               let rowSub = sheet.getRow(currentRow);
@@ -231,18 +263,27 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
       const wb = new ExcelJS.Workbook();
       const sheet = wb.addWorksheet('Rekap Golongan', { pageSetup: { paperSize: 5, orientation: 'landscape', margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4 } } });
 
-      sheet.columns = [ { width: 5 }, { width: 25 }, { width: 12 }, { width: 15 }, { width: 15 }, { width: 15 }, { width: 15 }, { width: 15 }, { width: 15 }, { width: 12 }, { width: 15 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 15 }, { width: 15 } ];
+      // 1. ATUR LEBAR KOLOM
+      sheet.getColumn(1).width = 5;   // No
+      sheet.getColumn(2).width = 25;  // Golongan
+      sheet.getColumn(3).width = 12;  // Jml Pegawai
+      for(let i=4; i<=8; i++) sheet.getColumn(i).width = 14; // BK, PK, dll
+      for(let i=9; i<=16; i++) sheet.getColumn(i).width = 16; // Jml Uang
 
+      // 2. MERGE CELL JUDUL & CENTER
       sheet.mergeCells('A1:P1'); sheet.getCell('A1').value = `REKAPITULASI PENGAJUAN TPP ASN OPD ${res.setting.Nama_Dinas} PROVINSI JAMBI`;
       sheet.mergeCells('A2:P2'); sheet.getCell('A2').value = `${res.jenisASN} ${res.unitCetak}`;
       sheet.mergeCells('A3:P3'); sheet.getCell('A3').value = `Bulan : ${res.bulanBesar}`;
-      for(let i=1; i<=3; i++) { sheet.getCell(`A${i}`).font = { bold: true, size: 12 }; sheet.getCell(`A${i}`).alignment = { horizontal: 'center' }; }
+      for(let i=1; i<=3; i++) { 
+          sheet.getCell(`A${i}`).font = { bold: true, size: 12 }; 
+          sheet.getCell(`A${i}`).alignment = { horizontal: 'center', vertical: 'middle' }; 
+      }
 
       sheet.getRow(5).values = ["No.", "GOLONGAN", "Jumlah\nPegawai", "BK", "PK", "KK", "TB", "KP", "Jumlah TPP", "BPJS 4%", "Jumlah Kotor", "PPh 21", "IWP 1%", "BPJS 4% (Pot)", "Jumlah\nPotongan", "Jumlah\nBersih"];
       sheet.getRow(6).values = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"];
 
       for (let i = 5; i <= 6; i++) {
-          sheet.getRow(i).height = i===5 ? 35 : 15;
+          sheet.getRow(i).height = i===5 ? 40 : 15;
           sheet.getRow(i).eachCell({ includeEmpty: true }, (cell) => {
               cell.font = { bold: true }; cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
               cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'CFE2F3' } };
@@ -311,16 +352,28 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
       const wb = new ExcelJS.Workbook();
       const sheet = wb.addWorksheet('Rekening TPP', { pageSetup: { paperSize: 5 } });
 
-      sheet.columns = [ { width: 5 }, { width: 35 }, { width: 20 }, { width: 15 }, { width: 20 }, { width: 15 }, { width: 15 } ];
+      // 1. ATUR LEBAR KOLOM
+      sheet.getColumn(1).width = 5;   // No
+      sheet.getColumn(2).width = 40;  // Nama
+      sheet.getColumn(3).width = 20;  // Rek Penerima
+      sheet.getColumn(4).width = 18;  // TPP Bersih
+      sheet.getColumn(5).width = 20;  // Rek Korpri
+      sheet.getColumn(6).width = 15;  // Pot Korpri
+      sheet.getColumn(7).width = 18;  // Jml Diterima
 
+      // 2. MERGE CELL JUDUL & CENTER
       sheet.mergeCells('A1:G1'); sheet.getCell('A1').value = `Daftar : Pembayaran TPP BULAN ${res.bulanBesar}`;
       sheet.mergeCells('A2:G2'); sheet.getCell('A2').value = `ASN ${res.setting.Nama_Dinas} PEMERINTAH PROVINSI JAMBI`;
       sheet.mergeCells('A3:G3'); sheet.getCell('A3').value = `${res.jenisASN} ${res.unitCetak}`;
       sheet.mergeCells('A4:G4'); sheet.getCell('A4').value = `DI BANK JAMBI`;
-      for(let i=1; i<=4; i++) { sheet.getCell(`A${i}`).font = { bold: true }; sheet.getCell(`A${i}`).alignment = { horizontal: 'center' }; }
+      
+      for(let i=1; i<=4; i++) { 
+          sheet.getCell(`A${i}`).font = { bold: true, size: 12 }; 
+          sheet.getCell(`A${i}`).alignment = { horizontal: 'center', vertical: 'middle' }; 
+      }
 
       let rowH = sheet.getRow(6);
-      rowH.height = 30;
+      rowH.height = 35;
       rowH.values = ["NO", "NAMA PEGAWAI", "NO. REK PENERIMA", "TPP BERSIH", "NO. REK KORPRI", "POT KORPRI", "JML DITERIMA"];
       rowH.eachCell({ includeEmpty: true }, cell => {
           cell.font = { bold: true }; cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
@@ -337,7 +390,7 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
 
           let jmlDiterima = c.tppBersih - potKorpri;
           let r = sheet.getRow(currentRow);
-          r.height = 35;
+          r.height = 25;
           r.values = [ no++, c.nama, c.rekening, c.tppBersih, res.setting.Rek_Korpri, potKorpri, jmlDiterima ];
           r.eachCell({ includeEmpty: true }, (cell, colN) => {
               cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
@@ -348,7 +401,7 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
           currentRow++; progressCount++;
           
           updateProgress(progressCount, totalData); 
-          if (progressCount % 2 === 0 || progressCount === totalData) { await new Promise(resolve => setTimeout(resolve, 0)); }
+          if (progressCount % 10 === 0 || progressCount === totalData) { await new Promise(resolve => setTimeout(resolve, 0)); }
       }
 
       let rGrand = sheet.getRow(currentRow);
@@ -372,17 +425,32 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
       const wb = new ExcelJS.Workbook();
       const sheet = wb.addWorksheet('Rekap Pajak TER', { pageSetup: { paperSize: 5, orientation: 'landscape' } });
 
-      sheet.columns = [
-          { width: 5 }, { width: 22 }, { width: 25 }, { width: 25 }, { width: 10 }, { width: 10 }, { width: 12 }, { width: 18 }, { width: 10 }, { width: 15 },
-          { width: 15 }, { width: 15 }, { width: 15 }, { width: 15 }, { width: 15 }, { width: 12 }, { width: 10 }, { width: 15 }, { width: 15 }, { width: 15 }
-      ];
+      // 1. ATUR LEBAR KOLOM
+      sheet.getColumn(1).width = 5;   // No
+      sheet.getColumn(2).width = 22;  // NIP
+      sheet.getColumn(3).width = 30;  // Nama Pegawai
+      sheet.getColumn(4).width = 30;  // Unit Kerja
+      sheet.getColumn(5).width = 12;  // Masa Pajak
+      sheet.getColumn(6).width = 10;  // Tahun
+      sheet.getColumn(7).width = 12;  // Status
+      sheet.getColumn(8).width = 18;  // NPWP
+      sheet.getColumn(9).width = 10;  // Kawin
+      sheet.getColumn(10).width = 15; // Jenis Jabatan
+      for(let i=11; i<=15; i++) sheet.getColumn(i).width = 16; // Gaji/Uang
+      sheet.getColumn(16).width = 12; // Kat TER
+      sheet.getColumn(17).width = 10; // Tarif
+      for(let i=18; i<=20; i++) sheet.getColumn(i).width = 16; // Total Pajak
 
+      // 2. MERGE CELL JUDUL & CENTER
       sheet.mergeCells('A1:T1'); sheet.getCell('A1').value = "REKAPITULASI PAJAK TER PENGHASILAN PEGAWAI";
       sheet.mergeCells('A2:T2'); sheet.getCell('A2').value = `PERIODE: ${res.bulanBesar}`;
-      for(let i=1; i<=2; i++) { sheet.getCell(`A${i}`).font = { bold: true, size: 12 }; sheet.getCell(`A${i}`).alignment = { horizontal: 'center' }; }
+      for(let i=1; i<=2; i++) { 
+          sheet.getCell(`A${i}`).font = { bold: true, size: 12 }; 
+          sheet.getCell(`A${i}`).alignment = { horizontal: 'center', vertical: 'middle' }; 
+      }
 
       let rowH = sheet.getRow(4);
-      rowH.height = 45;
+      rowH.height = 55;
       rowH.values = [ "No.", "NIP", "Nama Pegawai", "Unit Kerja", "Masa\nPajak", "Tahun\nPajak", "Status\nPegawai", "NPWP", "Status\nKawin", "Jenis\nJabatan", "Gaji Bruto\n(Amprah)", "PPh 21\nGaji", "Gaji Bruto\nBersih PPh", "TPP\nBruto", "Penghasilan Kotor\n(DPP TER)", "Kategori\nTER", "Tarif\n(%)", "Total PPh\nTerutang", "PPh 21\nAmprah Gaji", "Pajak TER\n(TPP)" ];
       
       rowH.eachCell({ includeEmpty: true }, cell => {
@@ -405,7 +473,7 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
           let gajiBrutoBersihPph = c.gajiKotorTER - c.pphGajiTER;
 
           let r = sheet.getRow(currentRow);
-          r.height = 65; 
+          r.height = 40; 
           r.values = [ no++, c.nip, c.nama, c.unitKerjaLengkap, res.namaBulan, res.tahun, statusPegawai, "", c.statusTER, c.jabatan, c.gajiKotorTER, c.pphGajiTER, gajiBrutoBersihPph, c.tppBruto, c.dasarPajakTER, "TER " + c.katTER, c.pctTER + "%", c.pph21TotalSebulanTER, c.pphGajiTER, c.pph21TKD ];
           
           r.eachCell({ includeEmpty: true }, (cell, colN) => {
@@ -417,7 +485,7 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
           currentRow++; progressCount++;
           
           updateProgress(progressCount, totalData); 
-          if (progressCount % 2 === 0 || progressCount === totalData) { await new Promise(resolve => setTimeout(resolve, 0)); }
+          if (progressCount % 10 === 0 || progressCount === totalData) { await new Promise(resolve => setTimeout(resolve, 0)); }
       }
 
       let rGrand = sheet.getRow(currentRow);
@@ -557,7 +625,7 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
                   currentRow++; progressCount++;
                   
                   updateProgress(progressCount, totalData); 
-                  if (progressCount % 2 === 0 || progressCount === totalData) { await new Promise(r => setTimeout(r, 0)); }
+                  if (progressCount % 5 === 0 || progressCount === totalData) { await new Promise(r => setTimeout(r, 10)); }
               }
 
               let rowSub = sheet.getRow(currentRow);
@@ -597,3 +665,5 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
       unduhFile(wb, `Perhitungan_TPP_${res.bulanBesar}_${res.unitCetak}.xlsx`);
       Swal.close();
   }
+
+  

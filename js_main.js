@@ -1,5 +1,4 @@
-
-  const listOPD = [
+const listOPD = [
       { nama: "Badan Kepegawaian Daerah", url: "https://script.google.com/macros/s/AKfycbw4PkelgARfgw65YLreJJ9GG7OynQDnEYtmYqz1fpoSnRLgH0cbltEBSpzciq0pPOXk9w/exec" },
       { nama: "Dinas Pendidikan", url: "https://script.google.com/macros/s/AKfycbwdAwCvzT3TBmxCc6uaTfD-7IE3f7iByNGgHCKW8Asnbo5zyDhj6m-bRJIcMS74-LfyZA/exec" },
       { nama: "Uji Coba", url: "https://script.google.com/macros/s/AKfycbwFPHoMeSpBESHfqhF2tenNezvCU6vA9mJWmwlytKKUhrw3DqYETj5NwrdP7wQtmhL4/exec"}
@@ -330,26 +329,43 @@
           return alertError(res.pesan);
       }
 
+      // 👇 LOGIKA IMPORT MENGGUNAKAN EXCELJS YANG AMAN DARI CRASH 👇
       if (sumber === 'import') {
           Swal.getHtmlContainer().innerHTML = "Menganalisa File Excel SKP BKD...";
           let file = fileInput.files[0];
-          let reader = new FileReader();
-
-          reader.onload = async function(ev) {
-              let data = new Uint8Array(ev.target.result);
-              let workbook = XLSX.read(data, {type: 'array'});
-              let data2D = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1, defval: ""});
+          
+          try {
+              let arrayBuffer = await file.arrayBuffer();
+              const wb = new ExcelJS.Workbook();
+              await wb.xlsx.load(arrayBuffer);
+              const worksheet = wb.worksheets[0];
+              
+              let data2D = [];
+              worksheet.eachRow({ includeEmpty: true }, function(row, rowNumber) {
+                  let r = [];
+                  for(let i = 1; i <= Math.max(row.cellCount, 40); i++) {
+                      let cell = row.getCell(i);
+                      let val = cell.value;
+                      if(val && typeof val === 'object') {
+                          if(val.result !== undefined) val = val.result;
+                          else if(val.richText) val = val.richText.map(t => t.text).join("");
+                      }
+                      r.push(val === null || val === undefined ? "" : val);
+                  }
+                  data2D.push(r);
+              });
 
               if(data2D.length === 0) {
                   stopLoading(); btnSubmit.disabled = false;
-                  return alertError("Periode terbuka, tapi file Excel kosong!");
+                  return alertError("File Excel kosong atau format tidak sesuai!");
               }
 
               let payload = [];
               for(let i = 1; i < data2D.length; i++) {
                   let row = data2D[i];
-                  let nipVal = row[3];
+                  let nipVal = row[3]; // Kolom D adalah NIP
                   if(!nipVal) continue; 
+
                   let nipBersih = String(nipVal).replace(/[\s-']/g, '');
                   if(!/^\d{18}$/.test(nipBersih)) continue; 
 
@@ -363,7 +379,7 @@
                       unitkerja: String(row[8] || "").trim(),      
                       unorInduk: String(row[10] || "").trim(),    
                       skp: String(row[16] || "").trim(),          
-                      golongan: String(row[30] || "").trim(),      
+                      golongan: String(row[29] || row[30] || "").trim(), // Excel BKD kadang bergeser     
                       statusPegawai: statusPegawaiVal,             
                       tglLahir: "", 
                       namaJabatan: "", 
@@ -377,7 +393,7 @@
 
               if(payload.length === 0) {
                   stopLoading(); btnSubmit.disabled = false;
-                  return alertPeringatan("Periode dibuka, tapi tidak ada data NIP valid di Kolom D (Excel).");
+                  return alertPeringatan("Periode dibuka, tapi tidak ada data NIP valid (18 Digit) di Kolom D.");
               }
 
               Swal.getHtmlContainer().innerHTML = `Menyimpan ${payload.length} Pegawai ke Database...`;
@@ -391,8 +407,11 @@
               renderDropdownPeriode(res.dataTerbaru);
               document.getElementById('formTambahPeriode').reset();
               toggleSumberData();
-          };
-          reader.readAsArrayBuffer(file);
+              
+          } catch(e) {
+              stopLoading(); btnSubmit.disabled = false;
+              alertError("Gagal memproses file Excel: " + e.message);
+          }
       } 
       else {
           stopLoading(); btnSubmit.disabled = false;
@@ -404,9 +423,23 @@
 
   async function muatDaftarPeriode() { let data = await fetchAPI("getDaftarPeriode", {}); if (data && !data.error) { renderDropdownPeriode(data); } }
 
+  // 👇 PERBAIKAN: DROPDOWN TIDAK LAMBAT LAGI KARENA DIPAKSA SELECT SESI AKTIF 👇
   function renderDropdownPeriode(data) {
-    arrayPeriode = data; let sel = document.getElementById('pilihPeriodeUtama'); sel.innerHTML = "";
-    if(!data || data.length === 0) { sel.innerHTML = `<option value="">Belum ada periode. Klik Tambah!</option>`; } else { data.forEach(p => { sel.innerHTML += `<option value="${p.namaPeriode}">${p.namaPeriode}</option>`; }); sel.value = data[data.length - 1].namaPeriode; }
+    arrayPeriode = data; 
+    let sel = document.getElementById('pilihPeriodeUtama'); 
+    sel.innerHTML = "";
+    if(!data || data.length === 0) { 
+        sel.innerHTML = `<option value="">Belum ada periode. Klik Tambah!</option>`; 
+    } else { 
+        data.forEach(p => { sel.innerHTML += `<option value="${p.namaPeriode}">${p.namaPeriode}</option>`; }); 
+        
+        // Pilih otomatis periode yang sedang aktif dari sesi
+        if (globalBulanAktif && data.some(p => p.namaPeriode === globalBulanAktif)) {
+            sel.value = globalBulanAktif;
+        } else {
+            sel.value = data[data.length - 1].namaPeriode; 
+        }
+    }
   }
 
   function bukaModalEditPeriode() {
@@ -1136,133 +1169,142 @@
     let ws = XLSX.utils.aoa_to_sheet(wsData); XLSX.utils.book_append_sheet(wb, ws, sheetName); XLSX.writeFile(wb, fileName);
   }
 
-  function prosesImportExcel() {
-    let fileInput = document.getElementById('fileImport'); 
-    if(!fileInput.files[0]) return alertPeringatan("Pilih file Excel terlebih dahulu!");
-    
-    let jenis = document.getElementById('importJenis').value; 
-    let file = fileInput.files[0]; 
-    let reader = new FileReader(); 
-    startLoading("Membaca & Menganalisa File Excel...");
-    
-    function formatTanggalExcel(excelDate) { 
-        if(!excelDate) return ""; 
-        if(!isNaN(excelDate)) { let date = new Date((excelDate - (25567 + 2)) * 86400 * 1000); return date.toISOString().split('T')[0]; } 
-        let strDate = String(excelDate).trim(); let regexBaku = /^\d{4}-\d{2}-\d{2}$/; 
-        if(regexBaku.test(strDate)) return strDate; 
-        let parts = strDate.split(/[-/]/); 
-        if(parts.length === 3) { 
-            if(parts[0].length === 4) return `${parts[0]}-${parts[1].padStart(2,'0')}-${parts[2].padStart(2,'0')}`; 
-            return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`; 
-        } 
-        return "1970-01-01"; 
-    }
-
-    reader.onload = async function(e) {
-      let data = new Uint8Array(e.target.result); 
-      let workbook = XLSX.read(data, {type: 'array'}); 
-      let sheetName = workbook.SheetNames[0]; 
+  async function prosesImportExcel() {
+      let fileInput = document.getElementById('fileImport'); 
+      if(!fileInput.files[0]) return alertPeringatan("Pilih file Excel terlebih dahulu!");
       
-      let payload = [];
+      let jenis = document.getElementById('importJenis').value; 
+      let file = fileInput.files[0]; 
+      
+      startLoading("Membaca & Menganalisa File Excel...");
+      
+      try {
+          let arrayBuffer = await file.arrayBuffer();
+          const wb = new ExcelJS.Workbook();
+          await wb.xlsx.load(arrayBuffer);
+          const worksheet = wb.worksheets[0];
+          
+          let data2D = [];
+          worksheet.eachRow({ includeEmpty: true }, function(row, rowNumber) {
+              let r = [];
+              for(let i = 1; i <= Math.max(row.cellCount, 40); i++) {
+                  let cell = row.getCell(i);
+                  let val = cell.value;
+                  if(val && typeof val === 'object') {
+                      if(val.result !== undefined) val = val.result;
+                      else if(val.richText) val = val.richText.map(t => t.text).join("");
+                  }
+                  r.push(val === null || val === undefined ? "" : val);
+              }
+              data2D.push(r);
+          });
 
-      if(jenis === 'pegawai') {
-        if(!globalBulanAktif) { stopLoading(); return alertError("Pilih Periode Bulan terlebih dahulu!"); }
-        
-        let data2D = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {header: 1, defval: ""});
-        if(data2D.length === 0) { stopLoading(); return alertError("File Excel kosong!"); }
+          if(data2D.length === 0) {
+              stopLoading(); return alertError("File Excel kosong atau format tidak sesuai!");
+          }
 
-        let headerRowIndex = -1;
-        let colMap = {};
+          let payload = [];
 
-        for(let i = 0; i < Math.min(30, data2D.length); i++) {
-            let row = data2D[i];
-            let rowStr = row.map(c => String(c).toLowerCase()).join("");
-            
-            if(rowStr.includes("nip") && rowStr.includes("nama")) {
-                headerRowIndex = i;
-                
-                row.forEach((colName, idx) => {
-                    let name = String(colName).toLowerCase().replace(/[\s.]/g, ''); 
-                    
-                    if(name === "nip") colMap.nip = idx;
-                    else if(name.includes("nama")) colMap.nama = idx;
-                    else if(name.includes("tgllahir") || name.includes("tanggallahir")) colMap.tglLahir = idx;
-                    else if(name.includes("gol") || name.includes("pangkat")) colMap.golongan = idx;
-                    else if(name.includes("unorinduk") || name.includes("opd") || name.includes("induk")) colMap.unorInduk = idx;
-                    else if(name.includes("unitkerja") || name.includes("lokasikerja")) colMap.unitkerja = idx;
-                    else if(name === "jabatan" || name.includes("namajabatan")) colMap.namaJabatan = idx;
-                    else if(name.includes("jenisjabatan")) colMap.jenisJab = idx;
-                    else if(name.includes("status") || name.includes("kawin")) colMap.statusKawin = idx;
-                    else if(name.includes("gajipokok") || name.includes("gapok")) colMap.gapok = idx;
-                    else if(name.includes("tunjanganjabatan") || name.includes("tjjabatan")) colMap.tjJab = idx;
-                    else if(name.includes("rekening")) colMap.rekening = idx;
-                    else if(name.includes("skp") || name.includes("nilaiskp")) colMap.skp = idx;
-                });
-                break; 
-            }
-        }
+          if(jenis === 'pegawai') {
+              if(!globalBulanAktif) { stopLoading(); return alertError("Pilih Periode Bulan terlebih dahulu!"); }
 
-        if(headerRowIndex === -1 || colMap.nip === undefined) {
-            stopLoading();
-            return alertError("Gagal mendeteksi format! Sistem tidak menemukan baris yang berisi judul 'NIP' dan 'Nama' di file Excel Anda.");
-        }
+              let headerRowIndex = -1;
+              let colMap = {};
 
-        for(let i = headerRowIndex + 1; i < data2D.length; i++) {
-            let row = data2D[i];
-            let nipVal = row[colMap.nip];
-            if(!nipVal) continue; 
+              for(let i = 0; i < Math.min(30, data2D.length); i++) {
+                  let row = data2D[i];
+                  let rowStr = row.map(c => String(c).toLowerCase()).join("");
+                  
+                  if(rowStr.includes("nip") && rowStr.includes("nama")) {
+                      headerRowIndex = i;
+                      
+                      row.forEach((colName, idx) => {
+                          let name = String(colName).toLowerCase().replace(/[\s.]/g, ''); 
+                          if(name === "nip") colMap.nip = idx;
+                          else if(name.includes("nama")) colMap.nama = idx;
+                          else if(name.includes("tgllahir") || name.includes("tanggallahir")) colMap.tglLahir = idx;
+                          else if(name.includes("gol") || name.includes("pangkat")) colMap.golongan = idx;
+                          else if(name.includes("unorinduk") || name.includes("opd") || name.includes("induk")) colMap.unorInduk = idx;
+                          else if(name.includes("unitkerja") || name.includes("lokasikerja")) colMap.unitkerja = idx;
+                          else if(name === "jabatan" || name.includes("namajabatan")) colMap.namaJabatan = idx;
+                          else if(name.includes("jenisjabatan")) colMap.jenisJab = idx;
+                          else if(name.includes("status") || name.includes("kawin")) colMap.statusKawin = idx;
+                          else if(name.includes("gajipokok") || name.includes("gapok")) colMap.gapok = idx;
+                          else if(name.includes("tunjanganjabatan") || name.includes("tjjabatan")) colMap.tjJab = idx;
+                          else if(name.includes("rekening")) colMap.rekening = idx;
+                          else if(name.includes("skp") || name.includes("nilaiskp")) colMap.skp = idx;
+                      });
+                      break; 
+                  }
+              }
 
-            let nipBersih = String(nipVal).replace(/[\s-']/g, '');
-            if(!/^\d{18}$/.test(nipBersih)) continue; 
+              if(headerRowIndex === -1 || colMap.nip === undefined) {
+                  stopLoading();
+                  return alertError("Gagal mendeteksi format! Sistem tidak menemukan baris yang berisi judul 'NIP' dan 'Nama' di file Excel Anda.");
+              }
 
-            payload.push({ 
-                nip: nipBersih, 
-                nama: colMap.nama !== undefined ? String(row[colMap.nama] || "") : "", 
-                tglLahir: colMap.tglLahir !== undefined ? formatTanggalExcel(row[colMap.tglLahir]) : "", 
-                golongan: colMap.golongan !== undefined ? String(row[colMap.golongan] || "") : "", 
-                unorInduk: colMap.unorInduk !== undefined ? String(row[colMap.unorInduk] || "") : "", 
-                unitkerja: colMap.unitkerja !== undefined ? String(row[colMap.unitkerja] || "") : "", 
-                namaJabatan: colMap.namaJabatan !== undefined ? String(row[colMap.namaJabatan] || "") : "", 
-                jenisJab: colMap.jenisJab !== undefined ? String(row[colMap.jenisJab] || "") : "Struktural", 
-                statusKawin: colMap.statusKawin !== undefined ? String(row[colMap.statusKawin] || "") : "TK/0 = 1", 
-                gapok: colMap.gapok !== undefined ? parseFloat(row[colMap.gapok]) || 0 : 0, 
-                tjJab: colMap.tjJab !== undefined ? parseFloat(row[colMap.tjJab]) || 0 : 0, 
-                rekening: colMap.rekening !== undefined ? String(row[colMap.rekening] || "").replace(/[']/g, '') : "",
-                skp: colMap.skp !== undefined ? String(row[colMap.skp] || "") : ""
-            });
-        }
-        
-        if(payload.length === 0) {
+              for(let i = headerRowIndex + 1; i < data2D.length; i++) {
+                  let row = data2D[i];
+                  let nipVal = row[colMap.nip];
+                  if(!nipVal) continue; 
+
+                  let nipBersih = String(nipVal).replace(/[\s-']/g, '');
+                  if(!/^\d{18}$/.test(nipBersih)) continue; 
+
+                  payload.push({ 
+                      nip: nipBersih, 
+                      nama: colMap.nama !== undefined ? String(row[colMap.nama] || "") : "", 
+                      tglLahir: colMap.tglLahir !== undefined ? formatTanggalExcel(row[colMap.tglLahir]) : "", 
+                      golongan: colMap.golongan !== undefined ? String(row[colMap.golongan] || "") : "", 
+                      unorInduk: colMap.unorInduk !== undefined ? String(row[colMap.unorInduk] || "") : "", 
+                      unitkerja: colMap.unitkerja !== undefined ? String(row[colMap.unitkerja] || "") : "", 
+                      namaJabatan: colMap.namaJabatan !== undefined ? String(row[colMap.namaJabatan] || "") : "", 
+                      jenisJab: colMap.jenisJab !== undefined ? String(row[colMap.jenisJab] || "") : "Struktural", 
+                      statusKawin: colMap.statusKawin !== undefined ? String(row[colMap.statusKawin] || "") : "TK/0 = 1", 
+                      gapok: colMap.gapok !== undefined ? parseFloat(row[colMap.gapok]) || 0 : 0, 
+                      tjJab: colMap.tjJab !== undefined ? parseFloat(row[colMap.tjJab]) || 0 : 0, 
+                      rekening: colMap.rekening !== undefined ? String(row[colMap.rekening] || "").replace(/[']/g, '') : "",
+                      skp: colMap.skp !== undefined ? String(row[colMap.skp] || "") : ""
+                  });
+              }
+              
+              if(payload.length === 0) {
+                stopLoading();
+                return alertPeringatan("Tidak ada data pegawai yang valid (NIP 18 digit) untuk diimport.");
+              }
+
+              let res = await fetchAPI("importPegawaiMassal", {payload: payload, bulanAktif: globalBulanAktif}); 
+              stopLoading(); 
+              if(String(res).includes("Error")) { alertError(res.pesan || res); } 
+              else if(String(res).includes("PERHATIAN")) { Swal.fire({ icon: 'warning', title: 'Import Selesai dengan Catatan', text: res, confirmButtonColor: '#ffc107' }); } 
+              else { alertSukses(res); } 
+              
+              let modalObj = bootstrap.Modal.getInstance(document.getElementById('modalImportExcel'));
+              if(modalObj) modalObj.hide();
+              muatDataPegawai(); 
+          } 
+          else if(jenis === 'pergub') {
+              for(let i = 1; i < data2D.length; i++) { 
+                  let row = data2D[i]; 
+                  if(!row[0]) continue; 
+                  payload.push({ namaJabatan: row[0], kelasJabatan: row[1], bk: parseFloat(row[2])||0, pk: parseFloat(row[3])||0, kk: parseFloat(row[4])||0, tb: parseFloat(row[5])||0, kp: parseFloat(row[6])||0 }); 
+              }
+              let res = await fetchAPI("importPergubMassal", payload); stopLoading(); 
+              if(String(res).includes("Error")) { alertError(res.pesan || res); } else { alertSukses(res); bootstrap.Modal.getInstance(document.getElementById('modalImportExcel')).hide(); muatDataPergub(); }
+          } 
+          else if(jenis === 'akun') {
+              for(let i = 1; i < data2D.length; i++) { 
+                  let row = data2D[i]; 
+                  if(!row[0]) continue; 
+                  payload.push({ username: row[0], password: row[1], role: row[2], unitkerja: row[3], email: row[4] }); 
+              }
+              let res = await fetchAPI("importAkunMassal", payload); stopLoading(); 
+              if(String(res).includes("Error") || String(res).includes("Gagal")) alertError(res.pesan || res); else alertSukses(res); bootstrap.Modal.getInstance(document.getElementById('modalImportExcel')).hide(); muatDaftarAkun(); 
+          }
+      } catch(e) {
           stopLoading();
-          return alertPeringatan("Tidak ada data pegawai yang valid (NIP 18 digit) untuk diimport.");
-        }
-
-        let res = await fetchAPI("importPegawaiMassal", {payload: payload, bulanAktif: globalBulanAktif}); 
-        stopLoading(); 
-        
-        if(String(res).includes("Error")) { alertError(res.pesan || res); } 
-        else if(String(res).includes("PERHATIAN")) { Swal.fire({ icon: 'warning', title: 'Import Selesai dengan Catatan', text: res, confirmButtonColor: '#ffc107' }); } 
-        else { alertSukses(res); } 
-        
-        let modalObj = bootstrap.Modal.getInstance(document.getElementById('modalImportExcel'));
-        if(modalObj) modalObj.hide();
-        muatDataPegawai(); 
-      } 
-      else if(jenis === 'pergub') {
-        let json = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {defval: ""});
-        json.forEach(row => { let keys = Object.keys(row); if(keys.length < 7) return; payload.push({ namaJabatan: row[keys[0]], kelasJabatan: row[keys[1]], bk: parseFloat(row[keys[2]])||0, pk: parseFloat(row[keys[3]])||0, kk: parseFloat(row[keys[4]])||0, tb: parseFloat(row[keys[5]])||0, kp: parseFloat(row[keys[6]])||0 }); });
-        let res = await fetchAPI("importPergubMassal", payload); stopLoading(); 
-        if(String(res).includes("Error")) { alertError(res.pesan || res); } else { alertSukses(res); bootstrap.Modal.getInstance(document.getElementById('modalImportExcel')).hide(); muatDataPergub(); }
-      } 
-      else if(jenis === 'akun') {
-        let json = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {defval: ""});
-        json.forEach(row => { let keys = Object.keys(row); if(keys.length < 2) return; payload.push({ username: row[keys[0]], password: row[keys[1]], role: row[keys[2]], unitkerja: row[keys[3]], email: row[keys[4]] }); });
-        let res = await fetchAPI("importAkunMassal", payload); stopLoading(); 
-        if(String(res).includes("Error") || String(res).includes("Gagal")) alertError(res.pesan || res); else alertSukses(res); bootstrap.Modal.getInstance(document.getElementById('modalImportExcel')).hide(); muatDaftarAkun(); 
+          alertError("Gagal membaca file: " + e.message);
       }
-    };
-    
-    reader.readAsArrayBuffer(file);
   }
 
   let globalDataAkun = []; let currentAkunPage = 1; let akunRowsPerPage = 15;
@@ -1281,13 +1323,11 @@
     
     if(data && !data.error) { 
       globalDataAkun = data; 
-      
       try {
           let currentCache = JSON.parse(localStorage.getItem('simTppCacheData') || "{}");
           currentCache.akun = data;
           localStorage.setItem('simTppCacheData', JSON.stringify(currentCache));
       } catch(e) {}
-
       terapkanFilterAkun(); 
     } else { 
       alertError(data.pesan || "Gagal memuat daftar akun dari server!"); 
@@ -1816,4 +1856,3 @@
       }
   }
   document.addEventListener("click", function (e) { closeAllLists(e.target); });
-

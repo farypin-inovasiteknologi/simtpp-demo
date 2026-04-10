@@ -1,103 +1,178 @@
-const listOPD = [
-      { nama: "Badan Kepegawaian Daerah", url: "https://script.google.com/macros/s/AKfycbw4PkelgARfgw65YLreJJ9GG7OynQDnEYtmYqz1fpoSnRLgH0cbltEBSpzciq0pPOXk9w/exec" },
-      { nama: "Dinas Pendidikan", url: "https://script.google.com/macros/s/AKfycbwdAwCvzT3TBmxCc6uaTfD-7IE3f7iByNGgHCKW8Asnbo5zyDhj6m-bRJIcMS74-LfyZA/exec" },
-      { nama: "Uji Coba", url: "https://script.google.com/macros/s/AKfycbzA86gasy5YvTg06ey2lGA4-mmRRfA9O8UrgtMw9wBbGlNZ__78eWGL9l_HTVuHzowa/exec"}
-  ];
+// =========================================================================
+// 1. KONFIGURASI SUPER MASTER (CUKUP 1 URL UNTUK SELURUH PROVINSI)
+// =========================================================================
+// Masukkan URL hasil Deploy Super Master Anda di sini:
+const API_URL = "https://script.google.com/macros/s/AKfycbw.../exec"; 
 
-  let API_URL = ""; 
-  async function fetchAPI(actionName, payloadData) {
-    let token = sessionStorage.getItem('authToken') || "";
-    if(!API_URL) return {status: "error", pesan: "Pilih OPD terlebih dahulu!"};
-    try {
-      let response = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: actionName, payload: payloadData, token: token })
-      });
-      return await response.json();
-    } catch (error) { return {status: "error", pesan: "Gagal terhubung ke server: " + error.message}; }
+let listOPD = []; // Dikosongkan, karena akan ditarik otomatis dari Super Master
+
+// =========================================================================
+// 2. FUNGSI JEMBATAN API (SELALU MENGIRIMKAN KUNCI OPD)
+// =========================================================================
+async function fetchAPI(actionName, payloadData) {
+  let token = sessionStorage.getItem('authToken') || "";
+  // Ambil ID Spreadsheet OPD yang dipilih user di halaman awal
+  let targetSheetId = sessionStorage.getItem('targetSheetId') || ""; 
+
+  // Cegah request jika OPD belum dipilih (Kecuali saat ngambil daftar OPD di awal)
+  if(!targetSheetId && actionName !== "getDaftarOPD") {
+      return {status: "error", pesan: "Pilih OPD terlebih dahulu!"};
   }
 
-  let globalBulanAktif = "", globalHariKerja = 0, globalHariKerja6 = 0, globalStatusLock = "Buka", globalPotKorpri = 0, globalRefBulanGaji = "", globalJenisASN = "", asNIPAktif = "", statusTERAktif = "", objNominatifSetahun = null, baseTPP = {bk: 0, pk: 0, kk: 0, tb: 0, kp: 0, total: 0}, arrayPeriode = [], arrayUnitKerjaValid = [], arrayJabatanValid = [], isGajiTersimpan = false, isAbsenTersimpan = false;
-  let currentUser = { role: "", unitkerja: "", username: "", email: "", uuid: "" };
-
-  window.onload = () => { 
-    let opdSelect = document.getElementById('selectTenantOPD');
-    listOPD.forEach(opd => { opdSelect.innerHTML += `<option value="${opd.url}">${opd.nama}</option>`; });
-    let savedUrl = sessionStorage.getItem('tenantUrl');
-    if (savedUrl) { API_URL = savedUrl; inisialisasiAplikasi(); } 
-    else { document.querySelectorAll('#viewLogin, #viewPilihBulan, #viewDaftarPegawai, #viewMasterPergub, #viewManajemenASN, #viewSetting, #viewPanduan, #viewManajemenAkun, #appContainer, #mobileHeader, #mobileBottomNav').forEach(el => el.classList.add('hidden')); document.body.classList.remove('bg-gradient-login'); document.getElementById('viewLanding').classList.remove('hidden'); }
-  };
-
-  function ubahNamaOPD(element) { API_URL = element.value !== "" ? element.value : ""; }
-
-  async function masukKeLogin() {
-      if(!API_URL) return alertPeringatan("Silakan pilih Instansi / OPD Anda terlebih dahulu!");
-      sessionStorage.setItem('tenantUrl', API_URL); startLoading("Menghubungkan ke Database OPD..."); await inisialisasiAplikasi(); stopLoading();
-      document.getElementById('viewLanding').classList.add('hidden'); document.getElementById('viewLogin').classList.remove('hidden'); document.body.classList.add('bg-gradient-login');
+  try {
+    let response = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ 
+          action: actionName, 
+          payload: payloadData, 
+          token: token,
+          sheetId: targetSheetId // INI KUNCI UTAMANYA!
+      })
+    });
+    return await response.json();
+  } catch (error) { 
+    return {status: "error", pesan: "Gagal terhubung ke server: " + error.message}; 
   }
+}
 
-  function kembaliKeLanding() {
-      sessionStorage.clear(); 
-      API_URL = ""; 
-      document.getElementById('selectTenantOPD').value = "";
-      
-      let appCont = document.getElementById('appContainer');
-      if(appCont) appCont.classList.add('hidden');
-      
-      let mHeader = document.getElementById('mobileHeader');
-      if(mHeader) mHeader.classList.add('hidden');
-      
-      let mNav = document.getElementById('mobileBottomNav');
-      if(mNav) mNav.classList.add('hidden');
-      
-      document.getElementById('viewLogin').classList.add('hidden'); 
+// =========================================================================
+// 3. VARIABEL GLOBAL APLIKASI
+// =========================================================================
+let globalBulanAktif = "", globalHariKerja = 0, globalHariKerja6 = 0, globalStatusLock = "Buka", globalPotKorpri = 0, globalRefBulanGaji = "", globalJenisASN = "", asNIPAktif = "", statusTERAktif = "", objNominatifSetahun = null, baseTPP = {bk: 0, pk: 0, kk: 0, tb: 0, kp: 0, total: 0}, arrayPeriode = [], arrayUnitKerjaValid = [], arrayJabatanValid = [], isGajiTersimpan = false, isAbsenTersimpan = false;
+let currentUser = { role: "", unitkerja: "", username: "", email: "", uuid: "" };
+
+// =========================================================================
+// 4. SAAT APLIKASI PERTAMA KALI DIBUKA (AUTO-FETCH DAFTAR OPD)
+// =========================================================================
+window.onload = async () => { 
+  let savedSheetId = sessionStorage.getItem('targetSheetId');
+  let isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
+
+  if (savedSheetId && isLoggedIn) { 
+      inisialisasiAplikasi(); 
+  } else { 
+      document.querySelectorAll('#viewLogin, #viewPilihBulan, #viewDaftarPegawai, #viewMasterPergub, #viewManajemenASN, #viewSetting, #viewPanduan, #viewManajemenAkun, #appContainer, #mobileHeader, #mobileBottomNav').forEach(el => el.classList.add('hidden')); 
+      document.body.classList.remove('bg-gradient-login'); 
       document.getElementById('viewLanding').classList.remove('hidden'); 
-      document.body.classList.remove('bg-gradient-login');
-  }
-
-  function togglePassword(inputId, btn) { let inp = document.getElementById(inputId); let icon = btn.querySelector('i'); if(inp.type === "password") { inp.type = "text"; icon.classList.replace('bi-eye', 'bi-eye-slash'); } else { inp.type = "password"; icon.classList.replace('bi-eye-slash', 'bi-eye'); } }
-
-  async function doLogin(e) {
-    e.preventDefault(); startLoading("Memeriksa Akses..."); 
-    let u = document.getElementById('logUser').value; let p = document.getElementById('logPass').value;
-    let res = await fetchAPI("prosesLogin", {username: u, password: p});
-    stopLoading(); 
-    if(res.status === "sukses") {
-      sessionStorage.setItem('authToken', res.token); currentUser = res.user; 
-      document.getElementById('navInfoRole').innerText = currentUser.unitkerja; 
-      document.getElementById('mHeaderUnit').innerText = currentUser.unitkerja; 
       
-      let r = currentUser.role;
-      let isSuper = (r === "Super Admin");
-      let isOpd = (r === "Admin OPD");
+      // TARIK DAFTAR OPD DARI SUPER MASTER SECARA DINAMIS
+      startLoading("Menghubungkan ke Server Provinsi...");
+      let res = await fetchAPI("getDaftarOPD", {});
+      stopLoading();
 
-      if(isSuper) { document.getElementById('btnMasterAdmin').classList.remove('hidden'); document.getElementById('btnAkunAdmin').classList.remove('hidden'); } 
-      else { document.getElementById('btnMasterAdmin').classList.add('hidden'); document.getElementById('btnAkunAdmin').classList.add('hidden'); }
-      
-      document.getElementById('btnSettingAdmin').classList.remove('hidden');
-      document.getElementById('mHeaderAdminIcons').classList.remove('hidden');
-      
-      let iconMasterHP = document.querySelector('i[onclick="switchView(\'viewMasterPergub\')"]');
-      let iconAkunHP = document.querySelector('i[onclick="muatDaftarAkun()"]');
+      let opdSelect = document.getElementById('selectTenantOPD');
+      opdSelect.innerHTML = '<option value="">-- PILIH OPD --</option>';
 
-      if(isSuper || isOpd) { 
-          document.getElementById('btnTambahBulan').classList.remove('hidden'); 
-          document.getElementById('btnKelolaBulan').classList.remove('hidden'); 
-          if(iconMasterHP && (isSuper || isOpd)) iconMasterHP.classList.remove('hidden'); else if(iconMasterHP) iconMasterHP.classList.add('hidden');
-          if(iconAkunHP && isSuper) iconAkunHP.classList.remove('hidden'); else if(iconAkunHP) iconAkunHP.classList.add('hidden');
-      } else { 
-          document.getElementById('btnTambahBulan').classList.add('hidden'); 
-          document.getElementById('btnKelolaBulan').classList.add('hidden'); 
-          if(iconMasterHP) iconMasterHP.classList.add('hidden');
-          if(iconAkunHP) iconAkunHP.classList.add('hidden');
+      if (res && res.status === "sukses") {
+          listOPD = res.data;
+          listOPD.forEach(opd => { 
+              // Simpan ID Spreadsheet ke dalam value dropdown
+              opdSelect.innerHTML += `<option value="${opd.sheetId}">${opd.nama}</option>`; 
+          });
+      } else {
+          opdSelect.innerHTML = '<option value="">Gagal memuat OPD</option>';
+          alertError("Gagal mengambil daftar OPD: " + (res.pesan || "Cek koneksi internet"));
       }
-
-      document.getElementById('viewLogin').classList.add('hidden'); document.getElementById('mainNav').classList.remove('hidden');
-      sessionStorage.setItem('isLoggedIn', 'true'); sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
-      switchView('viewPilihBulan'); inisialisasiAplikasi();
-    } else { alertError(res.pesan); }
   }
+};
+
+// =========================================================================
+// 5. NAVIGASI LANDING & LOGIN
+// =========================================================================
+function ubahNamaOPD(element) { 
+  if(element.value !== "") {
+      sessionStorage.setItem('targetSheetId', element.value); 
+  } else {
+      sessionStorage.removeItem('targetSheetId');
+  }
+}
+
+async function masukKeLogin() {
+  let target = sessionStorage.getItem('targetSheetId');
+  if(!target) return alertPeringatan("Silakan pilih Instansi / OPD Anda terlebih dahulu!");
+  
+  startLoading("Menghubungkan ke Database OPD..."); 
+  await inisialisasiAplikasi(); 
+  stopLoading();
+  
+  document.getElementById('viewLanding').classList.add('hidden'); 
+  document.getElementById('viewLogin').classList.remove('hidden'); 
+  document.body.classList.add('bg-gradient-login');
+}
+
+function kembaliKeLanding() {
+  sessionStorage.clear(); 
+  document.getElementById('selectTenantOPD').value = "";
+  
+  let appCont = document.getElementById('appContainer');
+  if(appCont) appCont.classList.add('hidden');
+  
+  let mHeader = document.getElementById('mobileHeader');
+  if(mHeader) mHeader.classList.add('hidden');
+  
+  let mNav = document.getElementById('mobileBottomNav');
+  if(mNav) mNav.classList.add('hidden');
+  
+  document.getElementById('viewLogin').classList.add('hidden'); 
+  document.getElementById('viewLanding').classList.remove('hidden'); 
+  document.body.classList.remove('bg-gradient-login');
+}
+
+function togglePassword(inputId, btn) { 
+  let inp = document.getElementById(inputId); let icon = btn.querySelector('i'); 
+  if(inp.type === "password") { inp.type = "text"; icon.classList.replace('bi-eye', 'bi-eye-slash'); } 
+  else { inp.type = "password"; icon.classList.replace('bi-eye-slash', 'bi-eye'); } 
+}
+
+async function doLogin(e) {
+  e.preventDefault(); startLoading("Memeriksa Akses..."); 
+  let u = document.getElementById('logUser').value; 
+  let p = document.getElementById('logPass').value;
+  
+  let res = await fetchAPI("prosesLogin", {username: u, password: p});
+  stopLoading(); 
+  
+  if(res.status === "sukses") {
+    sessionStorage.setItem('authToken', res.token); currentUser = res.user; 
+    document.getElementById('navInfoRole').innerText = currentUser.unitkerja; 
+    document.getElementById('mHeaderUnit').innerText = currentUser.unitkerja; 
+    
+    let r = currentUser.role;
+    let isSuper = (r === "Super Admin");
+    let isOpd = (r === "Admin OPD");
+
+    if(isSuper) { document.getElementById('btnMasterAdmin').classList.remove('hidden'); document.getElementById('btnAkunAdmin').classList.remove('hidden'); } 
+    else { document.getElementById('btnMasterAdmin').classList.add('hidden'); document.getElementById('btnAkunAdmin').classList.add('hidden'); }
+    
+    document.getElementById('btnSettingAdmin').classList.remove('hidden');
+    document.getElementById('mHeaderAdminIcons').classList.remove('hidden');
+    
+    let iconMasterHP = document.querySelector('i[onclick="switchView(\'viewMasterPergub\')"]');
+    let iconAkunHP = document.querySelector('i[onclick="muatDaftarAkun()"]');
+
+    if(isSuper || isOpd) { 
+        document.getElementById('btnTambahBulan').classList.remove('hidden'); 
+        document.getElementById('btnKelolaBulan').classList.remove('hidden'); 
+        if(iconMasterHP && (isSuper || isOpd)) iconMasterHP.classList.remove('hidden'); else if(iconMasterHP) iconMasterHP.classList.add('hidden');
+        if(iconAkunHP && isSuper) iconAkunHP.classList.remove('hidden'); else if(iconAkunHP) iconAkunHP.classList.add('hidden');
+    } else { 
+        document.getElementById('btnTambahBulan').classList.add('hidden'); 
+        document.getElementById('btnKelolaBulan').classList.add('hidden'); 
+        if(iconMasterHP) iconMasterHP.classList.add('hidden');
+        if(iconAkunHP) iconAkunHP.classList.add('hidden');
+    }
+
+    document.getElementById('viewLogin').classList.add('hidden'); 
+    document.getElementById('mainNav').classList.remove('hidden');
+    sessionStorage.setItem('isLoggedIn', 'true'); 
+    sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+    switchView('viewPilihBulan'); 
+    inisialisasiAplikasi();
+  } else { 
+    alertError(res.pesan); 
+  }
+}
 
   function logoutApp() { 
     Swal.fire({ 

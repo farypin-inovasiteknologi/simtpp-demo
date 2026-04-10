@@ -2,7 +2,7 @@
 // 1. KONFIGURASI SUPER MASTER (CUKUP 1 URL UNTUK SELURUH PROVINSI)
 // =========================================================================
 // Masukkan URL hasil Deploy Super Master Anda di sini:
-const API_URL = "https://script.google.com/macros/s/AKfycbyBUvKN3rXlelbIfLuNauR1IVmRYxUXsXrxwi0XxTq_3Niw3KRQV6a7P64PpQj71kHVMQ/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbzb4SAuxvVGhOvsKfH_KGZEcQymYSLCGtaL_Q4McV_B8A8_KYpHFtCa8AI-GoI27Rvb8w/exec"; 
 
 let listOPD = []; // Dikosongkan, karena akan ditarik otomatis dari Super Master
 
@@ -142,8 +142,13 @@ async function doLogin(e) {
     let isSuper = (r === "Super Admin");
     let isOpd = (r === "Admin OPD");
 
-    if(isSuper) { document.getElementById('btnMasterAdmin').classList.remove('hidden'); document.getElementById('btnAkunAdmin').classList.remove('hidden'); } 
-    else { document.getElementById('btnMasterAdmin').classList.add('hidden'); document.getElementById('btnAkunAdmin').classList.add('hidden'); }
+    // Super Admin bisa lihat Master TPP
+    if(isSuper) { document.getElementById('btnMasterAdmin').classList.remove('hidden'); } 
+    else { document.getElementById('btnMasterAdmin').classList.add('hidden'); }
+    
+    // Super Admin DAN Admin OPD bisa lihat Kelola Akun
+    if(isSuper || isOpd) { document.getElementById('btnAkunAdmin').classList.remove('hidden'); }
+    else { document.getElementById('btnAkunAdmin').classList.add('hidden'); }
     
     document.getElementById('btnSettingAdmin').classList.remove('hidden');
     document.getElementById('mHeaderAdminIcons').classList.remove('hidden');
@@ -151,16 +156,14 @@ async function doLogin(e) {
     let iconMasterHP = document.querySelector('i[onclick="switchView(\'viewMasterPergub\')"]');
     let iconAkunHP = document.querySelector('i[onclick="muatDaftarAkun()"]');
 
+    // (Cari bagian ini di dalam doLogin dan terapkanDataInit)
     if(isSuper || isOpd) { 
-        document.getElementById('btnTambahBulan').classList.remove('hidden'); 
-        document.getElementById('btnKelolaBulan').classList.remove('hidden'); 
-        if(iconMasterHP && (isSuper || isOpd)) iconMasterHP.classList.remove('hidden'); else if(iconMasterHP) iconMasterHP.classList.add('hidden');
-        if(iconAkunHP && isSuper) iconAkunHP.classList.remove('hidden'); else if(iconAkunHP) iconAkunHP.classList.add('hidden');
+        document.getElementById('btnSettingAdmin').classList.remove('hidden'); 
+        if(document.getElementById('mHeaderAdminIcons')) document.getElementById('mHeaderAdminIcons').classList.remove('hidden');
     } else { 
-        document.getElementById('btnTambahBulan').classList.add('hidden'); 
-        document.getElementById('btnKelolaBulan').classList.add('hidden'); 
-        if(iconMasterHP) iconMasterHP.classList.add('hidden');
-        if(iconAkunHP) iconAkunHP.classList.add('hidden');
+        document.getElementById('btnSettingAdmin').classList.add('hidden'); 
+        // Sembunyikan juga ikon gear di layar HP
+        if(document.getElementById('mHeaderAdminIcons')) document.getElementById('mHeaderAdminIcons').classList.add('hidden');
     }
 
     document.getElementById('viewLogin').classList.add('hidden'); 
@@ -860,7 +863,42 @@ async function doLogin(e) {
     });
   }
 
-  function validasiNIP(input) { let nilaiBersih = input.value.replace(/[\s-]/g, ''); input.value = nilaiBersih; if (nilaiBersih !== "") { let isAngka = /^\d+$/.test(nilaiBersih); if (!isAngka || nilaiBersih.length !== 18) { alertPeringatan("Perhatian! NIP wajib terdiri dari tepat 18 digit angka murni."); input.classList.add('border-danger'); } else { input.classList.remove('border-danger'); } } }
+  // Paste kode ini di js_main.js Anda
+
+// 1. Kunci keyboard saat ngetik (Mentok 18 angka & nolak huruf)
+document.addEventListener('DOMContentLoaded', function() {
+    let inputNip = document.getElementById('mNip');
+    if(inputNip) {
+        inputNip.addEventListener('input', function(e) {
+            // Hapus semua huruf/simbol, sisakan angka saja
+            this.value = this.value.replace(/[^0-9]/g, ''); 
+            
+            // Kunci mentok di 18 karakter
+            if(this.value.length > 18) {
+                this.value = this.value.slice(0, 18); 
+            }
+        });
+    }
+});
+
+// 2. Peringatan saat user pindah kolom (onblur)
+function validasiNIP(input) { 
+    let nilaiBersih = input.value.replace(/[^0-9]/g, ''); 
+    input.value = nilaiBersih; 
+    
+    if (nilaiBersih !== "") { 
+        if (nilaiBersih.length !== 18) { 
+            // Jika kurang dari 18 digit
+            alertPeringatan("Perhatian! NIP wajib terdiri dari TEPAT 18 digit angka murni. Saat ini baru " + nilaiBersih.length + " digit."); 
+            input.classList.add('border-danger', 'is-invalid'); 
+            input.classList.remove('border-primary');
+        } else { 
+            // Jika pas 18 digit
+            input.classList.remove('border-danger', 'is-invalid'); 
+            input.classList.add('border-success', 'is-valid');
+        } 
+    } 
+}
 
   async function inisialisasiAplikasi() {
     let bAktif = sessionStorage.getItem('globalBulanAktif') || "";
@@ -1427,7 +1465,20 @@ async function doLogin(e) {
     }
   }
 
-  function terapkanFilterAkun() { let cari = document.getElementById('filterCariAkun').value.toLowerCase(); let filtered = globalDataAkun.filter(row => String(row[0]).toLowerCase().includes(cari) || String(row[3]).toLowerCase().includes(cari)); renderTabelAkun(filtered); }
+  function terapkanFilterAkun() { 
+      let cari = document.getElementById('filterCariAkun').value.toLowerCase(); 
+      let filtered = globalDataAkun.filter(row => { 
+          let roleAkun = String(row[2]).trim();
+          
+          // 👇 KUNCI RAHASIA: Kalau yang login Admin OPD, Super Admin otomatis Ghaib!
+          if (currentUser.role === "Admin OPD" && roleAkun === "Super Admin") {
+              return false; 
+          }
+
+          return String(row[0]).toLowerCase().includes(cari) || String(row[3]).toLowerCase().includes(cari); 
+      }); 
+      renderTabelAkun(filtered); 
+  }
 
   function renderTabelAkun(data) {
     let tbody = document.getElementById('tabelBodyAkun'); if(!data.length) { document.getElementById('infoPaginationAkun').innerText = "Menampilkan 0 data"; document.getElementById('btnPaginationAkun').innerHTML = ""; return tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger fw-bold">Data tidak ditemukan.</td></tr>'; }
@@ -1487,17 +1538,15 @@ async function doLogin(e) {
       let iconMasterHP = document.querySelector('i[onclick="switchView(\'viewMasterPergub\')"]');
       let iconAkunHP = document.querySelector('i[onclick="muatDaftarAkun()"]');
 
-      if(isSuper || isOpd) { 
-          document.getElementById('btnTambahBulan').classList.remove('hidden'); 
-          document.getElementById('btnKelolaBulan').classList.remove('hidden'); 
-          if(iconMasterHP && (isSuper || isOpd)) iconMasterHP.classList.remove('hidden'); else if(iconMasterHP) iconMasterHP.classList.add('hidden');
-          if(iconAkunHP && isSuper) iconAkunHP.classList.remove('hidden'); else if(iconAkunHP) iconAkunHP.classList.add('hidden');
-      } else { 
-          document.getElementById('btnTambahBulan').classList.add('hidden'); 
-          document.getElementById('btnKelolaBulan').classList.add('hidden'); 
-          if(iconMasterHP) iconMasterHP.classList.add('hidden');
-          if(iconAkunHP) iconAkunHP.classList.add('hidden');
-      }
+      // (Cari bagian ini di dalam doLogin dan terapkanDataInit)
+    if(isSuper || isOpd) { 
+        document.getElementById('btnSettingAdmin').classList.remove('hidden'); 
+        if(document.getElementById('mHeaderAdminIcons')) document.getElementById('mHeaderAdminIcons').classList.remove('hidden');
+    } else { 
+        document.getElementById('btnSettingAdmin').classList.add('hidden'); 
+        // Sembunyikan juga ikon gear di layar HP
+        if(document.getElementById('mHeaderAdminIcons')) document.getElementById('mHeaderAdminIcons').classList.add('hidden');
+    }
 
       document.getElementById('viewLogin').classList.add('hidden'); 
       document.getElementById('viewLanding').classList.add('hidden'); 
@@ -1598,9 +1647,21 @@ async function doLogin(e) {
   function bukaModalAkun(aksi, user="", role="Operator", unit="", email="", uuid="") {
     document.getElementById('uAksi').value = aksi; 
     document.getElementById('uUser').value = user; 
-    document.getElementById('uRole').value = role; 
     document.getElementById('uEmail').value = email; 
     document.getElementById('uUuid').value = uuid;
+    
+    let optRole = document.getElementById('uRole');
+    
+    // 👇 Sembunyikan Opsi Super Admin dari Dropdown jika yang login Admin OPD
+    for (let i = 0; i < optRole.options.length; i++) {
+        if (optRole.options[i].value === "Super Admin") {
+            optRole.options[i].style.display = (currentUser.role === "Admin OPD") ? "none" : "block";
+        }
+    }
+    
+    // Setel default role agar tidak error
+    if (currentUser.role === "Admin OPD" && role === "Super Admin") role = "Operator";
+    optRole.value = role; 
     
     let passInp = document.getElementById('uPass'); 
     if(aksi === 'edit') { 

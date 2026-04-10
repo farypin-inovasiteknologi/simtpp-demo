@@ -147,7 +147,7 @@ function cetakTTDAman(sheet, startRow, setting, colMax) {
 }
 
 // ==============================================================
-// 1. FUNGSI EXCEL: DAFTAR NOMINATIF (RUMUS EXCEL + AUTO FIT)
+// 1. FUNGSI EXCEL: DAFTAR NOMINATIF (RUMUS EXCEL MURNI + AUTO FIT)
 // ==============================================================
 async function buatExcelNominatifJS(res) {
     try {
@@ -160,9 +160,9 @@ async function buatExcelNominatifJS(res) {
         const colWidths = [5, 35, 15, 30, 15, 12, 12, 12, 12, 12, 15, 12, 15, 12, 12, 12, 15, 18];
         colWidths.forEach((w, i) => { sheet.getColumn(i + 1).width = w; });
 
-        sheet.mergeCells('A1:R1'); sheet.getCell('A1').value = `DAFTAR NOMINATIF TPP ${getStr(res.setting.Nama_Dinas)} PEMERINTAH PROVINSI JAMBI`;
-        sheet.mergeCells('A2:R2'); sheet.getCell('A2').value = `${getStr(res.jenisASN)} ${getStr(res.unitCetak)}`;
-        sheet.mergeCells('A3:R3'); sheet.getCell('A3').value = `PERIODE BULAN: ${getStr(res.bulanBesar)}`;
+        sheet.mergeCells('A1:R1'); sheet.getCell('A1').value = `DAFTAR NOMINATIF TPP ${cleanStr(res.setting.Nama_Dinas)} PEMERINTAH PROVINSI JAMBI`;
+        sheet.mergeCells('A2:R2'); sheet.getCell('A2').value = `${cleanStr(res.jenisASN)} ${cleanStr(res.unitCetak)}`;
+        sheet.mergeCells('A3:R3'); sheet.getCell('A3').value = `PERIODE BULAN: ${cleanStr(res.bulanBesar)}`;
         
         for (let i = 1; i <= 3; i++) {
             let cell = sheet.getCell(i, 1);
@@ -199,7 +199,7 @@ async function buatExcelNominatifJS(res) {
         groups.forEach(g => rekapData[g] = []); 
 
         res.data.forEach(c => {
-            let golDasar = getStr(c.golonganAsli).split("/")[0].trim().toUpperCase();
+            let golDasar = cleanStr(c.golonganAsli).split("/")[0].trim().toUpperCase();
             let groupName = (res.jenisASN === "PPPK") ? getGroupPPPK(golDasar) : (golDasar.includes("IX") || golDasar.includes("X") ? "PPPK" : golDasar);
             if (rekapData[groupName]) rekapData[groupName].push(c);
         });
@@ -217,15 +217,15 @@ async function buatExcelNominatifJS(res) {
                 let startRowGroup = curRow;
 
                 arr.forEach(c => {
-                    let isKawin = getStr(c.statusTER).startsWith("K");
+                    let isKawin = cleanStr(c.statusTER).startsWith("K");
                     let jmlJiwa = (isKawin ? 2 : 1) + getNum(c.tanggungAnak);
                     let rasio = getNum(c.tppBruto) > 0 ? (getNum(c.tppNettoKinerja) / getNum(c.tppBruto)) : 0;
 
                     let rowData = [
                         no++,
-                        `${getStr(c.nama)}\n${getStr(c.tglLahir)}\nNIP. ${getStr(c.nip)}\n${getStr(res.jenisASN)} - Gol. ${getStr(c.golonganAsli)}`,
-                        `${getStr(c.statusTER)}\nJiwa: ${jmlJiwa}`,
-                        getStr(c.jabatan),
+                        `${cleanStr(c.nama)}\n${cleanStr(c.tglLahir)}\nNIP. ${cleanStr(c.nip)}\n${cleanStr(res.jenisASN)} - Gol. ${cleanStr(c.golonganAsli)}`,
+                        `${cleanStr(c.statusTER)}\nJiwa: ${jmlJiwa}`,
+                        cleanStr(c.jabatan),
                         getNum(c.gajiKotor),
                         Math.round(getNum(c.bk) * rasio),
                         Math.round(getNum(c.pk) * rasio),
@@ -245,11 +245,11 @@ async function buatExcelNominatifJS(res) {
                     for (let i = 0; i < 18; i++) {
                         let cell = sheet.getCell(curRow, i + 1);
 
-                        // RUMUS EXCEL
-                        if (i === 10) { cell.value = { formula: `SUM(F${curRow}:J${curRow})`, result: rowData[i] }; } 
-                        else if (i === 12) { cell.value = { formula: `K${curRow}+L${curRow}`, result: rowData[i] }; } 
-                        else if (i === 16) { cell.value = { formula: `SUM(N${curRow}:P${curRow})`, result: rowData[i] }; } 
-                        else if (i === 17) { cell.value = { formula: `M${curRow}-Q${curRow}`, result: rowData[i] }; } 
+                        // RUMUS EXCEL TANPA "result" AGAR TIDAK CORRUPT
+                        if (i === 10) { cell.value = { formula: `SUM(F${curRow}:J${curRow})` }; } 
+                        else if (i === 12) { cell.value = { formula: `K${curRow}+L${curRow}` }; } 
+                        else if (i === 16) { cell.value = { formula: `SUM(N${curRow}:P${curRow})` }; } 
+                        else if (i === 17) { cell.value = { formula: `M${curRow}-Q${curRow}` }; } 
                         else { cell.value = rowData[i]; }
 
                         cell.alignment = { vertical: 'middle', wrapText: true, horizontal: (i===1||i===3) ? 'left' : (i>=4 ? 'right' : 'center') };
@@ -262,10 +262,11 @@ async function buatExcelNominatifJS(res) {
                             maxChars[i + 1] = Math.max(maxChars[i + 1], formatDigit(rowData[i]).length);
                         }
                     }
-                    sheet.getRow(curRow).height = 85; // Tinggi 85 Pixel
+                    sheet.getRow(curRow).height = 85; 
                     curRow++;
                 });
 
+                // MENGGUNAKAN RUMUS EXCEL PADA SUB-TOTAL
                 sheet.mergeCells(`A${curRow}:D${curRow}`);
                 let cellSub = sheet.getCell(curRow, 1);
                 cellSub.value = `SUB-TOTAL GOLONGAN ${g}`;
@@ -278,7 +279,11 @@ async function buatExcelNominatifJS(res) {
                     cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
                     if (c >= 5) {
                         let colLtr = numToLet(c - 1);
-                        cell.value = { formula: `SUM(${colLtr}${startRowGroup}:${colLtr}${curRow-1})`, result: subTotals[c - 5] };
+                        if (startRowGroup <= curRow - 1) {
+                            cell.value = { formula: `SUM(${colLtr}${startRowGroup}:${colLtr}${curRow-1})` };
+                        } else {
+                            cell.value = 0;
+                        }
                         cell.font = { bold: true };
                         cell.numFmt = '#,##0';
                         cell.alignment = { horizontal: 'right', vertical: 'middle' };
@@ -303,8 +308,12 @@ async function buatExcelNominatifJS(res) {
             cell.border = { top: {style:'medium'}, left: {style:'thin'}, bottom: {style:'medium'}, right: {style:'thin'} };
             if (c >= 5) {
                 let colLtr = numToLet(c - 1);
-                let grandFormula = subTotalRows.length > 0 ? subTotalRows.map(r => `${colLtr}${r}`).join('+') : "0";
-                cell.value = { formula: grandFormula, result: grandTotals[c - 5] };
+                if (subTotalRows.length > 0) {
+                    let grandFormula = subTotalRows.length === 1 ? `SUM(${colLtr}${subTotalRows[0]})` : subTotalRows.map(r => `${colLtr}${r}`).join('+');
+                    cell.value = { formula: grandFormula };
+                } else {
+                    cell.value = 0;
+                }
                 cell.font = { bold: true };
                 cell.numFmt = '#,##0';
                 cell.alignment = { horizontal: 'right', vertical: 'middle' };
@@ -312,7 +321,7 @@ async function buatExcelNominatifJS(res) {
         }
         sheet.getRow(curRow).height = 30;
 
-        // AUTO-SHRINK (CIUT 0) & AUTO-FIT
+        // AUTO-SHRINK (CIUT 0) & AUTO-FIT (PRESISI)
         for (let c = 5; c <= 18; c++) {
             if (grandTotals[c - 5] === 0) {
                 sheet.getColumn(c).width = 4;
@@ -418,8 +427,9 @@ async function buatExcelRekapGolonganJS(res) {
             for (let i = 0; i < 12; i++) {
                 let cell = sheet.getCell(curRow, i + 1);
 
+                // RUMUS EXCEL TANPA "result" AGAR TIDAK CORRUPT
                 if (i === 8) { 
-                    cell.value = { formula: `SUM(D${curRow}:H${curRow})`, result: rowData[i] };
+                    cell.value = { formula: `SUM(D${curRow}:H${curRow})` };
                 } else {
                     cell.value = rowData[i];
                 }
@@ -452,7 +462,7 @@ async function buatExcelRekapGolonganJS(res) {
             
             if (c >= 3) {
                 let colLtr = numToLet(c - 1);
-                cell.value = { formula: `SUM(${colLtr}7:${colLtr}${curRow-1})`, result: grandTotals[c - 3] };
+                cell.value = { formula: `SUM(${colLtr}7:${colLtr}${curRow-1})` };
                 cell.font = { bold: true };
                 cell.alignment = { horizontal: c === 3 ? 'center' : 'right', vertical: 'middle' };
                 if (c >= 4) cell.numFmt = '#,##0';

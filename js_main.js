@@ -1,7 +1,7 @@
 const listOPD = [
       { nama: "Badan Kepegawaian Daerah", url: "https://script.google.com/macros/s/AKfycbw4PkelgARfgw65YLreJJ9GG7OynQDnEYtmYqz1fpoSnRLgH0cbltEBSpzciq0pPOXk9w/exec" },
       { nama: "Dinas Pendidikan", url: "https://script.google.com/macros/s/AKfycbwdAwCvzT3TBmxCc6uaTfD-7IE3f7iByNGgHCKW8Asnbo5zyDhj6m-bRJIcMS74-LfyZA/exec" },
-      { nama: "Uji Coba", url: "https://script.google.com/macros/s/AKfycbxxUMPhZztUE6JzrpcmKEQNoRTdGLLY4pZJWOda8vyks8kAqoAT6z5ZySgJsv7ZQkzq/exec"}
+      { nama: "Uji Coba", url: "https://script.google.com/macros/s/AKfycbzA86gasy5YvTg06ey2lGA4-mmRRfA9O8UrgtMw9wBbGlNZ__78eWGL9l_HTVuHzowa/exec"}
   ];
 
   let API_URL = ""; 
@@ -1135,7 +1135,7 @@ const listOPD = [
   }
 
   // =========================================================
-  // FUNGSI 2: IMPORT EXCEL BKD - AUTO REFRESH
+  // FUNGSI: IMPORT EXCEL (BKD / MASTER / AKUN) - AUTO REFRESH
   // =========================================================
   async function prosesImportExcel(fileInputElemen = null, periodeTarget = null, periodeDataTerbaru = null, btnSubmitModal = null) {
       let fileInput = fileInputElemen || document.getElementById('fileImport'); 
@@ -1144,7 +1144,7 @@ const listOPD = [
       let jenis = document.getElementById('importJenis').value; 
       let file = fileInput.files[0]; 
       
-      // Jika dipanggil dari Modal Tambah Periode
+      // Jika dipanggil dari Modal Tambah Periode, paksa mode "pegawai"
       if (periodeTarget) jenis = 'pegawai';
       let bulanTarget = periodeTarget || globalBulanAktif;
 
@@ -1200,7 +1200,7 @@ const listOPD = [
                       unitkerja: String(row[8] || "").trim(),     
                       unorInduk: String(row[10] || "").trim(),    
                       skp: String(row[16] || "").trim(),          
-                      golongan: String(row[30] || "").trim(),      
+                      golongan: String(row[30] || "").trim(),      // <--- AMAN! INDEKS 30 (KOLOM AE)
                       statusPegawai: statusPegawaiVal,             
                       tglLahir: "", namaJabatan: "", jenisJab: "Struktural", statusKawin: "TK/0 = 1", gapok: 0, tjJab: 0, rekening: ""
                   });
@@ -1224,7 +1224,7 @@ const listOPD = [
                   alertSukses(`Data SKP berhasil diimpor ke bulan ${bulanTarget}!`); 
               }
 
-              // JIKA BERASAL DARI MODAL TAMBAH PERIODE
+              // JIKA BERASAL DARI MODAL TAMBAH PERIODE (AUTO REFRESH!)
               if (periodeTarget && periodeDataTerbaru) {
                   let modalObj = bootstrap.Modal.getInstance(document.getElementById('modalTambahPeriode'));
                   if(modalObj) modalObj.hide();
@@ -1234,22 +1234,18 @@ const listOPD = [
                   document.getElementById('formTambahPeriode').reset();
                   toggleSumberData();
                   
-                  // Paksa Cache Hancur & Pindah Halaman
                   window.cacheDataPegawaiAll = null; 
                   globalBulanAktif = bulanTarget;
                   sessionStorage.setItem('globalBulanAktif', globalBulanAktif);
-                  masukAplikasi();
+                  masukAplikasi(); // Langsung pindah ke tabel pegawai
               } 
               // JIKA BERASAL DARI MENU IMPORT BIASA
               else {
                   let modalObj = bootstrap.Modal.getInstance(document.getElementById('modalImportExcel'));
                   if(modalObj) modalObj.hide();
-                  
-                  // Paksa Muat Ulang Data dari Server Tanpa Cache!
-                  muatDataPegawai(true); 
+                  muatDataPegawai(true); // Paksa narik data baru dari server
               }
-          }
-
+          } 
           else if(jenis === 'pergub') {
               for(let i = 1; i < data2D.length; i++) { 
                   let row = data2D[i]; 
@@ -1270,6 +1266,7 @@ const listOPD = [
           }
       } catch(e) {
           stopLoading();
+          if(btnSubmitModal) btnSubmitModal.disabled = false;
           alertError("Gagal memproses file Excel: " + e.message);
       }
   }

@@ -1,5 +1,4 @@
-
-  function showDownloadModal(url) { let modalEl = document.getElementById('modalDownloadReady'); if(modalEl) { document.getElementById('btnRealDownload').href = url; let modalObj = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl); modalObj.show(); } else { window.open(url, '_blank'); } }
+function showDownloadModal(url) { let modalEl = document.getElementById('modalDownloadReady'); if(modalEl) { document.getElementById('btnRealDownload').href = url; let modalObj = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl); modalObj.show(); } else { window.open(url, '_blank'); } }
   function tutupModalDownload() { setTimeout(() => { let modalEl = document.getElementById('modalDownloadReady'); let modal = bootstrap.Modal.getInstance(modalEl); if(modal) modal.hide(); }, 1000); }
 
   async function downloadLaporan(jenis, format, e) { if(e) e.preventDefault(); if(!globalBulanAktif) return alertPeringatan("Pilih bulan terlebih dahulu!"); startLoading("Menyiapkan File..."); let urls = await fetchAPI("cetakKeSheet", {jenis: jenis, bulanAktif: globalBulanAktif}); stopLoading(); if(urls && urls[format.toLowerCase()]) { showDownloadModal(urls[format.toLowerCase()]); } else { alertError("❌ Gagal."); } }
@@ -33,12 +32,15 @@
       }).catch(err => { alertError("Gagal men-generate Excel: " + err); });
   }
 
+  // ==============================================================
+  // UI COUNTER & PROGRESS BAR
+  // ==============================================================
   function showLoadingPhase1() {
       Swal.fire({ 
           title: 'Menyiapkan Laporan...', 
-          html: `<div id="loadStatus" class="fw-bold text-primary mb-2 fs-6">1. Sedang menarik data dari Server...</div>
-                 <h2 class="text-success fw-bold hidden mt-3" id="progressCounter">0 / 0</h2>
-                 <div class="progress mt-2 hidden" id="progressContainer" style="height: 12px; border-radius: 10px;">
+          html: `<div id="loadStatus" class="fw-bold text-primary mb-2 fs-6">1. Menarik data dari Server... (Mohon tunggu)</div>
+                 <h4 class="text-success fw-bold hidden mt-3" id="progressCounter">Memproses: 0 / 0</h4>
+                 <div class="progress mt-2 hidden shadow-sm" id="progressContainer" style="height: 18px; border-radius: 10px; background-color: #e9ecef;">
                     <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" style="width: 0%"></div>
                  </div>`, 
           allowOutsideClick: false, showConfirmButton: false, didOpen: () => { Swal.showLoading(); } 
@@ -48,24 +50,33 @@
   function switchToPhase2(totalData) {
       let statusEl = document.getElementById('loadStatus');
       if(statusEl) {
-          statusEl.innerText = "2. Sedang menggambar Excel ke laptop...";
+          statusEl.innerText = "2. Menyusun File Excel...";
           statusEl.className = "fw-bold text-success mb-2 fs-6";
           document.getElementById('progressCounter').classList.remove('hidden');
           document.getElementById('progressContainer').classList.remove('hidden');
-          document.getElementById('progressCounter').innerText = `0 / ${totalData}`;
+          document.getElementById('progressCounter').innerText = `Memproses: 0 / ${totalData}`;
       }
   }
 
   function updateProgress(current, total) {
       let counterEl = document.getElementById('progressCounter');
       let barEl = document.getElementById('progressBar');
-      if(counterEl) counterEl.innerText = `${current} / ${total}`;
+      if(counterEl) counterEl.innerText = `Memproses: ${current} / ${total}`;
       if(barEl) barEl.style.width = `${Math.round((current / total) * 100)}%`;
   }
 
+  // ==============================================================
+  // TRIGGER DOWNLOAD
+  // ==============================================================
   async function fetchDataLaporan(format, e, funcExcel, funcPdf) {
       if(e) e.preventDefault(); 
       if(!globalBulanAktif) return alertPeringatan("Pilih bulan terlebih dahulu!"); 
+      
+      // Jika PDF Kolektif diklik, berikan peringatan karena format tabel terlalu lebar
+      if (format === 'pdf' && funcPdf === null) {
+          return alertPeringatan("Fitur PDF massal dinonaktifkan karena jumlah kolom terlalu banyak untuk muat di kertas. Silakan unduh format Excel.");
+      }
+
       let fUnit = document.getElementById('filterUnitKerja').value; 
       
       showLoadingPhase1(); 
@@ -179,7 +190,10 @@
                       if (cell.value === undefined && colN >= 5) cell.value = 0;
                   });
                   currentRow++; progressCount++;
-                  if (progressCount % 5 === 0 || progressCount === totalData) { updateProgress(progressCount, totalData); await new Promise(r => setTimeout(r, 0)); }
+                  
+                  // UPDATE COUNTER & YIELD KE BROWSER SETIAP 2 DATA (AGAR ANIMASI TIDAK FREEZE)
+                  updateProgress(progressCount, totalData); 
+                  if (progressCount % 2 === 0 || progressCount === totalData) { await new Promise(r => setTimeout(r, 0)); }
               }
 
               let rowSub = sheet.getRow(currentRow);
@@ -270,7 +284,9 @@
               if(cell.value === undefined) cell.value = 0;
           });
           currentRow++; progressCount++;
-          updateProgress(progressCount, totalGol); await new Promise(resolve => setTimeout(resolve, 0));
+          
+          updateProgress(progressCount, totalGol); 
+          await new Promise(resolve => setTimeout(resolve, 0));
       }
 
       let rGrand = sheet.getRow(currentRow);
@@ -330,7 +346,9 @@
               if (cell.value === undefined) cell.value = 0;
           });
           currentRow++; progressCount++;
-          if (progressCount % 10 === 0 || progressCount === totalData) { updateProgress(progressCount, totalData); await new Promise(resolve => setTimeout(resolve, 0)); }
+          
+          updateProgress(progressCount, totalData); 
+          if (progressCount % 2 === 0 || progressCount === totalData) { await new Promise(resolve => setTimeout(resolve, 0)); }
       }
 
       let rGrand = sheet.getRow(currentRow);
@@ -397,7 +415,9 @@
               if(cell.value === undefined) cell.value = ""; 
           });
           currentRow++; progressCount++;
-          if (progressCount % 10 === 0 || progressCount === totalData) { updateProgress(progressCount, totalData); await new Promise(resolve => setTimeout(resolve, 0)); }
+          
+          updateProgress(progressCount, totalData); 
+          if (progressCount % 2 === 0 || progressCount === totalData) { await new Promise(resolve => setTimeout(resolve, 0)); }
       }
 
       let rGrand = sheet.getRow(currentRow);
@@ -535,7 +555,9 @@
                       if(cell.value === undefined && colN >= 21) cell.value = 0;
                   });
                   currentRow++; progressCount++;
-                  if (progressCount % 5 === 0 || progressCount === totalData) { updateProgress(progressCount, totalData); await new Promise(r => setTimeout(r, 0)); }
+                  
+                  updateProgress(progressCount, totalData); 
+                  if (progressCount % 2 === 0 || progressCount === totalData) { await new Promise(r => setTimeout(r, 0)); }
               }
 
               let rowSub = sheet.getRow(currentRow);

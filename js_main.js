@@ -778,24 +778,54 @@ async function doLogin(e) {
     startLoading("Menyimpan Pegawai..."); 
     
     const d = { 
-      nipLama: document.getElementById('mNipLama').value, nip: nipCek, nama: document.getElementById('mNama').value, tglLahir: document.getElementById('mTglLahir').value, golongan: document.getElementById('mGolongan').value, unorInduk: document.getElementById('mUnorInduk').value, unitkerja: s, namaJabatan: j, jenisJab: document.getElementById('mJenis').value, statusKawin: document.getElementById('mStatus').value, gapok: document.getElementById('mGapok').value, tjJab: document.getElementById('mTjJab').value, rekening: document.getElementById('mRekening').value, skp: document.getElementById('mSkp').value, bulan: globalBulanAktif, statusPegawai: globalJenisASN, uuid: document.getElementById('mUuid').value || Utilities.getUuid(), roleUser: currentUser.role, unitkerjaUser: currentUser.unitkerja  
+      nipLama: document.getElementById('mNipLama').value, 
+      nip: nipCek, 
+      nama: document.getElementById('mNama').value, 
+      tglLahir: document.getElementById('mTglLahir').value, 
+      golongan: document.getElementById('mGolongan').value, 
+      unorInduk: document.getElementById('mUnorInduk').value, 
+      unitkerja: s, 
+      namaJabatan: j, 
+      jenisJab: document.getElementById('mJenis').value, 
+      statusKawin: document.getElementById('mStatus').value, 
+      gapok: document.getElementById('mGapok').value, 
+      tjJab: document.getElementById('mTjJab').value, 
+      rekening: document.getElementById('mRekening').value, 
+      skp: document.getElementById('mSkp').value, 
+      bulan: globalBulanAktif, 
+      statusPegawai: globalJenisASN, 
+      // 👇 INI YANG BIKIN ERROR KEMARIN, SUDAH SAYA BERSIHKAN!
+      uuid: document.getElementById('mUuid').value || "", 
+      roleUser: currentUser.role, 
+      unitkerjaUser: currentUser.unitkerja  
     };
 
     let res = await fetchAPI(aksi === 'edit' ? "updatePegawai" : "simpanPegawai", d); 
     stopLoading(); 
     
-    // 👇 BACA RESPON JSON DENGAN BENAR (Ini yang bikin muter-muter) 👇
-    if (res && res.status === "error") { 
-        alertError(res.pesan); 
-    } else if (res && res.status === "sukses") { 
-        alertSukses(res.pesan); 
-        bootstrap.Modal.getInstance(document.getElementById('modalKelolaPegawai')).hide(); 
+    // 👇 BACA RESPON LEBIH CERDAS DAN KEBAL ERROR
+    let isError = false;
+    let pesanInfo = "";
+
+    if (typeof res === "object" && res !== null) {
+        isError = (res.status === "error");
+        pesanInfo = res.pesan || "Tidak ada pesan dari server";
+    } else {
+        let strRes = String(res).toLowerCase();
+        isError = strRes.includes("gagal") || strRes.includes("error");
+        pesanInfo = String(res);
+    }
+
+    if (isError) { 
+        alertError(pesanInfo); 
+    } else { 
+        alertSukses(pesanInfo); 
+        let modalObj = bootstrap.Modal.getInstance(document.getElementById('modalKelolaPegawai'));
+        if (modalObj) modalObj.hide(); 
         document.getElementById('formPegawai').reset(); 
         
-        // Tarik ulang data dari server biar aman dan fresh
+        // Tarik ulang data fresh dari database Master OPD
         muatDataPegawai(true); 
-    } else {
-        alertError("Terjadi kesalahan respon dari server.");
     }
   }
 

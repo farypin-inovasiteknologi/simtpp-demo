@@ -329,7 +329,6 @@ const listOPD = [
           return alertError(res.pesan);
       }
 
-      // 👇 LOGIKA IMPORT MENGGUNAKAN EXCELJS YANG AMAN DARI CRASH 👇
       if (sumber === 'import') {
           Swal.getHtmlContainer().innerHTML = "Menganalisa File Excel SKP BKD...";
           let file = fileInput.files[0];
@@ -363,7 +362,7 @@ const listOPD = [
               let payload = [];
               for(let i = 1; i < data2D.length; i++) {
                   let row = data2D[i];
-                  let nipVal = row[3]; // Kolom D adalah NIP
+                  let nipVal = row[3]; 
                   if(!nipVal) continue; 
 
                   let nipBersih = String(nipVal).replace(/[\s-']/g, '');
@@ -379,7 +378,10 @@ const listOPD = [
                       unitkerja: String(row[8] || "").trim(),      
                       unorInduk: String(row[10] || "").trim(),    
                       skp: String(row[16] || "").trim(),          
-                      golongan: String(row[29] || row[30] || "").trim(), // Excel BKD kadang bergeser     
+                      
+                      // 👇 PERBAIKAN: STRICT AMBIL KOLOM AE (Index 30) 👇
+                      golongan: String(row[30] || "").trim(),      
+                      
                       statusPegawai: statusPegawaiVal,             
                       tglLahir: "", 
                       namaJabatan: "", 
@@ -393,7 +395,7 @@ const listOPD = [
 
               if(payload.length === 0) {
                   stopLoading(); btnSubmit.disabled = false;
-                  return alertPeringatan("Periode dibuka, tapi tidak ada data NIP valid (18 Digit) di Kolom D.");
+                  return alertPeringatan("Periode dibuka, tapi tidak ada data NIP valid (18 Digit) di Kolom D (NIP).");
               }
 
               Swal.getHtmlContainer().innerHTML = `Menyimpan ${payload.length} Pegawai ke Database...`;
@@ -423,17 +425,38 @@ const listOPD = [
 
   async function muatDaftarPeriode() { let data = await fetchAPI("getDaftarPeriode", {}); if (data && !data.error) { renderDropdownPeriode(data); } }
 
-  // 👇 PERBAIKAN: DROPDOWN TIDAK LAMBAT LAGI KARENA DIPAKSA SELECT SESI AKTIF 👇
+  // 👇 PERBAIKAN: SMART SORTING DROPDOWN (URUT WAKTU + GANDENG THR) 👇
   function renderDropdownPeriode(data) {
+    if (data && data.length > 0) {
+        const getSortValue = (p) => {
+            let baseBulan = parseInt(p.bulanAngka) || 0;
+            let year = parseInt(p.tahun) || 0;
+            
+            if (p.jenisPeriode !== "Reguler" && p.indukPajak) {
+                let induk = data.find(x => x.namaPeriode === p.indukPajak);
+                if (induk) {
+                    baseBulan = parseInt(induk.bulanAngka) || 0;
+                    year = parseInt(induk.tahun) || 0;
+                }
+                // Desimal ditambahkan agar nempel tepat di bawah induknya
+                if (p.jenisPeriode === "THR") baseBulan += 0.1;
+                else if (p.jenisPeriode === "Gaji 13") baseBulan += 0.2;
+                else baseBulan += 0.3;
+            }
+            return (year * 100) + baseBulan;
+        };
+        data.sort((a, b) => getSortValue(a) - getSortValue(b));
+    }
+
     arrayPeriode = data; 
     let sel = document.getElementById('pilihPeriodeUtama'); 
     sel.innerHTML = "";
+    
     if(!data || data.length === 0) { 
         sel.innerHTML = `<option value="">Belum ada periode. Klik Tambah!</option>`; 
     } else { 
         data.forEach(p => { sel.innerHTML += `<option value="${p.namaPeriode}">${p.namaPeriode}</option>`; }); 
         
-        // Pilih otomatis periode yang sedang aktif dari sesi
         if (globalBulanAktif && data.some(p => p.namaPeriode === globalBulanAktif)) {
             sel.value = globalBulanAktif;
         } else {
@@ -997,9 +1020,9 @@ const listOPD = [
       else if(["TK/2", "TK/3", "K/1", "K/2"].includes(statusKawinShort)) katTER = "B"; 
       else if(["K/3"].includes(statusKawinShort)) katTER = "C";
       
-      const terA = [[5400000,0],[5650000,0.25],[5950000,0.5],[6300000,0.75],[6750000,1],[7500000,1.25],[8550000,1.5],[9650000,1.75],[10050000,2],[10350000,2.25],[10700000,2.5],[11050000,3],[11600000,3.5],[12500000,4],[13750000,5],[15100000,6],[16950000,7],[19750000,8],[24100000,9],[26450000,10]]; 
-      const terB = [[6200000,0],[6500000,0.25],[6850000,0.5],[7300000,0.75],[9200000,1],[10750000,1.5],[11250000,2],[11600000,2.5],[12600000,3],[13600000,4],[14950000,5],[16400000,6],[18450000,7],[21850000,8],[26000000,9],[27700000,10]]; 
-      const terC = [[6600000,0],[6950000,0.25],[7350000,0.5],[7800000,0.75],[8850000,1],[9800000,1.25],[10950000,1.5],[11200000,2],[11600000,2.5],[12050000,3],[13200000,4],[14400000,5],[15900000,6],[17950000,7],[21200000,8],[25850000,9]];
+      const terA = [[5400000,0],[5650000,0.25],[5950000,0.5],[6300000,0.75],[6750000,1],[7500000,1.25],[8550000,1.5],[9650000,1.75],[10050000,2],[10350000,2.25],[10700000,2.5],[11050000,3],[11600000,3.5],[12500000,4],[13750000,5],[15100000,6],[16950000,7],[19750000,8],[24100000,9],[26450000,10],[28000000,11],[30000000,12],[32000000,13],[35000000,14],[37000000,15],[39000000,16],[41000000,17],[43000000,18],[46000000,19],[49000000,20],[52000000,21],[55000000,22],[58000000,23],[61000000,24],[64000000,25],[67000000,26],[70000000,27],[74000000,28],[78000000,29],[82000000,30],[86000000,31],[90000000,32],[94000000,33],[Infinity,34]]; 
+      const terB = [[6200000,0],[6500000,0.25],[6850000,0.5],[7300000,0.75],[9200000,1],[10750000,1.5],[11250000,2],[11600000,2.5],[12600000,3],[13600000,4],[14950000,5],[16400000,6],[18450000,7],[21850000,8],[26000000,9],[27700000,10],[29350000,11],[31450000,12],[33450000,13],[37000000,14],[39000000,15],[41000000,16],[43000000,17],[46000000,18],[48000000,19],[51000000,20],[54000000,21],[57000000,22],[60000000,23],[63000000,24],[66000000,25],[69000000,26],[73000000,27],[77000000,28],[81000000,29],[85000000,30],[89000000,31],[93000000,32],[97000000,33],[Infinity,34]]; 
+      const terC = [[6600000,0],[6950000,0.25],[7350000,0.5],[7800000,0.75],[8850000,1],[9800000,1.25],[10950000,1.5],[11200000,2],[11600000,2.5],[12050000,3],[13200000,4],[14400000,5],[15900000,6],[17950000,7],[21200000,8],[25850000,9],[27200000,10],[28900000,11],[30800000,12],[32800000,13],[35800000,14],[38000000,15],[40000000,16],[42000000,17],[44000000,18],[47000000,19],[50000000,20],[53000000,21],[56000000,22],[59000000,23],[62000000,24],[65000000,25],[68000000,26],[71000000,27],[75000000,28],[79000000,29],[83000000,30],[87000000,31],[91000000,32],[95000000,33],[Infinity,34]];
       
       let tabelPilihan = katTER === "A" ? terA : (katTER === "B" ? terB : terC); 
       let pctTER = 0; 

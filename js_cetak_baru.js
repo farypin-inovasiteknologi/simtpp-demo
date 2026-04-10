@@ -64,24 +64,13 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
       if(barEl) barEl.style.width = `${Math.round((current / total) * 100)}%`;
   }
 
-
   // ==============================================================
-  // TRIGGER DOWNLOAD (SUDAH DIPERBAIKI ANTI-FREEZE)
+  // TRIGGER DOWNLOAD
   // ==============================================================
   async function fetchDataLaporan(format, e, funcExcel, funcPdf) {
       if(e) e.preventDefault(); 
       if(!globalBulanAktif) return alertPeringatan("Pilih bulan terlebih dahulu!"); 
       
-      // 1. BLOKIR CETAK PDF MASSAL DARI AWAL
-      if (format.toLowerCase() === 'pdf') {
-          return Swal.fire({
-              icon: 'info',
-              title: 'PDF Massal Dinonaktifkan',
-              text: 'Format tabel ini terlalu lebar (banyak kolom) untuk dijadikan PDF secara otomatis. Silakan unduh format Excel, lalu "Save As PDF" secara manual melalui aplikasi Microsoft Excel di laptop Anda.',
-              confirmButtonColor: '#0d6efd'
-          });
-      }
-
       let fUnit = document.getElementById('filterUnitKerja').value; 
       
       showLoadingPhase1(); 
@@ -104,30 +93,25 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
                   Swal.close(); 
                   Swal.fire({
                       title: 'Ada Data Belum Lengkap!',
-                      text: 'Ditemukan pegawai yang data Gaji-nya belum tersimpan (angkanya Rp 0). Yakin ingin lanjut mencetak Excel?',
+                      text: 'Ditemukan pegawai yang data Gaji-nya belum tersimpan (angkanya Rp 0). Yakin ingin lanjut mencetak?',
                       icon: 'warning', showCancelButton: true, confirmButtonColor: '#3085d6', cancelButtonColor: '#d33',
                       confirmButtonText: 'Ya, Lanjut Cetak!', cancelButtonText: 'Batal'
                   }).then(async (result) => {
                       if (result.isConfirmed) {
                           showLoadingPhase1(); 
-                          switchToPhase2(res.data.length); 
-                          await new Promise(r => setTimeout(r, 100)); // Napas buatan untuk UI
-                          
-                          try {
+                          if(format === 'excel') { 
+                              switchToPhase2(res.data.length); 
+                              await new Promise(r => setTimeout(r, 100)); // Napas buatan untuk UI
                               await funcExcel(res); 
-                          } catch(excelErr) {
-                              Swal.close(); alertError("Terjadi error sistem saat menyusun Excel: " + excelErr.message);
-                          }
+                          } else { funcPdf(res); } 
                       }
                   });
               } else {
-                  switchToPhase2(res.data.length); 
-                  await new Promise(r => setTimeout(r, 100)); // Napas buatan untuk UI
-                  try {
+                  if(format === 'excel') { 
+                      switchToPhase2(res.data.length); 
+                      await new Promise(r => setTimeout(r, 100)); // Napas buatan untuk UI
                       await funcExcel(res); 
-                  } catch(excelErr) {
-                      Swal.close(); alertError("Terjadi error sistem saat menyusun Excel: " + excelErr.message);
-                  }
+                  } else { funcPdf(res); } 
               }
           } else { Swal.close(); alertError("❌ Gagal mengambil data dari server. Periksa koneksi."); } 
       } catch (err) { Swal.close(); alertError("Terjadi kesalahan sistem: " + err.message); }
@@ -139,28 +123,29 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
   function unduhRekening(format, e) { fetchDataLaporan(format, e, buatExcelRekeningJS, null); }
   function unduhRekapPajak(format, e) { fetchDataLaporan(format, e, buatExcelRekapPajakJS, null); }
 
-
-  // ==============================================================
-  // 1. ENGINE EXCELJS: DAFTAR NOMINATIF (18 KOLOM - BEBAS ERROR)
+// ==============================================================
+  // 1. ENGINE EXCELJS: DAFTAR NOMINATIF (18 KOLOM) - ANTI ERROR
   // ==============================================================
   async function buatExcelNominatifJS(res) {
       try {
           const wb = new ExcelJS.Workbook();
           const sheet = wb.addWorksheet('Daftar Nominatif', { pageSetup: { paperSize: 5, orientation: 'landscape', margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4 } } });
 
+          // 1. ATUR LEBAR KOLOM EKSPLISIT
           const colWidths = [5, 38, 15, 30, 15, 11, 11, 11, 11, 11, 14, 12, 15, 12, 12, 12, 14, 18];
           colWidths.forEach((w, i) => { sheet.getColumn(i+1).width = w; });
 
+          // 2. JUDUL UTAMA
           sheet.mergeCells('A1:R1'); sheet.getCell('A1').value = `DAFTAR NOMINATIF TPP ${res.setting.Nama_Dinas} PEMERINTAH PROVINSI JAMBI`;
           sheet.mergeCells('A2:R2'); sheet.getCell('A2').value = `${res.jenisASN} ${res.unitCetak}`;
           sheet.mergeCells('A3:R3'); sheet.getCell('A3').value = `PERIODE BULAN: ${res.bulanBesar}`;
           
           for(let i=1; i<=3; i++) { 
-              let c = sheet.getCell(`A${i}`);
-              c.font = { bold: true, size: i===1 ? 14 : 12 }; 
-              c.alignment = { horizontal: 'center', vertical: 'middle' }; 
+              sheet.getCell(`A${i}`).font = { bold: true, size: i===1?14:12 }; 
+              sheet.getCell(`A${i}`).alignment = { horizontal: 'center', vertical: 'middle' }; 
           }
 
+          // 3. HEADER BERTINGKAT EKSPLISIT (Aman dari error sintaks)
           sheet.mergeCells('A5:A6'); sheet.getCell('A5').value = "No.";
           sheet.mergeCells('B5:B6'); sheet.getCell('B5').value = "Nama / Tgl Lahir / NIP / Gol.";
           sheet.mergeCells('C5:C6'); sheet.getCell('C5').value = "Status / Jiwa";
@@ -168,31 +153,38 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
           sheet.mergeCells('E5:E6'); sheet.getCell('E5').value = "Gaji Kotor";
           
           sheet.mergeCells('F5:M5'); sheet.getCell('F5').value = "PERHITUNGAN TPP (NETTO)";
-          ['BK','PK','KK','TB','KP','Jumlah TPP','BPJS 4%','Total TPP Netto'].forEach((txt, i) => sheet.getCell(6, 6+i).value = txt);
+          sheet.getCell('F6').value = 'BK'; sheet.getCell('G6').value = 'PK'; sheet.getCell('H6').value = 'KK';
+          sheet.getCell('I6').value = 'TB'; sheet.getCell('J6').value = 'KP'; sheet.getCell('K6').value = 'Jumlah TPP';
+          sheet.getCell('L6').value = 'BPJS 4%'; sheet.getCell('M6').value = 'Total TPP Netto';
           
           sheet.mergeCells('N5:Q5'); sheet.getCell('N5').value = "PENGURANGAN TPP";
-          ['IWP 1%','PPh 21','BPJS 4%','TOTAL POT.'].forEach((txt, i) => sheet.getCell(6, 14+i).value = txt);
+          sheet.getCell('N6').value = 'IWP 1%'; sheet.getCell('O6').value = 'PPh 21';
+          sheet.getCell('P6').value = 'BPJS 4%'; sheet.getCell('Q6').value = 'TOTAL POT.';
           
           sheet.mergeCells('R5:R6'); sheet.getCell('R5').value = "TPP BERSIH DITERIMA";
 
-          for(let i=1; i<=18; i++) { sheet.getCell(7, i).value = i.toString(); }
+          // Baris 7 Angka Urut
+          let colsNom = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R'];
+          colsNom.forEach((col, idx) => { sheet.getCell(`${col}7`).value = (idx + 1).toString(); });
 
+          // 4. STYLING HEADER
           for (let r = 5; r <= 7; r++) {
               let row = sheet.getRow(r);
               row.height = r === 7 ? 15 : 25;
-              for(let c = 1; c <= 18; c++) {
-                  let cell = row.getCell(c);
+              colsNom.forEach((col, idx) => {
+                  let cell = row.getCell(idx + 1);
                   cell.font = { bold: r!==7, italic: r===7, size: r===7 ? 8 : 10 };
                   cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
                   cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
                   
-                  let bg = 'FFCFE2F3'; // Kode Warna ARGB Wajib 8 Digit!
-                  if(r === 7) bg = 'FFE9ECEF'; 
-                  else if (c >= 14 && c <= 17 && r === 5) bg = 'FFFCE5CD'; 
+                  let bg = 'CFE2F3';
+                  if(r === 7) bg = 'E9ECEF'; 
+                  else if (idx >= 13 && idx <= 16 && r === 5) bg = 'FCE5CD'; 
                   cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
-              }
+              });
           }
 
+          // 5. ISI DATA
           let grouped = {};
           res.data.forEach(c => {
               let golDasar = c.golonganAsli.split("/")[0].trim().toUpperCase();
@@ -202,36 +194,24 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
           });
 
           let urutanGol = res.jenisASN === "PPPK" ? ["XVII - XIII", "XII - IX", "VIII - V", "IV - I"] : ["IV", "III", "II", "I"];
-          let noUrut = 1; let currentRow = 8;
+          let noUrut = 1; let currentRow = 8; let subTotalRows = [];
           let progressCount = 0; let totalData = res.data.length;
-          
-          // Penampung Nilai Kalkulator JS
-          let grandTotals = Array(14).fill(0); 
 
           for (let gol of urutanGol) {
               if(grouped[gol] && grouped[gol].length > 0) {
-                  let subTotals = Array(14).fill(0); // Penampung Sub Total JS
-
+                  let startRowGroup = currentRow;
                   for (let c of grouped[gol]) {
                       let isKawin = c.statusTER.startsWith("K");
                       let jmlJiwa = (isKawin ? 2 : 1) + parseInt(c.tanggungAnak || 0);
                       let rasio = c.tppBruto > 0 ? (c.tppNettoKinerja / c.tppBruto) : 0;
+                      let bk = Math.round(c.bk * rasio); let pk = Math.round(c.pk * rasio); let kk = Math.round(c.kk * rasio); 
+                      let tb = Math.round(c.tb * rasio); let kp = Math.round(c.kp * rasio);
                       let tppPlusBpjs = c.tppNettoKinerja + c.bpjs4;
                       let totalPot = c.iwp1 + c.pph21TKD + c.bpjs4; 
-                      let tppBersih = tppPlusBpjs - totalPot;
-
-                      // Array nilai uang
-                      let vals = [
-                          c.gajiKotor, Math.round(c.bk * rasio), Math.round(c.pk * rasio), Math.round(c.kk * rasio), Math.round(c.tb * rasio), Math.round(c.kp * rasio),
-                          c.tppNettoKinerja, c.bpjs4, tppPlusBpjs, c.iwp1, c.pph21TKD, c.bpjs4, totalPot, tppBersih
-                      ];
-
-                      // Tambahkan ke SubTotal dan GrandTotal JS
-                      vals.forEach((v, i) => { subTotals[i] += v; grandTotals[i] += v; });
 
                       let row = sheet.getRow(currentRow);
                       row.height = 70;
-                      row.values = [ noUrut++, `${c.nama}\n${c.tglLahir}\nNIP. ${c.nip}\n${res.jenisASN} - Gol. ${c.golonganAsli}`, `${c.statusTER}\nJiwa: ${jmlJiwa}`, c.jabatan, ...vals ];
+                      row.values = [ noUrut++, `${c.nama}\n${c.tglLahir}\nNIP. ${c.nip}\n${res.jenisASN} - Gol. ${c.golonganAsli}`, `${c.statusTER}\nJiwa: ${jmlJiwa}`, c.jabatan, c.gajiKotor, bk, pk, kk, tb, kp, c.tppNettoKinerja, c.bpjs4, tppPlusBpjs, c.iwp1, c.pph21TKD, c.bpjs4, totalPot, { formula: `M${currentRow}-Q${currentRow}` } ];
 
                       row.eachCell({ includeEmpty: true }, (cell, colN) => {
                           cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
@@ -246,29 +226,24 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
                   }
 
                   let rowSub = sheet.getRow(currentRow);
-                  rowSub.height = 25; 
-                  // Tulis langsung angka SubTotal ke cell (TANPA RUMUS)
-                  rowSub.values = ["", `SUB-TOTAL GOLONGAN ${gol}`, "", "", ...subTotals];
-                  rowSub.getCell(2).font = { bold: true };
+                  rowSub.height = 25; rowSub.getCell('B').value = `SUB-TOTAL GOLONGAN ${gol}`; rowSub.getCell('B').font = { bold: true };
+                  ['E','F','G','H','I','J','K','L','M','N','O','P','Q','R'].forEach(col => { rowSub.getCell(col).value = { formula: `SUM(${col}${startRowGroup}:${col}${currentRow-1})` }; });
 
                   rowSub.eachCell({ includeEmpty: true }, (cell, colN) => {
                       cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-                      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF3F3F3' } };
+                      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'F3F3F3' } };
                       if (colN >= 5) { cell.numFmt = '#,##0'; cell.font = {bold: true}; }
                   });
-                  currentRow++;
+                  subTotalRows.push(currentRow); currentRow++;
               }
           }
 
           let rowGrand = sheet.getRow(currentRow);
-          rowGrand.height = 30; 
-          // Tulis langsung angka Grand Total ke cell (TANPA RUMUS)
-          rowGrand.values = ["", "TOTAL KESELURUHAN (ALL GOLONGAN)", "", "", ...grandTotals];
-          rowGrand.getCell(2).font = { bold: true };
-
+          rowGrand.height = 30; rowGrand.getCell('B').value = "TOTAL KESELURUHAN (ALL GOLONGAN)"; rowGrand.getCell('B').font = { bold: true };
+          if(subTotalRows.length > 0) { ['E','F','G','H','I','J','K','L','M','N','O','P','Q','R'].forEach(col => { rowGrand.getCell(col).value = { formula: subTotalRows.map(rNum => `${col}${rNum}`).join('+') }; }); }
           rowGrand.eachCell({ includeEmpty: true }, (cell, colN) => {
               cell.border = { top: {style:'medium'}, left: {style:'thin'}, bottom: {style:'medium'}, right: {style:'thin'} };
-              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE9ECEF' } };
+              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'E9ECEF' } };
               if (colN >= 5) { cell.numFmt = '#,##0'; cell.font = {bold: true}; }
           });
 
@@ -276,56 +251,69 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
           unduhFile(wb, `Daftar_Nominatif_${res.bulanBesar}_${res.unitCetak}.xlsx`);
           Swal.close();
           
-      } catch(e) { console.error(e); Swal.close(); alertError("Terjadi error ExcelJS: " + e.message); }
+      } catch(e) {
+          console.error(e); Swal.close(); alertError("Terjadi error ExcelJS: " + e.message);
+      }
   }
+
   // ==============================================================
-  // 2. ENGINE EXCELJS: REKAP GOLONGAN (16 KOLOM - BEBAS ERROR)
+  // 2. ENGINE EXCELJS: REKAP GOLONGAN (16 KOLOM) - ANTI ERROR
   // ==============================================================
   async function buatExcelRekapGolonganJS(res) {
       try {
           const wb = new ExcelJS.Workbook();
           const sheet = wb.addWorksheet('Rekap Golongan', { pageSetup: { paperSize: 5, orientation: 'landscape', margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4 } } });
 
+          // 1. ATUR LEBAR KOLOM EKSPLISIT
           const colWidths = [5, 25, 12, 14, 14, 14, 14, 14, 16, 16, 16, 16, 16, 16, 16, 16];
           colWidths.forEach((w, i) => { sheet.getColumn(i+1).width = w; });
 
+          // 2. JUDUL UTAMA
           sheet.mergeCells('A1:P1'); sheet.getCell('A1').value = `REKAPITULASI PENGAJUAN TPP ASN OPD ${res.setting.Nama_Dinas} PROVINSI JAMBI`;
           sheet.mergeCells('A2:P2'); sheet.getCell('A2').value = `${res.jenisASN} ${res.unitCetak}`;
           sheet.mergeCells('A3:P3'); sheet.getCell('A3').value = `Bulan : ${res.bulanBesar}`;
           for(let i=1; i<=3; i++) { 
-              let c = sheet.getCell(`A${i}`); c.font = { bold: true, size: 12 }; c.alignment = { horizontal: 'center', vertical: 'middle' }; 
+              sheet.getCell(`A${i}`).font = { bold: true, size: 12 }; 
+              sheet.getCell(`A${i}`).alignment = { horizontal: 'center', vertical: 'middle' }; 
           }
 
+          // 3. HEADER BERTINGKAT EKSPLISIT
           sheet.mergeCells('A5:A6'); sheet.getCell('A5').value = "No.";
           sheet.mergeCells('B5:B6'); sheet.getCell('B5').value = "GOLONGAN";
           sheet.mergeCells('C5:C6'); sheet.getCell('C5').value = "Jumlah\nPegawai";
           
           sheet.mergeCells('D5:H5'); sheet.getCell('D5').value = "PERHITUNGAN TPP (NETTO)";
-          ['BK','PK','KK','TB','KP'].forEach((txt, i) => sheet.getCell(6, 4+i).value = txt);
+          sheet.getCell('D6').value = 'BK'; sheet.getCell('E6').value = 'PK';
+          sheet.getCell('F6').value = 'KK'; sheet.getCell('G6').value = 'TB'; sheet.getCell('H6').value = 'KP';
           
           sheet.mergeCells('I5:I6'); sheet.getCell('I5').value = "Jumlah TPP";
           sheet.mergeCells('J5:J6'); sheet.getCell('J5').value = "BPJS 4%";
           sheet.mergeCells('K5:K6'); sheet.getCell('K5').value = "Jumlah Kotor";
           
           sheet.mergeCells('L5:O5'); sheet.getCell('L5').value = "PENGURANGAN";
-          ['PPh 21','IWP 1%','BPJS 4%','Total Potongan'].forEach((txt, i) => sheet.getCell(6, 12+i).value = txt);
+          sheet.getCell('L6').value = 'PPh 21'; sheet.getCell('M6').value = 'IWP 1%';
+          sheet.getCell('N6').value = 'BPJS 4%'; sheet.getCell('O6').value = 'Total Potongan';
           
           sheet.mergeCells('P5:P6'); sheet.getCell('P5').value = "Jumlah Bersih";
 
-          for(let i=1; i<=16; i++) { sheet.getCell(7, i).value = i.toString(); }
+          // Baris 7 Angka Urut
+          let colsRekap = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P'];
+          colsRekap.forEach((col, idx) => { sheet.getCell(`${col}7`).value = (idx + 1).toString(); });
 
+          // 4. STYLING HEADER
           for (let r = 5; r <= 7; r++) {
               let row = sheet.getRow(r);
               row.height = r === 7 ? 15 : 25;
-              for(let c = 1; c <= 16; c++) {
-                  let cell = row.getCell(c);
+              colsRekap.forEach((col, idx) => {
+                  let cell = row.getCell(idx + 1);
                   cell.font = { bold: r!==7, italic: r===7, size: r===7 ? 8 : 10 };
                   cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
                   cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-                  cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: r===7 ? 'FFE9ECEF' : 'FFCFE2F3' } };
-              }
+                  cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: r===7 ? 'E9ECEF' : 'CFE2F3' } };
+              });
           }
 
+          // 5. ISI DATA
           let grouped = {};
           res.data.forEach(c => {
               let golDasar = c.golonganAsli.split("/")[0].trim().toUpperCase();
@@ -336,9 +324,6 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
 
           let urutanGol = res.jenisASN === "PPPK" ? ["XVII - XIII", "XII - IX", "VIII - V", "IV - I"] : ["IV", "III", "II", "I"];
           let no = 1; let currentRow = 8; let progressCount = 0; let totalGol = urutanGol.length;
-          
-          // Penampung JS Grand Total
-          let grandTotals = Array(14).fill(0); 
 
           for (let gol of urutanGol) {
               let arr = grouped[gol] || []; 
@@ -346,16 +331,11 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
               if(arr.length > 0) {
                   for (let c of arr) {
                       let rasio = c.tppBruto > 0 ? (c.tppNettoKinerja / c.tppBruto) : 0;
-                      let vals = [
-                          Math.round(c.bk * rasio), Math.round(c.pk * rasio), Math.round(c.kk * rasio), Math.round(c.tb * rasio), Math.round(c.kp * rasio),
-                          c.tppNettoKinerja, c.bpjs4, (c.tppNettoKinerja + c.bpjs4),
-                          c.pph21TKD, c.iwp1, c.bpjs4, (c.pph21TKD + c.iwp1 + c.bpjs4), c.tppBersih
-                      ];
-                      vals.forEach((v, i) => { sum[i] += v; });
+                      sum[0] += Math.round(c.bk * rasio); sum[1] += Math.round(c.pk * rasio); sum[2] += Math.round(c.kk * rasio);
+                      sum[3] += Math.round(c.tb * rasio); sum[4] += Math.round(c.kp * rasio);
+                      sum[5] += c.tppNettoKinerja; sum[6] += c.bpjs4; sum[7] += c.tppNettoKinerja + c.bpjs4;
+                      sum[8] += c.pph21TKD; sum[9] += c.iwp1; sum[10] += c.bpjs4; sum[11] += c.pph21TKD + c.iwp1 + c.bpjs4; sum[12] += c.tppBersih;
                   }
-                  // Hitung untuk Grand Total
-                  grandTotals[0] += arr.length;
-                  sum.forEach((v, i) => { grandTotals[i+1] += v; });
               }
               
               let r = sheet.getRow(currentRow);
@@ -374,13 +354,11 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
           }
 
           let rGrand = sheet.getRow(currentRow);
-          rGrand.height = 30; 
-          // Masukkan angka jadi, TANPA RUMUS
-          rGrand.values = ["", "Total Penghitungan TPP", ...grandTotals];
-          rGrand.getCell(2).font = {bold: true};
+          rGrand.height = 30; rGrand.getCell('B').value = "Total Penghitungan TPP"; rGrand.getCell('B').font = {bold: true};
+          ['C','D','E','F','G','H','I','J','K','L','M','N','O','P'].forEach(col => rGrand.getCell(col).value = { formula: `SUM(${col}8:${col}${currentRow-1})` });
           
           rGrand.eachCell({ includeEmpty: true }, (cell, colN) => {
-              cell.font = {bold: true}; cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFF3F3F3' } };
+              cell.font = {bold: true}; cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'F3F3F3' } };
               cell.border = { top: {style:'medium'}, left: {style:'thin'}, bottom: {style:'medium'}, right: {style:'thin'} };
               if(colN >= 3) cell.numFmt = '#,##0';
           });
@@ -389,7 +367,9 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
           unduhFile(wb, `Rekap_Golongan_${res.bulanBesar}_${res.unitCetak}.xlsx`);
           Swal.close();
           
-      } catch(e) { console.error(e); Swal.close(); alertError("Terjadi error ExcelJS: " + e.message); }
+      } catch(e) {
+          console.error(e); Swal.close(); alertError("Terjadi error ExcelJS: " + e.message);
+      }
   }
 
   // ==============================================================

@@ -1722,25 +1722,26 @@ const listOPD = [
   }
 
   let loadingTimer;
+
+  // ==============================================================
+  // ALAT BANTU (HELPER) WAJIB FRONTEND - ANTI GHOST TIMER
+  // ==============================================================
   function startLoading(text) { 
-      let count = 5; 
       Swal.fire({ 
           title: text, 
-          html: `Sedang memproses...<br>Tunggu: <b class="text-danger fs-4">${count}</b> detik`, 
-          allowOutsideClick: false, showConfirmButton: false, 
+          html: `<div class="mt-2 text-primary fw-bold">Sedang memproses, mohon tunggu sebentar...</div>`, 
+          allowOutsideClick: false, 
+          showConfirmButton: false, 
           didOpen: () => { 
               Swal.showLoading(); 
-              const b = Swal.getHtmlContainer().querySelector('b'); 
-              loadingTimer = setInterval(() => { 
-                  count--; 
-                  if(count > 0) { if(b) b.textContent = count; } 
-                  else { Swal.getHtmlContainer().innerHTML = "Menyelesaikan proses..."; clearInterval(loadingTimer); } 
-              }, 1000); 
           } 
       }); 
   }
   
-  function stopLoading() { clearInterval(loadingTimer); Swal.close(); }
+  function stopLoading() { 
+      Swal.close(); 
+  }
+
   function alertSukses(pesan) { Swal.fire({ icon: 'success', title: 'Berhasil!', text: pesan, confirmButtonColor: '#198754' }); }
   function alertError(pesan) { Swal.fire({ icon: 'error', title: 'Oops...', text: pesan, confirmButtonColor: '#dc3545' }); }
   function alertPeringatan(pesan) { Swal.fire({ icon: 'warning', title: 'Perhatian', text: pesan, confirmButtonColor: '#ffc107' }); }
@@ -1819,4 +1820,5 @@ const listOPD = [
           }
       }
   }
+  
   document.addEventListener("click", function (e) { closeAllLists(e.target); });

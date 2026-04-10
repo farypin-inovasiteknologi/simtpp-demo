@@ -123,34 +123,29 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
   function unduhRekening(format, e) { fetchDataLaporan(format, e, buatExcelRekeningJS, null); }
   function unduhRekapPajak(format, e) { fetchDataLaporan(format, e, buatExcelRekapPajakJS, null); }
 
-
- // ==============================================================
-  // 1. ENGINE EXCELJS: DAFTAR NOMINATIF (18 KOLOM) - SUPER KETAT
+// ==============================================================
+  // 1. ENGINE EXCELJS: DAFTAR NOMINATIF (18 KOLOM) - ANTI ERROR
   // ==============================================================
   async function buatExcelNominatifJS(res) {
       try {
           const wb = new ExcelJS.Workbook();
           const sheet = wb.addWorksheet('Daftar Nominatif', { pageSetup: { paperSize: 5, orientation: 'landscape', margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4 } } });
 
-          // 1. ATUR LEBAR KOLOM SECARA EKSPLISIT (PASTI BERHASIL)
+          // 1. ATUR LEBAR KOLOM EKSPLISIT
           const colWidths = [5, 38, 15, 30, 15, 11, 11, 11, 11, 11, 14, 12, 15, 12, 12, 12, 14, 18];
           colWidths.forEach((w, i) => { sheet.getColumn(i+1).width = w; });
 
-          // 2. MERGE CELL JUDUL UTAMA & CENTER
-          sheet.mergeCells('A1:R1'); 
-          sheet.getCell('A1').value = `DAFTAR NOMINATIF TPP ${res.setting.Nama_Dinas} PEMERINTAH PROVINSI JAMBI`;
-          sheet.mergeCells('A2:R2'); 
-          sheet.getCell('A2').value = `${res.jenisASN} ${res.unitCetak}`;
-          sheet.mergeCells('A3:R3'); 
-          sheet.getCell('A3').value = `PERIODE BULAN: ${res.bulanBesar}`;
+          // 2. JUDUL UTAMA
+          sheet.mergeCells('A1:R1'); sheet.getCell('A1').value = `DAFTAR NOMINATIF TPP ${res.setting.Nama_Dinas} PEMERINTAH PROVINSI JAMBI`;
+          sheet.mergeCells('A2:R2'); sheet.getCell('A2').value = `${res.jenisASN} ${res.unitCetak}`;
+          sheet.mergeCells('A3:R3'); sheet.getCell('A3').value = `PERIODE BULAN: ${res.bulanBesar}`;
           
           for(let i=1; i<=3; i++) { 
-              let c = sheet.getCell(`A${i}`);
-              c.font = { bold: true, size: i===1 ? 14 : 12 }; 
-              c.alignment = { horizontal: 'center', vertical: 'middle' }; 
+              sheet.getCell(`A${i}`).font = { bold: true, size: i===1?14:12 }; 
+              sheet.getCell(`A${i}`).alignment = { horizontal: 'center', vertical: 'middle' }; 
           }
 
-          // 3. MERGE CELL JUDUL KOLOM BERTINGKAT
+          // 3. HEADER BERTINGKAT EKSPLISIT (Aman dari error sintaks)
           sheet.mergeCells('A5:A6'); sheet.getCell('A5').value = "No.";
           sheet.mergeCells('B5:B6'); sheet.getCell('B5').value = "Nama / Tgl Lahir / NIP / Gol.";
           sheet.mergeCells('C5:C6'); sheet.getCell('C5').value = "Status / Jiwa";
@@ -158,35 +153,38 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
           sheet.mergeCells('E5:E6'); sheet.getCell('E5').value = "Gaji Kotor";
           
           sheet.mergeCells('F5:M5'); sheet.getCell('F5').value = "PERHITUNGAN TPP (NETTO)";
-          let hNetto = ['BK','PK','KK','TB','KP','Jumlah TPP','BPJS 4%','Total TPP Netto'];
-          hNetto.forEach((txt, i) => sheet.getCell(6, 6+i).value = txt);
+          sheet.getCell('F6').value = 'BK'; sheet.getCell('G6').value = 'PK'; sheet.getCell('H6').value = 'KK';
+          sheet.getCell('I6').value = 'TB'; sheet.getCell('J6').value = 'KP'; sheet.getCell('K6').value = 'Jumlah TPP';
+          sheet.getCell('L6').value = 'BPJS 4%'; sheet.getCell('M6').value = 'Total TPP Netto';
           
           sheet.mergeCells('N5:Q5'); sheet.getCell('N5').value = "PENGURANGAN TPP";
-          let hPot = ['IWP 1%','PPh 21','BPJS 4%','TOTAL POT.'];
-          hPot.forEach((txt, i) => sheet.getCell(6, 14+i).value = txt);
+          sheet.getCell('N6').value = 'IWP 1%'; sheet.getCell('O6').value = 'PPh 21';
+          sheet.getCell('P6').value = 'BPJS 4%'; sheet.getCell('Q6').value = 'TOTAL POT.';
           
           sheet.mergeCells('R5:R6'); sheet.getCell('R5').value = "TPP BERSIH DITERIMA";
 
-          // Baris 7 untuk penomoran kolom
-          for(let i=1; i<=18; i++) { sheet.getCell(7, i).value = i.toString(); }
+          // Baris 7 Angka Urut
+          let colsNom = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R'];
+          colsNom.forEach((col, idx) => { sheet.getCell(`${col}7`).value = (idx + 1).toString(); });
 
-          // 4. BERIKAN WARNA, BOLD, DAN GARIS (BORDER) PADA HEADER
+          // 4. STYLING HEADER
           for (let r = 5; r <= 7; r++) {
               let row = sheet.getRow(r);
               row.height = r === 7 ? 15 : 25;
-              for(let c = 1; c <= 18; c++) {
-                  let cell = row.getCell(c);
+              colsNom.forEach((col, idx) => {
+                  let cell = row.getCell(idx + 1);
                   cell.font = { bold: r!==7, italic: r===7, size: r===7 ? 8 : 10 };
                   cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
                   cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
                   
-                  let bg = 'CFE2F3'; // Biru default
-                  if(r === 7) bg = 'E9ECEF'; // Abu-abu angka
-                  else if (c >= 14 && c <= 17) bg = 'FCE5CD'; // Oren untuk potongan
+                  let bg = 'CFE2F3';
+                  if(r === 7) bg = 'E9ECEF'; 
+                  else if (idx >= 13 && idx <= 16 && r === 5) bg = 'FCE5CD'; 
                   cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
-              }
+              });
           }
 
+          // 5. ISI DATA
           let grouped = {};
           res.data.forEach(c => {
               let golDasar = c.golonganAsli.split("/")[0].trim().toUpperCase();
@@ -258,62 +256,64 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
       }
   }
 
-
   // ==============================================================
-  // 2. ENGINE EXCELJS: REKAP GOLONGAN (16 KOLOM) - BERTINGKAT
+  // 2. ENGINE EXCELJS: REKAP GOLONGAN (16 KOLOM) - ANTI ERROR
   // ==============================================================
   async function buatExcelRekapGolonganJS(res) {
       try {
           const wb = new ExcelJS.Workbook();
           const sheet = wb.addWorksheet('Rekap Golongan', { pageSetup: { paperSize: 5, orientation: 'landscape', margins: { left: 0.2, right: 0.2, top: 0.4, bottom: 0.4 } } });
 
-          // 1. ATUR LEBAR KOLOM SECARA EKSPLISIT
+          // 1. ATUR LEBAR KOLOM EKSPLISIT
           const colWidths = [5, 25, 12, 14, 14, 14, 14, 14, 16, 16, 16, 16, 16, 16, 16, 16];
           colWidths.forEach((w, i) => { sheet.getColumn(i+1).width = w; });
 
-          // 2. MERGE CELL JUDUL & CENTER
+          // 2. JUDUL UTAMA
           sheet.mergeCells('A1:P1'); sheet.getCell('A1').value = `REKAPITULASI PENGAJUAN TPP ASN OPD ${res.setting.Nama_Dinas} PROVINSI JAMBI`;
           sheet.mergeCells('A2:P2'); sheet.getCell('A2').value = `${res.jenisASN} ${res.unitCetak}`;
           sheet.mergeCells('A3:P3'); sheet.getCell('A3').value = `Bulan : ${res.bulanBesar}`;
           for(let i=1; i<=3; i++) { 
-              let c = sheet.getCell(`A${i}`);
-              c.font = { bold: true, size: 12 }; 
-              c.alignment = { horizontal: 'center', vertical: 'middle' }; 
+              sheet.getCell(`A${i}`).font = { bold: true, size: 12 }; 
+              sheet.getCell(`A${i}`).alignment = { horizontal: 'center', vertical: 'middle' }; 
           }
 
-          // 3. HEADER BERTINGKAT (SAMA SEPERTI NOMINATIF)
+          // 3. HEADER BERTINGKAT EKSPLISIT
           sheet.mergeCells('A5:A6'); sheet.getCell('A5').value = "No.";
           sheet.mergeCells('B5:B6'); sheet.getCell('B5').value = "GOLONGAN";
           sheet.mergeCells('C5:C6'); sheet.getCell('C5').value = "Jumlah\nPegawai";
           
           sheet.mergeCells('D5:H5'); sheet.getCell('D5').value = "PERHITUNGAN TPP (NETTO)";
-          ['BK','PK','KK','TB','KP'].forEach((txt, i) => sheet.getCell(6, 4+i).value = txt);
+          sheet.getCell('D6').value = 'BK'; sheet.getCell('E6').value = 'PK';
+          sheet.getCell('F6').value = 'KK'; sheet.getCell('G6').value = 'TB'; sheet.getCell('H6').value = 'KP';
           
           sheet.mergeCells('I5:I6'); sheet.getCell('I5').value = "Jumlah TPP";
           sheet.mergeCells('J5:J6'); sheet.getCell('J5').value = "BPJS 4%";
           sheet.mergeCells('K5:K6'); sheet.getCell('K5').value = "Jumlah Kotor";
           
           sheet.mergeCells('L5:O5'); sheet.getCell('L5').value = "PENGURANGAN";
-          ['PPh 21','IWP 1%','BPJS 4%','Total Potongan'].forEach((txt, i) => sheet.getCell(6, 12+i).value = txt);
+          sheet.getCell('L6').value = 'PPh 21'; sheet.getCell('M6').value = 'IWP 1%';
+          sheet.getCell('N6').value = 'BPJS 4%'; sheet.getCell('O6').value = 'Total Potongan';
           
           sheet.mergeCells('P5:P6'); sheet.getCell('P5').value = "Jumlah Bersih";
 
-          // Baris 7 untuk penomoran kolom
-          for(let i=1; i<=16; i++) { sheet.getCell(7, i).value = i.toString(); }
+          // Baris 7 Angka Urut
+          let colsRekap = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P'];
+          colsRekap.forEach((col, idx) => { sheet.getCell(`${col}7`).value = (idx + 1).toString(); });
 
           // 4. STYLING HEADER
           for (let r = 5; r <= 7; r++) {
               let row = sheet.getRow(r);
               row.height = r === 7 ? 15 : 25;
-              for(let c = 1; c <= 16; c++) {
-                  let cell = row.getCell(c);
+              colsRekap.forEach((col, idx) => {
+                  let cell = row.getCell(idx + 1);
                   cell.font = { bold: r!==7, italic: r===7, size: r===7 ? 8 : 10 };
                   cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
                   cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
                   cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: r===7 ? 'E9ECEF' : 'CFE2F3' } };
-              }
+              });
           }
 
+          // 5. ISI DATA
           let grouped = {};
           res.data.forEach(c => {
               let golDasar = c.golonganAsli.split("/")[0].trim().toUpperCase();

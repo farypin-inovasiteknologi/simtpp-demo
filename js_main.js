@@ -767,68 +767,34 @@ async function doLogin(e) {
     e.preventDefault(); 
     let aksi = document.getElementById('mAksi').value; 
     let nipCek = document.getElementById('mNip').value.trim(); 
-    if (!/^\d{18}$/.test(nipCek)) { return alertPeringatan("Gagal menyimpan! NIP belum valid (Wajib 18 digit angka). Silakan perbaiki NIP terlebih dahulu."); } 
+    if (!/^\d{18}$/.test(nipCek)) { return alertPeringatan("Gagal menyimpan! NIP belum valid (Wajib 18 digit angka)."); } 
     
     let s = document.getElementById('mUnitKerja').value.trim(); 
-    if(currentUser.role === 'Admin' && !arrayUnitKerjaValid.includes(s)) { return alertPeringatan("Unit Kerja tidak valid! Silakan hapus dan pilih dari daftar dropdown."); } 
+    if(currentUser.role === 'Admin' && !arrayUnitKerjaValid.includes(s)) { return alertPeringatan("Unit Kerja tidak valid!"); } 
     
     let j = document.getElementById('mJabatan').value.trim(); 
-    if(!arrayJabatanValid.includes(j)) { return alertPeringatan("Jabatan tidak valid! Silakan ketik dan pilih dari daftar dropdown jabatan."); }
+    if(!arrayJabatanValid.includes(j)) { return alertPeringatan("Jabatan tidak valid!"); }
     
     startLoading("Menyimpan Pegawai..."); 
     
     const d = { 
-      nipLama: document.getElementById('mNipLama').value, 
-      nip: nipCek, 
-      nama: document.getElementById('mNama').value, 
-      tglLahir: document.getElementById('mTglLahir').value, 
-      golongan: document.getElementById('mGolongan').value, 
-      unorInduk: document.getElementById('mUnorInduk').value, 
-      unitkerja: s, 
-      namaJabatan: j, 
-      jenisJab: document.getElementById('mJenis').value, 
-      statusKawin: document.getElementById('mStatus').value, 
-      gapok: document.getElementById('mGapok').value, 
-      tjJab: document.getElementById('mTjJab').value, 
-      rekening: document.getElementById('mRekening').value, 
-      skp: document.getElementById('mSkp').value, 
-      bulan: globalBulanAktif, 
-      statusPegawai: globalJenisASN, 
-      uuid: document.getElementById('mUuid').value || Utilities.getUuid(),
-      roleUser: currentUser.role, 
-      unitkerjaUser: currentUser.unitkerja  
+      nipLama: document.getElementById('mNipLama').value, nip: nipCek, nama: document.getElementById('mNama').value, tglLahir: document.getElementById('mTglLahir').value, golongan: document.getElementById('mGolongan').value, unorInduk: document.getElementById('mUnorInduk').value, unitkerja: s, namaJabatan: j, jenisJab: document.getElementById('mJenis').value, statusKawin: document.getElementById('mStatus').value, gapok: document.getElementById('mGapok').value, tjJab: document.getElementById('mTjJab').value, rekening: document.getElementById('mRekening').value, skp: document.getElementById('mSkp').value, bulan: globalBulanAktif, statusPegawai: globalJenisASN, uuid: document.getElementById('mUuid').value || Utilities.getUuid(), roleUser: currentUser.role, unitkerjaUser: currentUser.unitkerja  
     };
 
     let res = await fetchAPI(aksi === 'edit' ? "updatePegawai" : "simpanPegawai", d); 
     stopLoading(); 
     
-    // 👇 INI YANG DIPERBAIKI: Menangkap respon format JSON {status, pesan}
+    // 👇 BACA RESPON JSON DENGAN BENAR (Ini yang bikin muter-muter) 👇
     if (res && res.status === "error") { 
         alertError(res.pesan); 
-    } 
-    else if (res && res.status === "sukses") { 
+    } else if (res && res.status === "sukses") { 
         alertSukses(res.pesan); 
         bootstrap.Modal.getInstance(document.getElementById('modalKelolaPegawai')).hide(); 
         document.getElementById('formPegawai').reset(); 
         
-        let formatTanggalLahirLokal = d.tglLahir ? d.tglLahir : "";
-        let dataPegawaiBaruLokal = [
-            d.nip, d.nama, formatTanggalLahirLokal, d.golongan, d.unorInduk, d.unitkerja, d.namaJabatan, 
-            d.jenisJab, d.statusKawin, parseFloat(d.gapok), parseFloat(d.tjJab), d.rekening, d.skp, 
-            d.bulan, d.statusPegawai, d.uuid, "SistemLokal", new Date().toISOString()
-        ];
-
-        if (aksi === 'edit') {
-            let idx = window.cacheDataPegawaiAll.findIndex(p => p[0] === d.nipLama && p[13].toLowerCase() === globalBulanAktif.toLowerCase());
-            if(idx !== -1) window.cacheDataPegawaiAll[idx] = dataPegawaiBaruLokal;
-        } else {
-            if(window.cacheDataPegawaiAll) window.cacheDataPegawaiAll.unshift(dataPegawaiBaruLokal);
-        }
-
-        globalDataPegawai = window.cacheDataPegawaiAll.filter(p => String(p[14] || "PNS").toUpperCase() === globalJenisASN);
-        terapkanFilter(); 
-    } 
-    else {
+        // Tarik ulang data dari server biar aman dan fresh
+        muatDataPegawai(true); 
+    } else {
         alertError("Terjadi kesalahan respon dari server.");
     }
   }
@@ -1200,7 +1166,7 @@ async function doLogin(e) {
     if (target === 'tabTahunan') hitungPajakTahunan(); if (target === 'tabNominatif') muatNominatif();
   }
 
-  function bukaModalImport(jenis) { document.getElementById('importJenis').value = jenis; document.getElementById('fileImport').value = ""; document.getElementById('importModalTitle').innerText = jenis === 'pegawai' ? "Import Data Pegawai (Excel)" : "Import Master TPP (Excel)"; 
+  function bukaModalImport(jenis) { document.getElementById('importJenis').value = jenis; document.getElementById('fileImport').value = ""; document.getElementById('importModalTitle').innerText = jenis === 'pegawai' ? "Import Data Pegawai (Excel)" : "Import Data (Excel)"; 
     let modalObj = bootstrap.Modal.getInstance(document.getElementById('modalImportExcel')) || new bootstrap.Modal(document.getElementById('modalImportExcel'));
     modalObj.show(); 
   }
@@ -1217,10 +1183,11 @@ async function doLogin(e) {
               sheetName = "Template_Pegawai"; 
               fileName = "Template_Import_Pegawai.xlsx"; 
           } 
-          else if (jenis === 'pergub') { 
-              wsData = ["Nama Jabatan", "Kelas Jabatan", "Beban Kerja (BK)", "Prestasi Kerja (PK)", "Kondisi Kerja (KK)", "Tempat Bertugas (TB)", "Kelangkaan Profesi (KP)"]; 
-              sheetName = "Template_Master_TPP"; 
-              fileName = "Template_Import_Master_TPP.xlsx"; 
+          else if(jenis === 'pergub') { 
+        // 👇 TAMBAH KOLOM STATUS PEGAWAI DI SINI 👇
+        wsData = ["Nama Jabatan", "Kelas Jabatan", "Beban Kerja (BK)", "Prestasi Kerja (PK)", "Kondisi Kerja (KK)", "Tempat Bertugas (TB)", "Kelangkaan Profesi (KP)", "Status Pegawai (PNS / PPPK)"]; 
+        sheetName = "Template_Master_TPP"; 
+        fileName = "Template_Import_Master_TPP.xlsx"; 
           } 
           else if (jenis === 'akun') { 
               wsData = ["Username", "Password", "Role (Admin / Operator)", "Unit Kerja (Harus sesuai ketikan DB_Unit_Kerja)", "Email"]; 
@@ -1363,10 +1330,29 @@ async function doLogin(e) {
               for(let i = 1; i < data2D.length; i++) { 
                   let row = data2D[i]; 
                   if(!row[0]) continue; 
-                  payload.push({ namaJabatan: row[0], kelasJabatan: row[1], bk: parseFloat(row[2])||0, pk: parseFloat(row[3])||0, kk: parseFloat(row[4])||0, tb: parseFloat(row[5])||0, kp: parseFloat(row[6])||0 }); 
+                  
+                  payload.push({ 
+                      namaJabatan: row[0], 
+                      kelasJabatan: row[1], 
+                      bk: parseFloat(row[2])||0, 
+                      pk: parseFloat(row[3])||0, 
+                      kk: parseFloat(row[4])||0, 
+                      tb: parseFloat(row[5])||0, 
+                      kp: parseFloat(row[6])||0,
+                      statusPegawai: String(row[7] || "PNS").trim() // 👇 TANGKAP KOLOM KE 8 (Indeks 7)
+                  }); 
               }
-              let res = await fetchAPI("importPergubMassal", payload); stopLoading(); 
-              if(String(res).includes("Error")) { alertError(res.pesan || res); } else { alertSukses(res); bootstrap.Modal.getInstance(document.getElementById('modalImportExcel')).hide(); muatDataPergub(); }
+              let res = await fetchAPI("importPergubMassal", payload); 
+              stopLoading(); 
+              
+              // 👇 Perbaiki bacaan respon errornya
+              if(res && res.status === "error") { 
+                  alertError(res.pesan); 
+              } else { 
+                  alertSukses(res.pesan || "Sukses"); 
+                  bootstrap.Modal.getInstance(document.getElementById('modalImportExcel')).hide(); 
+                  muatDataPergub(); 
+              }
           } 
           else if(jenis === 'akun') {
               for(let i = 1; i < data2D.length; i++) { 

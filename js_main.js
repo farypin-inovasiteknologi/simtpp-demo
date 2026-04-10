@@ -2,7 +2,7 @@
 // 1. KONFIGURASI SUPER MASTER (CUKUP 1 URL UNTUK SELURUH PROVINSI)
 // =========================================================================
 // Masukkan URL hasil Deploy Super Master Anda di sini:
-const API_URL = "https://script.google.com/macros/s/AKfycbw.../exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbyBUvKN3rXlelbIfLuNauR1IVmRYxUXsXrxwi0XxTq_3Niw3KRQV6a7P64PpQj71kHVMQ/exec"; 
 
 let listOPD = []; // Dikosongkan, karena akan ditarik otomatis dari Super Master
 

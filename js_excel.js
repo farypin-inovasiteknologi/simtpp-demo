@@ -115,13 +115,14 @@ const getNum = (val) => {
     return (isNaN(num) || !isFinite(num)) ? 0 : num;
 };
 
-const getStr = (val) => {
-    return (val === null || val === undefined) ? "-" : String(val).trim();
-};
-
 const formatDigit = (num) => Math.round(num).toLocaleString('id-ID'); // Untuk hitung panjang karakter
 
+// ==========================================
+// HELPER: TTD AMAN
+// ==========================================
 function cetakTTDAman(sheet, startRow, setting, colMax) {
+    // FUNGSI PEMBERSIH DIKUNCI DI DALAM SINI
+    const getStr = (val) => (val === null || val === undefined) ? "-" : String(val).trim();
     const letRight = numToLet(colMax - 1); 
     
     sheet.getCell(`${letRight}${startRow}`).value = `Jambi, ........................ ${new Date().getFullYear()}`;
@@ -150,6 +151,11 @@ function cetakTTDAman(sheet, startRow, setting, colMax) {
 // 1. FUNGSI EXCEL: DAFTAR NOMINATIF (RUMUS EXCEL MURNI + AUTO FIT)
 // ==============================================================
 async function buatExcelNominatifJS(res) {
+    // FUNGSI PEMBERSIH DIKUNCI DI DALAM SINI AGAR TIDAK ERROR "NOT DEFINED"
+    const getNum = (val) => { let num = parseFloat(val); return (isNaN(num) || !isFinite(num)) ? 0 : num; };
+    const getStr = (val) => { return (val === null || val === undefined) ? "-" : String(val).trim(); };
+    const formatDigit = (num) => Math.round(num).toLocaleString('id-ID');
+
     try {
         const wb = new ExcelJS.Workbook();
         const sheet = wb.addWorksheet('Daftar Nominatif', {
@@ -160,9 +166,9 @@ async function buatExcelNominatifJS(res) {
         const colWidths = [5, 35, 15, 30, 15, 12, 12, 12, 12, 12, 15, 12, 15, 12, 12, 12, 15, 18];
         colWidths.forEach((w, i) => { sheet.getColumn(i + 1).width = w; });
 
-        sheet.mergeCells('A1:R1'); sheet.getCell('A1').value = `DAFTAR NOMINATIF TPP ${cleanStr(res.setting.Nama_Dinas)} PEMERINTAH PROVINSI JAMBI`;
-        sheet.mergeCells('A2:R2'); sheet.getCell('A2').value = `${cleanStr(res.jenisASN)} ${cleanStr(res.unitCetak)}`;
-        sheet.mergeCells('A3:R3'); sheet.getCell('A3').value = `PERIODE BULAN: ${cleanStr(res.bulanBesar)}`;
+        sheet.mergeCells('A1:R1'); sheet.getCell('A1').value = `DAFTAR NOMINATIF TPP ${getStr(res.setting.Nama_Dinas)} PEMERINTAH PROVINSI JAMBI`;
+        sheet.mergeCells('A2:R2'); sheet.getCell('A2').value = `${getStr(res.jenisASN)} ${getStr(res.unitCetak)}`;
+        sheet.mergeCells('A3:R3'); sheet.getCell('A3').value = `PERIODE BULAN: ${getStr(res.bulanBesar)}`;
         
         for (let i = 1; i <= 3; i++) {
             let cell = sheet.getCell(i, 1);
@@ -199,7 +205,7 @@ async function buatExcelNominatifJS(res) {
         groups.forEach(g => rekapData[g] = []); 
 
         res.data.forEach(c => {
-            let golDasar = cleanStr(c.golonganAsli).split("/")[0].trim().toUpperCase();
+            let golDasar = getStr(c.golonganAsli).split("/")[0].trim().toUpperCase();
             let groupName = (res.jenisASN === "PPPK") ? getGroupPPPK(golDasar) : (golDasar.includes("IX") || golDasar.includes("X") ? "PPPK" : golDasar);
             if (rekapData[groupName]) rekapData[groupName].push(c);
         });
@@ -217,15 +223,15 @@ async function buatExcelNominatifJS(res) {
                 let startRowGroup = curRow;
 
                 arr.forEach(c => {
-                    let isKawin = cleanStr(c.statusTER).startsWith("K");
+                    let isKawin = getStr(c.statusTER).startsWith("K");
                     let jmlJiwa = (isKawin ? 2 : 1) + getNum(c.tanggungAnak);
                     let rasio = getNum(c.tppBruto) > 0 ? (getNum(c.tppNettoKinerja) / getNum(c.tppBruto)) : 0;
 
                     let rowData = [
                         no++,
-                        `${cleanStr(c.nama)}\n${cleanStr(c.tglLahir)}\nNIP. ${cleanStr(c.nip)}\n${cleanStr(res.jenisASN)} - Gol. ${cleanStr(c.golonganAsli)}`,
-                        `${cleanStr(c.statusTER)}\nJiwa: ${jmlJiwa}`,
-                        cleanStr(c.jabatan),
+                        `${getStr(c.nama)}\n${getStr(c.tglLahir)}\nNIP. ${getStr(c.nip)}\n${getStr(res.jenisASN)} - Gol. ${getStr(c.golonganAsli)}`,
+                        `${getStr(c.statusTER)}\nJiwa: ${jmlJiwa}`,
+                        getStr(c.jabatan),
                         getNum(c.gajiKotor),
                         Math.round(getNum(c.bk) * rasio),
                         Math.round(getNum(c.pk) * rasio),
@@ -245,7 +251,6 @@ async function buatExcelNominatifJS(res) {
                     for (let i = 0; i < 18; i++) {
                         let cell = sheet.getCell(curRow, i + 1);
 
-                        // RUMUS EXCEL TANPA "result" AGAR TIDAK CORRUPT
                         if (i === 10) { cell.value = { formula: `SUM(F${curRow}:J${curRow})` }; } 
                         else if (i === 12) { cell.value = { formula: `K${curRow}+L${curRow}` }; } 
                         else if (i === 16) { cell.value = { formula: `SUM(N${curRow}:P${curRow})` }; } 
@@ -266,7 +271,6 @@ async function buatExcelNominatifJS(res) {
                     curRow++;
                 });
 
-                // MENGGUNAKAN RUMUS EXCEL PADA SUB-TOTAL
                 sheet.mergeCells(`A${curRow}:D${curRow}`);
                 let cellSub = sheet.getCell(curRow, 1);
                 cellSub.value = `SUB-TOTAL GOLONGAN ${g}`;
@@ -295,7 +299,6 @@ async function buatExcelNominatifJS(res) {
             }
         });
 
-        // RUMUS GRAND TOTAL
         sheet.mergeCells(`A${curRow}:D${curRow}`);
         let cellGrand = sheet.getCell(curRow, 1);
         cellGrand.value = "TOTAL KESELURUHAN";
@@ -321,7 +324,6 @@ async function buatExcelNominatifJS(res) {
         }
         sheet.getRow(curRow).height = 30;
 
-        // AUTO-SHRINK (CIUT 0) & AUTO-FIT (PRESISI)
         for (let c = 5; c <= 18; c++) {
             if (grandTotals[c - 5] === 0) {
                 sheet.getColumn(c).width = 4;
@@ -347,6 +349,11 @@ async function buatExcelNominatifJS(res) {
 // 2. FUNGSI EXCEL: REKAP GOLONGAN (RUMUS EXCEL + AUTO-SHRINK/FIT)
 // ==============================================================
 async function buatExcelRekapGolonganJS(res) {
+    // FUNGSI PEMBERSIH DIKUNCI DI DALAM SINI
+    const getNum = (val) => { let num = parseFloat(val); return (isNaN(num) || !isFinite(num)) ? 0 : num; };
+    const getStr = (val) => { return (val === null || val === undefined) ? "-" : String(val).trim(); };
+    const formatDigit = (num) => Math.round(num).toLocaleString('id-ID');
+
     try {
         const wb = new ExcelJS.Workbook();
         const sheet = wb.addWorksheet('Rekap Golongan', {
@@ -427,7 +434,6 @@ async function buatExcelRekapGolonganJS(res) {
             for (let i = 0; i < 12; i++) {
                 let cell = sheet.getCell(curRow, i + 1);
 
-                // RUMUS EXCEL TANPA "result" AGAR TIDAK CORRUPT
                 if (i === 8) { 
                     cell.value = { formula: `SUM(D${curRow}:H${curRow})` };
                 } else {

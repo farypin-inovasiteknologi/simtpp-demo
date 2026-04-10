@@ -99,11 +99,115 @@ function showDownloadModal(url) { let modalEl = document.getElementById('modalDo
       } catch (err) { Swal.close(); alertError("Terjadi kesalahan sistem: " + err.message); }
   }
 
-  function unduhNominatifKolektif(format, e) { fetchDataLaporan(format, e, buatExcelNominatifJS, null); } 
-  function unduhPerhitunganKolektif(format, e) { fetchDataLaporan(format, e, buatExcelPerhitunganJS, null); }
-  function unduhRekapGolongan(format, e) { fetchDataLaporan(format, e, buatExcelRekapGolonganJS, null); }
-  function unduhRekening(format, e) { fetchDataLaporan(format, e, buatExcelRekeningJS, null); }
-  function unduhRekapPajak(format, e) { fetchDataLaporan(format, e, buatExcelRekapPajakJS, null); }
+  // ==============================================================
+// 6. MESIN CETAK PDF KOLEKTIF (JSPDF + AUTOTABLE)
+// ==============================================================
+
+function buatPdfNominatifJS(res) { prosesCetakPdfKolektif(res, 'Nominatif'); }
+function buatPdfPerhitunganJS(res) { prosesCetakPdfKolektif(res, 'Perhitungan'); }
+function buatPdfRekapGolonganJS(res) { prosesCetakPdfKolektif(res, 'RekapGolongan'); }
+function buatPdfRekeningJS(res) { prosesCetakPdfKolektif(res, 'Rekening'); }
+function buatPdfRekapPajakJS(res) { prosesCetakPdfKolektif(res, 'PajakTER'); }
+
+async function prosesCetakPdfKolektif(res, jenis) {
+    try {
+        const { jsPDF } = window.jspdf;
+        // Kertas F4/Legal Landscape
+        const doc = new jsPDF({ orientation: 'landscape', format: 'legal' });
+
+        // --- KOP SURAT ---
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        let judulLaporan = `LAPORAN ${jenis.toUpperCase()} TPP - ${res.setting.Nama_Dinas}`;
+        doc.text(judulLaporan, 14, 15);
+        
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Periode: ${res.bulanBesar} | Kategori ASN: ${res.jenisASN} ${res.unitCetak}`, 14, 21);
+
+        let head = [];
+        let body = [];
+        let fRp = (num) => Math.round(num || 0).toLocaleString('id-ID');
+
+        // --- MAPPING DATA SESUAI JENIS LAPORAN ---
+        if (jenis === 'Rekening') {
+            head = [['No', 'Nama Pegawai', 'NIP', 'No. Rekening', 'TPP Bersih', 'Pot. Korpri', 'Diterima']];
+            let potKorpri = parseFloat(res.setting.Pot_Korpri) || 0;
+            body = res.data.map((c, i) => [
+                i+1, c.nama, c.nip, c.rekening, fRp(c.tppBersih), fRp(potKorpri), fRp(c.tppBersih - potKorpri)
+            ]);
+        } 
+        else if (jenis === 'Nominatif') {
+            head = [['No', 'Nama / NIP', 'Jabatan', 'Gol.', 'TPP Bruto', 'BPJS 4%', 'IWP 1%', 'PPh 21', 'Jml Potongan', 'TPP Bersih']];
+            body = res.data.map((c, i) => [
+                i+1, `${c.nama}\n${c.nip}`, c.jabatan, c.golonganAsli,
+                fRp(c.tppBruto), fRp(c.bpjs4), fRp(c.iwp1), fRp(c.pph21TKD),
+                fRp(c.bpjs4 + c.iwp1 + c.pph21TKD), fRp(c.tppBersih)
+            ]);
+        }
+        else if (jenis === 'PajakTER') {
+            head = [['No', 'Nama / NIP', 'Status Kawin', 'Gaji Kotor', 'TPP Bruto', 'Dasar Pajak (TER)', 'Tarif TER', 'Pajak TPP (Potongan)']];
+            body = res.data.map((c, i) => [
+                i+1, `${c.nama}\n${c.nip}`, c.statusTER,
+                fRp(c.gajiKotorTER), fRp(c.tppBruto), fRp(c.dasarPajakTER), 
+                `${c.pctTER}% (TER ${c.katTER})`, fRp(c.pph21TKD)
+            ]);
+        }
+        else {
+            // Standar Tabel Rangkuman (Untuk Perhitungan & Rekap Golongan agar muat di kertas)
+            head = [['No', 'Nama / NIP', 'Golongan', 'Jabatan', 'Total TPP Bruto', 'Total Potongan', 'TPP Bersih Diterima']];
+            body = res.data.map((c, i) => [
+                i+1, `${c.nama}\n${c.nip}`, c.golonganAsli, c.jabatan,
+                fRp(c.tppBruto), fRp(c.bpjs4 + c.iwp1 + c.pph21TKD), fRp(c.tppBersih)
+            ]);
+        }
+
+        // --- RENDER TABEL (AUTOTABLE) ---
+        doc.autoTable({
+            startY: 25,
+            head: head,
+            body: body,
+            theme: 'grid',
+            headStyles: { fillColor: [41, 128, 185], textColor: 255, fontSize: 9, halign: 'center' },
+            bodyStyles: { fontSize: 8 },
+            columnStyles: { 0: { halign: 'center', cellWidth: 10 } },
+            didParseCell: function (data) {
+                // Rata Kanan untuk kolom Angka/Rupiah
+                if (data.section === 'body' && data.column.index > 2) {
+                    if (/[0-9]/.test(data.cell.text[0])) { data.cell.styles.halign = 'right'; }
+                }
+            }
+        });
+
+        // --- TANDA TANGAN (DINAMIS DI BAWAH TABEL) ---
+        let finalY = doc.lastAutoTable.finalY + 15;
+        if (finalY > 170) { doc.addPage(); finalY = 20; } // Pindah halaman kalau mentok bawah
+        
+        doc.setFontSize(9);
+        doc.text(`Jambi, ........................ ${new Date().getFullYear()}`, 280, finalY, { align: 'center' });
+        
+        doc.text("Mengetahui,", 70, finalY + 5, { align: 'center' });
+        doc.text(res.setting.Kepala_Jabatan || "KEPALA DINAS", 70, finalY + 10, { align: 'center' });
+        doc.text("BENDAHARA PENGELUARAN", 280, finalY + 10, { align: 'center' });
+
+        doc.setFont("helvetica", "bold");
+        doc.text(res.setting.Kepala_Nama || "Nama Kepala", 70, finalY + 35, { align: 'center' });
+        doc.text(res.setting.Bendahara_Nama || "Nama Bendahara", 280, finalY + 35, { align: 'center' });
+        
+        doc.setFont("helvetica", "normal");
+        doc.text(`NIP. ${res.setting.Kepala_NIP || "-"}`, 70, finalY + 40, { align: 'center' });
+        doc.text(`NIP. ${res.setting.Bendahara_NIP || "-"}`, 280, finalY + 40, { align: 'center' });
+
+        // --- SIMPAN PDF ---
+        doc.save(`PDF_${jenis}_${res.bulanBesar}_${res.unitCetak}.pdf`);
+        Swal.close();
+        alertSukses(`File PDF ${jenis} Berhasil Diunduh!`);
+
+    } catch(err) {
+        Swal.close();
+        alertError("Gagal menyusun PDF: " + err.message);
+    }
+}
 
 // ==========================================
 // 0. HELPER: Pembersih Data & Cetak TTD
@@ -118,32 +222,47 @@ const getNum = (val) => {
 const formatDigit = (num) => Math.round(num).toLocaleString('id-ID'); // Untuk hitung panjang karakter
 
 // ==========================================
-// HELPER: TTD AMAN
+// HELPER: TTD AMAN (FIX POSISI STEMPEL)
 // ==========================================
 function cetakTTDAman(sheet, startRow, setting, colMax) {
-    // FUNGSI PEMBERSIH DIKUNCI DI DALAM SINI
+    // Fungsi pembersih teks
     const getStr = (val) => (val === null || val === undefined) ? "-" : String(val).trim();
-    const letRight = numToLet(colMax - 1); 
     
-    sheet.getCell(`${letRight}${startRow}`).value = `Jambi, ........................ ${new Date().getFullYear()}`;
-    sheet.getCell(`B${startRow+1}`).value = "Mengetahui,";
-    sheet.getCell(`B${startRow+2}`).value = getStr(setting.Kepala_Jabatan);
-    sheet.getCell(`${letRight}${startRow+2}`).value = "BENDAHARA PENGELUARAN";
+    // 1. Kepala ditaruh di Kolom ke-3 (Kolom 'C') agar lega untuk stempel
+    const letKiri = 'C'; 
     
-    sheet.getCell(`B${startRow+6}`).value = getStr(setting.Kepala_Nama);
-    sheet.getCell(`B${startRow+6}`).font = { bold: true, underline: true };
-    sheet.getCell(`${letRight}${startRow+6}`).value = getStr(setting.Bendahara_Nama);
-    sheet.getCell(`${letRight}${startRow+6}`).font = { bold: true, underline: true };
+    // 2. Bendahara ditarik mundur 5 kolom dari ujung kanan
+    let idxKanan = colMax - 5;
     
-    sheet.getCell(`B${startRow+7}`).value = getStr(setting.Kepala_Pangkat);
-    sheet.getCell(`${letRight}${startRow+7}`).value = getStr(setting.Bendahara_Pangkat);
+    // Jaga-jaga: Kalau tabelnya sangat sempit (misal tabel Rekening cuma 7 kolom),
+    // Pastikan posisi Bendahara minimal ada di ujung kanan biar nggak nabrak Kepala di kolom C (index 2).
+    if (idxKanan <= 2) { 
+        idxKanan = colMax - 2; 
+    } 
     
-    sheet.getCell(`B${startRow+8}`).value = "NIP. " + getStr(setting.Kepala_NIP);
-    sheet.getCell(`${letRight}${startRow+8}`).value = "NIP. " + getStr(setting.Bendahara_NIP);
+    const letKanan = numToLet(idxKanan);
+    
+    // 3. Render Teks Tanda Tangan
+    sheet.getCell(`${letKanan}${startRow}`).value = `Jambi, ........................ ${new Date().getFullYear()}`;
+    sheet.getCell(`${letKiri}${startRow+1}`).value = "Mengetahui,";
+    sheet.getCell(`${letKiri}${startRow+2}`).value = getStr(setting.Kepala_Jabatan);
+    sheet.getCell(`${letKanan}${startRow+2}`).value = "BENDAHARA PENGELUARAN";
+    
+    sheet.getCell(`${letKiri}${startRow+6}`).value = getStr(setting.Kepala_Nama);
+    sheet.getCell(`${letKiri}${startRow+6}`).font = { bold: true, underline: true };
+    sheet.getCell(`${letKanan}${startRow+6}`).value = getStr(setting.Bendahara_Nama);
+    sheet.getCell(`${letKanan}${startRow+6}`).font = { bold: true, underline: true };
+    
+    sheet.getCell(`${letKiri}${startRow+7}`).value = getStr(setting.Kepala_Pangkat);
+    sheet.getCell(`${letKanan}${startRow+7}`).value = getStr(setting.Bendahara_Pangkat);
+    
+    sheet.getCell(`${letKiri}${startRow+8}`).value = "NIP. " + getStr(setting.Kepala_NIP);
+    sheet.getCell(`${letKanan}${startRow+8}`).value = "NIP. " + getStr(setting.Bendahara_NIP);
 
+    // 4. Set Alignment ke Kiri Semua Biar Rapi
     for(let i=0; i<=8; i++) {
-        sheet.getCell(`B${startRow+i}`).alignment = { horizontal: 'left' };
-        sheet.getCell(`${letRight}${startRow+i}`).alignment = { horizontal: 'left' };
+        sheet.getCell(`${letKiri}${startRow+i}`).alignment = { horizontal: 'left' };
+        sheet.getCell(`${letKanan}${startRow+i}`).alignment = { horizontal: 'left' };
     }
 }
 

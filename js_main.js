@@ -139,32 +139,53 @@ async function doLogin(e) {
     document.getElementById('mHeaderUnit').innerText = currentUser.unitkerja; 
     
     let r = currentUser.role;
-    let isSuper = (r === "Super Admin");
-    let isOpd = (r === "Admin OPD");
+      let isSuper = (r === "Super Admin");
+      let isOpd = (r === "Admin OPD");
 
-    // Super Admin bisa lihat Master TPP
-    if(isSuper) { document.getElementById('btnMasterAdmin').classList.remove('hidden'); } 
-    else { document.getElementById('btnMasterAdmin').classList.add('hidden'); }
-    
-    // Super Admin DAN Admin OPD bisa lihat Kelola Akun
-    if(isSuper || isOpd) { document.getElementById('btnAkunAdmin').classList.remove('hidden'); }
-    else { document.getElementById('btnAkunAdmin').classList.add('hidden'); }
-    
-    document.getElementById('btnSettingAdmin').classList.remove('hidden');
-    document.getElementById('mHeaderAdminIcons').classList.remove('hidden');
-    
-    let iconMasterHP = document.querySelector('i[onclick="switchView(\'viewMasterPergub\')"]');
-    let iconAkunHP = document.querySelector('i[onclick="muatDaftarAkun()"]');
+      // 1. MASTER TPP: Hanya Super Admin
+      if(isSuper) { 
+          document.getElementById('btnMasterAdmin').classList.remove('hidden'); 
+      } else { 
+          document.getElementById('btnMasterAdmin').classList.add('hidden'); 
+      }
+      
+      // 2. KELOLA AKUN: Super Admin DAN Admin OPD bisa lihat!
+      if(isSuper || isOpd) { 
+          document.getElementById('btnAkunAdmin').classList.remove('hidden'); 
+      } else { 
+          document.getElementById('btnAkunAdmin').classList.add('hidden'); 
+      }
+      
+      // 3. SETTING: Hanya Super Admin & Admin OPD (Operator disembunyikan)
+      if(isSuper || isOpd) { 
+          document.getElementById('btnSettingAdmin').classList.remove('hidden'); 
+          if(document.getElementById('mHeaderAdminIcons')) document.getElementById('mHeaderAdminIcons').classList.remove('hidden');
+      } else { 
+          document.getElementById('btnSettingAdmin').classList.add('hidden'); 
+          if(document.getElementById('mHeaderAdminIcons')) document.getElementById('mHeaderAdminIcons').classList.add('hidden');
+      }
+      
+      // 4. IKON DI HP MOBILE
+      let iconMasterHP = document.querySelector('i[onclick="switchView(\'viewMasterPergub\')"]');
+      let iconAkunHP = document.querySelector('i[onclick="muatDaftarAkun()"]');
 
-    // (Cari bagian ini di dalam doLogin dan terapkanDataInit)
-    if(isSuper || isOpd) { 
-        document.getElementById('btnSettingAdmin').classList.remove('hidden'); 
-        if(document.getElementById('mHeaderAdminIcons')) document.getElementById('mHeaderAdminIcons').classList.remove('hidden');
-    } else { 
-        document.getElementById('btnSettingAdmin').classList.add('hidden'); 
-        // Sembunyikan juga ikon gear di layar HP
-        if(document.getElementById('mHeaderAdminIcons')) document.getElementById('mHeaderAdminIcons').classList.add('hidden');
-    }
+      if(isSuper || isOpd) { 
+          document.getElementById('btnTambahBulan').classList.remove('hidden'); 
+          document.getElementById('btnKelolaBulan').classList.remove('hidden'); 
+          
+          // Ikon Master TPP HP: Hanya Super Admin
+          if(iconMasterHP && isSuper) iconMasterHP.classList.remove('hidden'); 
+          else if(iconMasterHP) iconMasterHP.classList.add('hidden');
+          
+          // Ikon Kelola Akun HP: Super Admin & Admin OPD
+          if(iconAkunHP && (isSuper || isOpd)) iconAkunHP.classList.remove('hidden'); 
+          else if(iconAkunHP) iconAkunHP.classList.add('hidden');
+      } else { 
+          document.getElementById('btnTambahBulan').classList.add('hidden'); 
+          document.getElementById('btnKelolaBulan').classList.add('hidden'); 
+          if(iconMasterHP) iconMasterHP.classList.add('hidden');
+          if(iconAkunHP) iconAkunHP.classList.add('hidden');
+      }
 
     document.getElementById('viewLogin').classList.add('hidden'); 
     document.getElementById('mainNav').classList.remove('hidden');
@@ -1529,25 +1550,50 @@ function validasiNIP(input) {
       let isSuper = (r === "Super Admin");
       let isOpd = (r === "Admin OPD");
 
-      if(isSuper) { document.getElementById('btnMasterAdmin').classList.remove('hidden'); document.getElementById('btnAkunAdmin').classList.remove('hidden'); } 
-      else { document.getElementById('btnMasterAdmin').classList.add('hidden'); document.getElementById('btnAkunAdmin').classList.add('hidden'); }
+      // 1. MASTER TPP: Hanya Super Admin
+      if(isSuper) { 
+          document.getElementById('btnMasterAdmin').classList.remove('hidden'); 
+      } else { 
+          document.getElementById('btnMasterAdmin').classList.add('hidden'); 
+      }
       
-      document.getElementById('btnSettingAdmin').classList.remove('hidden');
-      document.getElementById('mHeaderAdminIcons').classList.remove('hidden');
+      // 2. KELOLA AKUN: Super Admin DAN Admin OPD bisa lihat!
+      if(isSuper || isOpd) { 
+          document.getElementById('btnAkunAdmin').classList.remove('hidden'); 
+      } else { 
+          document.getElementById('btnAkunAdmin').classList.add('hidden'); 
+      }
       
+      // 3. SETTING: Hanya Super Admin & Admin OPD (Operator disembunyikan)
+      if(isSuper || isOpd) { 
+          document.getElementById('btnSettingAdmin').classList.remove('hidden'); 
+          if(document.getElementById('mHeaderAdminIcons')) document.getElementById('mHeaderAdminIcons').classList.remove('hidden');
+      } else { 
+          document.getElementById('btnSettingAdmin').classList.add('hidden'); 
+          if(document.getElementById('mHeaderAdminIcons')) document.getElementById('mHeaderAdminIcons').classList.add('hidden');
+      }
+      
+      // 4. IKON DI HP MOBILE
       let iconMasterHP = document.querySelector('i[onclick="switchView(\'viewMasterPergub\')"]');
       let iconAkunHP = document.querySelector('i[onclick="muatDaftarAkun()"]');
 
-      // (Cari bagian ini di dalam doLogin dan terapkanDataInit)
-    if(isSuper || isOpd) { 
-        document.getElementById('btnSettingAdmin').classList.remove('hidden'); 
-        if(document.getElementById('mHeaderAdminIcons')) document.getElementById('mHeaderAdminIcons').classList.remove('hidden');
-    } else { 
-        document.getElementById('btnSettingAdmin').classList.add('hidden'); 
-        // Sembunyikan juga ikon gear di layar HP
-        if(document.getElementById('mHeaderAdminIcons')) document.getElementById('mHeaderAdminIcons').classList.add('hidden');
-    }
-
+      if(isSuper || isOpd) { 
+          document.getElementById('btnTambahBulan').classList.remove('hidden'); 
+          document.getElementById('btnKelolaBulan').classList.remove('hidden'); 
+          
+          // Ikon Master TPP HP: Hanya Super Admin
+          if(iconMasterHP && isSuper) iconMasterHP.classList.remove('hidden'); 
+          else if(iconMasterHP) iconMasterHP.classList.add('hidden');
+          
+          // Ikon Kelola Akun HP: Super Admin & Admin OPD
+          if(iconAkunHP && (isSuper || isOpd)) iconAkunHP.classList.remove('hidden'); 
+          else if(iconAkunHP) iconAkunHP.classList.add('hidden');
+      } else { 
+          document.getElementById('btnTambahBulan').classList.add('hidden'); 
+          document.getElementById('btnKelolaBulan').classList.add('hidden'); 
+          if(iconMasterHP) iconMasterHP.classList.add('hidden');
+          if(iconAkunHP) iconAkunHP.classList.add('hidden');
+      }
       document.getElementById('viewLogin').classList.add('hidden'); 
       document.getElementById('viewLanding').classList.add('hidden'); 
       document.getElementById('mainNav').classList.remove('hidden');

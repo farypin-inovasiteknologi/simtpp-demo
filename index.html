@@ -623,87 +623,218 @@
             </div>
         </div>
 
-        <div class="modal fade" id="modalPopupASN" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content shadow-lg border-0">
-            <div class="modal-header text-white" style="background: linear-gradient(90deg, #2c3e50, #3498db);">
-                <h5 class="modal-title fw-bold"><i class="bi bi-person-bounding-box"></i> Panel Kelola TPP Pegawai</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" style="background-color: #f4f6f9;">
+        <div id="viewPilihBulan" class="hidden" style="margin-top: 3rem;">
+            <div class="row g-4 justify-content-center mx-auto" style="max-width: 1100px;">
                 
-                <div id="viewManajemenASN">
-
-            <ul class="nav nav-pills mb-3 mt-3 d-flex gap-2">
-                <li class="nav-item border border-primary rounded shadow-sm"><button id="navGaji" class="nav-link active fw-bold text-white px-4" style="background-color: #0d6efd;" onclick="navigasiTab('tabGaji')">1. Amprah Gaji</button></li>
-                <li class="nav-item border border-warning rounded shadow-sm"><button id="navAbsen" class="nav-link fw-bold text-dark px-4" style="background-color: #ffc107;" onclick="navigasiTab('tabAbsen')">2. Perhitungan TPP</button></li>
-                <li class="nav-item border border-danger rounded shadow-sm"><button id="navTahunan" class="nav-link fw-bold text-white px-4" style="background-color: #dc3545;" onclick="navigasiTab('tabTahunan')">3. Penghasilan Setahun / Pajak TER</button></li>
-                <li class="nav-item border border-success rounded shadow-sm"><button id="navNominatif" class="nav-link fw-bold text-white px-4" style="background-color: #198754;" onclick="navigasiTab('tabNominatif')">4. Nominatif TPP</button></li>
-            </ul>
-
-            <div class="alert alert-info border-info p-2 d-flex justify-content-between align-items-center mb-1">
-                <div>
-                    <h5 id="labelNamaASN" class="mb-1 fw-bold">NAMA PEGAWAI</h5>
-                    <span id="labelStatusASN" class="badge bg-secondary">ASN: </span>
-                    <span id="labelNIPASN" class="badge bg-primary">NIP: </span>
-                    <span id="labelGolonganASN" class="badge bg-success">Gol: </span>
-                    <span id="labelJabatanASN" class="badge bg-dark">Jabatan: </span>
-                    <span id="labelUnitKerjaASN" class="badge bg-info text-dark">Unit Kerja: </span>
+                <div class="col-lg-8 col-md-12">
+                    <div class="card shadow-sm border-0 rounded-4 h-100" style="background-color: #f4f8ff; border: 1px solid #dbeafe !important;">
+                        <div class="card-header text-white fw-bold py-3 rounded-top-4" style="background: linear-gradient(135deg, #4e73df, #224abe);">
+                            <i class="bi bi-calendar-week"></i> Pilih Periode TPP
+                        </div>
+                        <div class="card-body p-4">
+                            <p class="text-muted small mb-3">Klik salah satu bulan di bawah ini. Tombol akan otomatis menyesuaikan barisnya.</p>
+                            
+                            <div id="containerTombolPeriode" class="row g-2 mb-4">
+                                <span class="text-muted small">Memuat periode...</span>
+                            </div>
+                            
+                            <hr class="text-secondary" style="opacity: 0.2;">
+                            
+                            <div class="d-flex flex-column flex-md-row gap-2">
+                                <button id="btnTambahBulan" class="btn btn-outline-primary fw-bold hidden w-100" onclick="bukaModalTambahPeriode()">
+                                    <i class="bi bi-plus-circle"></i> Tambah Periode
+                                </button>
+                                <button id="btnKelolaBulan" class="btn btn-outline-danger fw-bold hidden w-100" onclick="bukaModalEditPeriode()">
+                                    <i class="bi bi-gear"></i> Kelola Periode
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                <div class="col-lg-4 col-md-12">
+                    <div class="card shadow-lg border-0 rounded-4 h-100" style="background-color: #fffbf0; border: 1px solid #fef0c7 !important;">
+                        <div class="card-body p-4 text-center d-flex flex-column justify-content-center h-100">
+                            
+                            <h6 class="text-muted fw-bold mb-2">Bulan yang Diaktifkan:</h6>
+                            <h2 id="displayBulanAktif" class="fw-bold mb-4 px-3 py-2 rounded-pill border shadow-sm" style="color: #b45309; background-color: #fef3c7; border-color: #fde68a !important;">BELUM DIPILIH</h2>
+                            
+                            <h6 class="fw-bold mb-3 text-dark text-start border-bottom pb-2" style="border-color: #fde68a !important;"><i class="bi bi-person-badge"></i> Kategori ASN:</h6>
+                            
+                            <div class="d-flex justify-content-center gap-3 mb-4">
+                                <button id="btnPilihPNS" class="btn btn-success fw-bold w-50 py-2 fs-5 shadow-sm rounded-3" onclick="ubahJenisASN('PNS')">PNS</button>
+                                <button id="btnPilihPPPK" class="btn btn-outline-warning text-dark fw-bold w-50 py-2 fs-5 shadow-sm rounded-3" onclick="ubahJenisASN('PPPK')">PPPK</button>
+                            </div>
+                            
+                            <input type="hidden" id="pilihJenisASN" value="PNS">
+                            <input type="hidden" id="pilihPeriodeUtama" value="">
+
+                            <button class="btn btn-primary btn-lg w-100 fw-bold rounded-pill shadow-lg mt-auto py-3" style="font-size: 1.15rem; background: linear-gradient(90deg, #0d6efd, #0a58ca); border: none;" onclick="masukAplikasi()">
+                                MASUK KELOLA TPP <i class="bi bi-arrow-right-circle ms-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+
+        <div id="viewDaftarPegawai" class="hidden">
+            <div class="alert alert-primary fw-bold text-center fs-5 shadow-sm mb-3">
+                PENGELOLAAN DATA PEGAWAI & TPP<br>
+                <span class="text-dark" style="font-size: 1rem; font-weight: normal;">
+                    Periode : <span id="labelBulanAktif" class="text-danger fw-bold text-uppercase"></span> 
+                    <span class="d-block d-md-inline mt-1 mt-md-0">( HK : <span id="labelHKAktif"></span> Hari )</span>
+                </span>
+            </div>
+            <div id="warningLock" class="alert alert-danger fw-bold text-center shadow-sm hidden border-danger">
+                <i class="bi bi-lock-fill"></i> PERIODE INI SUDAH DIKUNCI OLEH ADMIN <br> <span class="small text-dark">Data hanya dapat dilihat dan dicetak. Anda tidak dapat menambah/mengedit data pegawai.</span>
             </div>
             
-            <div class="alert alert-secondary border-secondary p-1 mb-3 text-center shadow-sm" style="font-size: 0.9rem;">
-                <span class="text-dark">Periode : <span id="labelBulanASNPanel" class="text-danger fw-bold text-uppercase"></span></span>
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start mb-3 gap-3">
+                <div class="action-left d-flex flex-wrap gap-2">
+                    <button id="btnTambahPegawai" class="btn btn-primary btn-sm fw-bold shadow-sm" onclick="bukaModalPegawai('tambah')"><i class="bi bi-person-plus"></i> Tambah</button>
+                </div>
+                <div class="action-right d-flex flex-wrap gap-2 justify-content-md-end">
+                    <div class="btn-group shadow-sm">
+                        <button class="btn btn-success btn-sm dropdown-toggle fw-bold" data-bs-toggle="dropdown"><i class="bi bi-printer"></i> Nominatif</button>
+                        <ul class="dropdown-menu shadow text-center">
+                            <li><a class="dropdown-item fw-bold text-success" href="javascript:void(0)" onclick="unduhNominatifKolektif('excel', event)">Unduh Excel</a></li>
+                            <li><a class="dropdown-item fw-bold text-danger" href="javascript:void(0)" onclick="unduhNominatifKolektif('pdf', event)">Unduh PDF</a></li>
+                        </ul>
+                    </div>
+                    <div class="btn-group shadow-sm">
+                        <button class="btn btn-warning btn-sm dropdown-toggle fw-bold" data-bs-toggle="dropdown"><i class="bi bi-printer"></i> Perhitungan</button>
+                        <ul class="dropdown-menu shadow text-center">
+                            <li><a class="dropdown-item fw-bold text-success" href="javascript:void(0)" onclick="unduhPerhitunganKolektif('excel', event)">Unduh Excel</a></li>
+                            <li><a class="dropdown-item fw-bold text-danger" href="javascript:void(0)" onclick="unduhPerhitunganKolektif('pdf', event)">Unduh PDF</a></li>
+                        </ul>
+                    </div>
+                    <div class="btn-group shadow-sm">
+                        <button class="btn btn-info text-white btn-sm dropdown-toggle fw-bold" data-bs-toggle="dropdown"><i class="bi bi-bar-chart-fill"></i> Rekap Gol.</button>
+                        <ul class="dropdown-menu shadow text-center">
+                            <li><a class="dropdown-item fw-bold text-success" href="javascript:void(0)" onclick="unduhRekapGolongan('excel', event)">Unduh Excel</a></li>
+                            <li><a class="dropdown-item fw-bold text-danger" href="javascript:void(0)" onclick="unduhRekapGolongan('pdf', event)">Unduh PDF</a></li>
+                        </ul>
+                    </div>
+                    <div class="btn-group shadow-sm">
+                        <button class="btn btn-secondary btn-sm dropdown-toggle fw-bold" data-bs-toggle="dropdown"><i class="bi bi-bank"></i> Rekening</button>
+                        <ul class="dropdown-menu shadow text-center">
+                            <li><a class="dropdown-item fw-bold text-success" href="javascript:void(0)" onclick="unduhRekening('excel', event)">Unduh Excel</a></li>
+                            <li><a class="dropdown-item fw-bold text-danger" href="javascript:void(0)" onclick="unduhRekening('pdf', event)">Unduh PDF</a></li>
+                        </ul>
+                    </div>
+                    <div class="btn-group shadow-sm">
+                        <button class="btn btn-danger btn-sm dropdown-toggle fw-bold" data-bs-toggle="dropdown"><i class="bi bi-receipt"></i> Rekap Pajak</button>
+                        <ul class="dropdown-menu shadow text-center">
+                            <li><a class="dropdown-item fw-bold text-success" href="javascript:void(0)" onclick="unduhRekapPajak('excel', event)">Unduh Excel</a></li>
+                            <li><a class="dropdown-item fw-bold text-danger" href="javascript:void(0)" onclick="unduhRekapPajak('pdf', event)">Unduh PDF</a></li>
+                        </ul>
+                    </div>
+                </div>
             </div>
 
-            <div class="tab-content border p-3 bg-light">
-                <div class="tab-pane fade show active" id="tabGaji">
-                    <form id="formGaji" onsubmit="submitGaji(event)">
-                        <div class="alert alert-primary p-2 mb-3"><i class="bi bi-info-circle"></i> <b>Info:</b> Gaji Pokok & Tunjangan Jabatan terisi otomatis.</div>
-                        <div class="row mb-3">
-                            <div class="col-md-4"><label class="fw-bold">Gaji Pokok (Terkunci)</label><input type="number" class="form-control readonly-field bg-light text-primary" id="aGapok" readonly></div>
-                            <div class="col-md-4"><label class="fw-bold">Tj. Jabatan (Terkunci)</label><input type="number" class="form-control readonly-field bg-light text-primary" id="aTjJab" readonly></div>
-                            <div class="col-md-4"><label class="fw-bold">Pembulatan (Otomatis)</label><input type="number" class="form-control readonly-field bg-light text-success" id="aBulat" value="0" readonly></div>
+            <div class="row mb-3 bg-light p-2 border rounded shadow-sm mx-0">
+                <div class="col-md-4 mb-1"><input type="text" id="filterCari" class="form-control border-primary" placeholder="🔍 Cari NIP atau Nama..." oninput="terapkanFilter()"></div>
+                <div class="col-md-4 mb-1"><select id="filterGol" class="form-select border-primary" onchange="terapkanFilter()"><option value="">Semua Golongan</option></select></div>
+                <div class="col-md-4 mb-1"><select id="filterUnitKerja" class="form-select border-primary" onchange="terapkanFilter()"><option value="">Semua Unit Kerja</option></select></div>
+            </div>
+
+            <div class="table-responsive bg-white">
+                <table class="table table-bordered table-hover align-middle">
+                    <thead class="table-dark"><tr><th>NIP</th><th>Nama Pegawai</th><th>Golongan</th><th>Unit Kerja</th><th>Jabatan</th><th>Rekening</th><th class="text-center">Aksi</th></tr></thead>
+                    <tbody id="tabelBodyPegawai"><tr><td colspan="7" class="text-center">Memuat...</td></tr></tbody>
+                </table>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center mt-2">
+                <span id="infoPagination" class="text-muted fw-bold small">Menampilkan 0 data</span>
+                <div id="btnPagination" class="btn-group"></div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="modalPopupASN" tabindex="-1" data-bs-backdrop="static">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                <div class="modal-content shadow-lg border-0">
+                    <div class="modal-header text-white" style="background: linear-gradient(90deg, #2c3e50, #3498db);">
+                        <h5 class="modal-title fw-bold"><i class="bi bi-person-bounding-box"></i> Panel Kelola TPP Pegawai</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" style="background-color: #f4f6f9;">
+                        
+                        <div id="viewManajemenASN">
+
+                    <ul class="nav nav-pills mb-3 mt-3 d-flex gap-2">
+                        <li class="nav-item border border-primary rounded shadow-sm"><button id="navGaji" class="nav-link active fw-bold text-white px-4" style="background-color: #0d6efd;" onclick="navigasiTab('tabGaji')">1. Amprah Gaji</button></li>
+                        <li class="nav-item border border-warning rounded shadow-sm"><button id="navAbsen" class="nav-link fw-bold text-dark px-4" style="background-color: #ffc107;" onclick="navigasiTab('tabAbsen')">2. Perhitungan TPP</button></li>
+                        <li class="nav-item border border-danger rounded shadow-sm"><button id="navTahunan" class="nav-link fw-bold text-white px-4" style="background-color: #dc3545;" onclick="navigasiTab('tabTahunan')">3. Penghasilan Setahun / Pajak TER</button></li>
+                        <li class="nav-item border border-success rounded shadow-sm"><button id="navNominatif" class="nav-link fw-bold text-white px-4" style="background-color: #198754;" onclick="navigasiTab('tabNominatif')">4. Nominatif TPP</button></li>
+                    </ul>
+
+                    <div class="alert alert-info border-info p-2 d-flex justify-content-between align-items-center mb-1">
+                        <div>
+                            <h5 id="labelNamaASN" class="mb-1 fw-bold">NAMA PEGAWAI</h5>
+                            <span id="labelStatusASN" class="badge bg-secondary">ASN: </span>
+                            <span id="labelNIPASN" class="badge bg-primary">NIP: </span>
+                            <span id="labelGolonganASN" class="badge bg-success">Gol: </span>
+                            <span id="labelJabatanASN" class="badge bg-dark">Jabatan: </span>
+                            <span id="labelUnitKerjaASN" class="badge bg-info text-dark">Unit Kerja: </span>
                         </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <div class="box-amprah">
-                                    <h6 class="fw-bold text-success border-bottom pb-2">Rincian Penghasilan (Otomatis)</h6>
-                                    <div class="flex-row-center"><span>Tj. Istri (10%)</span><input type="number" id="aTjIstri" class="form-control input-sm readonly-field w-50" readonly></div>
-                                    <div class="flex-row-center"><span>Tj. Anak (2% / Anak)</span><input type="number" id="aTjAnak" class="form-control input-sm readonly-field w-50" readonly></div>
-                                    <div class="flex-row-center fw-bold text-primary mt-2"><span>Jml. Keluarga (Gaji+Istri+Anak)</span><input type="number" id="aJmlKeluarga" class="form-control input-sm readonly-field bg-light text-primary w-50" readonly></div>
-                                    <hr>
-                                    <div class="flex-row-center"><span>Tj. Beras</span><input type="number" id="aTjBeras" class="form-control input-sm readonly-field w-50" readonly></div>
-                                    <div class="flex-row-center"><span>Tj. Pajak PPh 21</span><input type="number" id="aTjPajak" class="form-control input-sm readonly-field text-danger fw-bold w-50" readonly></div>
-                                    <div class="flex-row-center"><span>Tj. BPJS Kes (4%)</span><input type="number" id="aTjBPJS4" class="form-control input-sm readonly-field w-50" readonly></div>
-                                    <div class="flex-row-center"><span>Tj. JKK (0.24%)</span><input type="number" id="aTjJKK" class="form-control input-sm readonly-field w-50" readonly></div>
-                                    <div class="flex-row-center"><span>Tj. JKM (0.72%)</span><input type="number" id="aTjJKM" class="form-control input-sm readonly-field w-50" readonly></div>
-                                    <hr><div class="flex-row-center"><span class="fw-bold fs-6">GAJI KOTOR</span><input type="number" id="aJmlKotor" class="form-control form-control-sm readonly-field bg-success text-white w-50 fw-bold fs-6" readonly></div>
+                    </div>
+                    
+                    <div class="alert alert-secondary border-secondary p-1 mb-3 text-center shadow-sm" style="font-size: 0.9rem;">
+                        <span class="text-dark">Periode : <span id="labelBulanASNPanel" class="text-danger fw-bold text-uppercase"></span></span>
+                    </div>
+
+                    <div class="tab-content border p-3 bg-light">
+                        <div class="tab-pane fade show active" id="tabGaji">
+                            <div id="formGaji">
+                                <div class="alert alert-success p-2 mb-3 shadow-sm border-success">
+                                    <i class="bi bi-check-circle-fill"></i> <b>Otomatis:</b> Gaji pokok & semua rincian dikalkulasi dan <b>disimpan secara otomatis</b>. Anda tidak perlu mengklik tombol simpan.
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-4"><label class="fw-bold">Gaji Pokok (Terkunci)</label><input type="number" class="form-control readonly-field bg-light text-primary" id="aGapok" readonly></div>
+                                    <div class="col-md-4"><label class="fw-bold">Tj. Jabatan (Terkunci)</label><input type="number" class="form-control readonly-field bg-light text-primary" id="aTjJab" readonly></div>
+                                    <div class="col-md-4"><label class="fw-bold">Pembulatan (Otomatis)</label><input type="number" class="form-control readonly-field bg-light text-success" id="aBulat" value="0" readonly></div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <div class="box-amprah">
+                                            <h6 class="fw-bold text-success border-bottom pb-2">Rincian Penghasilan (Otomatis)</h6>
+                                            <div class="flex-row-center"><span>Tj. Istri (10%)</span><input type="number" id="aTjIstri" class="form-control input-sm readonly-field w-50" readonly></div>
+                                            <div class="flex-row-center"><span>Tj. Anak (2% / Anak)</span><input type="number" id="aTjAnak" class="form-control input-sm readonly-field w-50" readonly></div>
+                                            <div class="flex-row-center fw-bold text-primary mt-2"><span>Jml. Keluarga (Gaji+Istri+Anak)</span><input type="number" id="aJmlKeluarga" class="form-control input-sm readonly-field bg-light text-primary w-50" readonly></div>
+                                            <hr>
+                                            <div class="flex-row-center"><span>Tj. Beras</span><input type="number" id="aTjBeras" class="form-control input-sm readonly-field w-50" readonly></div>
+                                            <div class="flex-row-center"><span>Tj. Pajak PPh 21</span><input type="number" id="aTjPajak" class="form-control input-sm readonly-field text-danger fw-bold w-50" readonly></div>
+                                            <div class="flex-row-center"><span>Tj. BPJS Kes (4%)</span><input type="number" id="aTjBPJS4" class="form-control input-sm readonly-field w-50" readonly></div>
+                                            <div class="flex-row-center"><span>Tj. JKK (0.24%)</span><input type="number" id="aTjJKK" class="form-control input-sm readonly-field w-50" readonly></div>
+                                            <div class="flex-row-center"><span>Tj. JKM (0.72%)</span><input type="number" id="aTjJKM" class="form-control input-sm readonly-field w-50" readonly></div>
+                                            <hr><div class="flex-row-center"><span class="fw-bold fs-6">GAJI KOTOR</span><input type="number" id="aJmlKotor" class="form-control form-control-sm readonly-field bg-success text-white w-50 fw-bold fs-6" readonly></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="box-amprah">
+                                            <h6 class="fw-bold text-danger border-bottom pb-2">Rincian Potongan (Otomatis)</h6>
+                                            <div class="flex-row-center"><span>IWP 8% (Pensiun)</span><input type="number" id="aPotIWP8" class="form-control input-sm readonly-field w-50" readonly></div>
+                                            <div class="flex-row-center"><span>IWP 1% (Kes)</span><input type="number" id="aPotIWP1" class="form-control input-sm readonly-field w-50" readonly></div>
+                                            <div class="flex-row-center"><span>Pot. BPJS (4%)</span><input type="number" id="aPotBPJS4" class="form-control input-sm readonly-field w-50" readonly></div>
+                                            <div class="flex-row-center"><span>Potongan PPh 21</span><input type="number" id="aPotPajak" class="form-control input-sm readonly-field text-danger fw-bold w-50" readonly></div>
+                                            <div class="flex-row-center"><span>Pot. JKK</span><input type="number" id="aPotJKK" class="form-control input-sm readonly-field w-50" readonly></div>
+                                            <div class="flex-row-center"><span>Pot. JKM</span><input type="number" id="aPotJKM" class="form-control input-sm readonly-field w-50" readonly></div>
+                                            <hr style="margin-top: 25px;"><div class="flex-row-center"><span class="fw-bold fs-6">TOTAL POTONGAN</span><input type="number" id="aJmlPotongan" class="form-control form-control-sm readonly-field bg-danger text-white w-50 fw-bold fs-6" readonly></div>
+                                        </div>
+                                    </div>
+                                </div> 
+                                <div class="alert alert-success d-flex justify-content-between align-items-center mt-2 shadow-sm border-success box-jml-bersih">
+                                    <h4 class="mb-0 fw-bold">JUMLAH GAJI BERSIH <span id="labelBulanGajiBersih" class="text-uppercase text-danger"></span></h4>
+                                    <input type="number" id="aJmlBersih" class="form-control readonly-field bg-white fw-bold fs-3 w-25 text-end text-success" readonly>
+                                </div>
+                                <div class="d-flex justify-content-center mt-4">
+                                    <button type="button" class="btn btn-danger px-5 fw-bold fs-5 py-3 rounded-pill shadow-sm" onclick="cetakPDFPerorangan('tabGaji', 'Slip_Gaji')"><i class="bi bi-file-pdf-fill"></i> UNDUH PDF AMPRAH GAJI</button>
                                 </div>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <div class="box-amprah">
-                                    <h6 class="fw-bold text-danger border-bottom pb-2">Rincian Potongan (Otomatis)</h6>
-                                    <div class="flex-row-center"><span>IWP 8% (Pensiun)</span><input type="number" id="aPotIWP8" class="form-control input-sm readonly-field w-50" readonly></div>
-                                    <div class="flex-row-center"><span>IWP 1% (Kes)</span><input type="number" id="aPotIWP1" class="form-control input-sm readonly-field w-50" readonly></div>
-                                    <div class="flex-row-center"><span>Pot. BPJS (4%)</span><input type="number" id="aPotBPJS4" class="form-control input-sm readonly-field w-50" readonly></div>
-                                    <div class="flex-row-center"><span>Potongan PPh 21</span><input type="number" id="aPotPajak" class="form-control input-sm readonly-field text-danger fw-bold w-50" readonly></div>
-                                    <div class="flex-row-center"><span>Pot. JKK</span><input type="number" id="aPotJKK" class="form-control input-sm readonly-field w-50" readonly></div>
-                                    <div class="flex-row-center"><span>Pot. JKM</span><input type="number" id="aPotJKM" class="form-control input-sm readonly-field w-50" readonly></div>
-                                    <hr style="margin-top: 25px;"><div class="flex-row-center"><span class="fw-bold fs-6">TOTAL POTONGAN</span><input type="number" id="aJmlPotongan" class="form-control form-control-sm readonly-field bg-danger text-white w-50 fw-bold fs-6" readonly></div>
-                                </div>
-                            </div>
-                        </div> 
-                        <div class="alert alert-success d-flex justify-content-between align-items-center mt-2 shadow-sm border-success box-jml-bersih">
-                            <h4 class="mb-0 fw-bold">JUMLAH GAJI BERSIH <span id="labelBulanGajiBersih" class="text-uppercase text-danger"></span></h4>
-                            <input type="number" id="aJmlBersih" class="form-control readonly-field bg-white fw-bold fs-3 w-25 text-end text-success" readonly>
                         </div>
-                        <div class="d-flex gap-2 mt-4">
-                            <button type="submit" id="btnSimpanGaji" class="btn btn-primary w-100 fw-bold fs-5 py-2"><i class="bi bi-save"></i> SIMPAN AMPRAH GAJI</button>
-                            <button type="button" class="btn btn-danger w-100 fw-bold fs-5 py-2" onclick="cetakPDFPerorangan('tabGaji', 'Slip_Gaji')"><i class="bi bi-file-pdf-fill"></i> UNDUH PDF</button>
-                        </div>
-                    </form>
-                </div>
 
                 <div class="tab-pane fade" id="tabAbsen">
                     <form id="formAbsen" onsubmit="submitPerhitunganTPP(event)">

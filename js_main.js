@@ -483,7 +483,6 @@ async function doLogin(e) {
 
   function renderDropdownPeriode(data) {
     if (data && data.length > 0) {
-        // Algoritma Smart Sorting (Tetap sama, ini sudah oke)
         const getSortValue = (p) => {
             let baseBulan = parseInt(p.bulanAngka) || 0;
             let year = parseInt(p.tahun) || 0;
@@ -500,8 +499,6 @@ async function doLogin(e) {
     }
 
     arrayPeriode = data; 
-    
-    // GANTI TARGET DARI DROPDOWN MENJADI CONTAINER TOMBOL KIRI
     let container = document.getElementById('containerTombolPeriode'); 
     let hiddenInput = document.getElementById('pilihPeriodeUtama');
     let displayTeks = document.getElementById('displayBulanAktif');
@@ -514,16 +511,20 @@ async function doLogin(e) {
         hiddenInput.value = "";
     } else { 
         data.forEach(p => { 
-            // PERUBAHAN DI SINI: Dibungkus col-6 (2 di HP) dan col-md-3 (4 di Laptop), tombol diset w-100 agar memenuhi kotak
+            // PERUBAHAN 2: Deteksi gembok & berikan warna tombol yang berbeda
+            let isLocked = p.statusLock === "Kunci";
+            let lockIcon = isLocked ? '<i class="bi bi-lock-fill me-1"></i>' : '';
+            // Jika dikunci, dasarnya abu-abu. Jika terbuka, dasarnya biru.
+            let btnClass = isLocked ? 'btn-outline-secondary text-secondary' : 'btn-outline-primary';
+            
             container.innerHTML += `
             <div class="col-6 col-md-3">
-                <button type="button" class="btn btn-outline-secondary w-100 fw-bold py-2 btn-periode-select shadow-sm text-truncate" onclick="klikBulan('${p.namaPeriode}', this)" title="${p.namaPeriode}">
-                    ${p.namaPeriode}
+                <button type="button" class="btn ${btnClass} w-100 fw-bold py-2 btn-periode-select shadow-sm text-truncate" onclick="klikBulan('${p.namaPeriode}', '${p.statusLock}', this)" title="${p.namaPeriode}">
+                    ${lockIcon}${p.namaPeriode}
                 </button>
             </div>`; 
         }); 
         
-        // Pengecekan otomatis (Pilih bulan yang paling baru / terakhir jika tidak ada histori)
         let selectedBulan = "";
         if (globalBulanAktif && data.some(p => p.namaPeriode === globalBulanAktif)) {
             selectedBulan = globalBulanAktif;
@@ -531,58 +532,54 @@ async function doLogin(e) {
             selectedBulan = data[data.length - 1].namaPeriode; 
         }
         
-        // Simulasi Klik otomatis setelah tombol di-render
+        let selectedBulanObj = data.find(p => p.namaPeriode === selectedBulan) || data[data.length - 1];
+        
         setTimeout(() => {
             let btns = container.querySelectorAll('.btn-periode-select');
             btns.forEach(btn => {
-                if (btn.innerText.trim() === selectedBulan) {
-                    klikBulan(selectedBulan, btn);
+                if (btn.innerText.replace(/[\n\r]+|[\s]{2,}/g, ' ').trim().includes(selectedBulanObj.namaPeriode)) {
+                    klikBulan(selectedBulanObj.namaPeriode, selectedBulanObj.statusLock, btn);
                 }
             });
         }, 50);
     }
   }
 
-  // --- LOGIKA BARU UNTUK KLIK TOMBOL BULAN & ASN ---
-  
-  function klikBulan(namaBulan, btnElement) {
-      // 1. Masukkan nilai ke hidden input
+  function klikBulan(namaBulan, statusLock, btnElement) {
       document.getElementById('pilihPeriodeUtama').value = namaBulan;
-      // 2. Ubah teks di panel kanan jadi mencolok
       document.getElementById('displayBulanAktif').innerText = namaBulan.toUpperCase();
       
-      // 3. Reset warna semua tombol bulan (Kembali jadi putih/outline)
       let btns = document.querySelectorAll('.btn-periode-select');
       btns.forEach(b => {
-          b.classList.replace('btn-primary', 'btn-outline-secondary');
-          b.classList.remove('text-white');
+          b.classList.remove('btn-primary', 'btn-secondary', 'text-white');
+          if(b.innerHTML.includes('bi-lock-fill')) {
+              b.classList.add('btn-outline-secondary', 'text-secondary');
+          } else {
+              b.classList.add('btn-outline-primary');
+          }
       });
       
-      // 4. Beri warna Primer ke tombol yang barusan di-klik
-      btnElement.classList.replace('btn-outline-secondary', 'btn-primary');
-      btnElement.classList.add('text-white');
+      btnElement.classList.remove('btn-outline-primary', 'btn-outline-secondary', 'text-secondary');
+      if (statusLock === "Kunci") {
+          btnElement.classList.add('btn-secondary', 'text-white');
+      } else {
+          btnElement.classList.add('btn-primary', 'text-white');
+      }
   }
 
   function ubahJenisASN(jenis) {
       document.getElementById('pilihJenisASN').value = jenis;
-      
       let btnPNS = document.getElementById('btnPilihPNS');
       let btnPPPK = document.getElementById('btnPilihPPPK');
       
       if (jenis === 'PNS') {
-          // Tombol PNS menyala hijau (Aktif)
           btnPNS.classList.replace('btn-outline-success', 'btn-success');
           btnPNS.classList.add('text-white');
-          
-          // Tombol PPPK redup kuning (Pasif)
           btnPPPK.classList.replace('btn-warning', 'btn-outline-warning');
           btnPPPK.classList.remove('text-white');
       } else {
-          // Tombol PPPK menyala kuning gelap (Aktif)
           btnPPPK.classList.replace('btn-outline-warning', 'btn-warning');
           btnPPPK.classList.add('text-dark');
-          
-          // Tombol PNS redup hijau (Pasif)
           btnPNS.classList.replace('btn-success', 'btn-outline-success');
           btnPNS.classList.remove('text-white');
       }
@@ -1168,6 +1165,13 @@ function validasiNIP(input) {
       
       hitungAmprah(); 
       
+      // 👇 PERUBAHAN 4: Simpan Gaji Diam-Diam di Belakang Layar 👇
+      if (globalStatusLock !== "Kunci") {
+          simpanGajiSiluman(); 
+      } else {
+          isGajiTersimpan = true; 
+      }
+      
       if(res.absen) { 
         let hkDb = parseInt(res.absen[3]); 
         if(hkDb === globalHariKerja6) { document.getElementById('inpPolaHK').value = "6"; } 
@@ -1356,51 +1360,47 @@ function validasiNIP(input) {
     });
   }
 
-  async function submitGaji(e) {
-    e.preventDefault(); startLoading("Menyimpan Amprah..."); 
-
-    const d = { 
-        nip: asNIPAktif, bulan: globalBulanAktif, 
-        gapok: unformatRupiah(document.getElementById('aGapok').value), 
-        tjIstri: unformatRupiah(document.getElementById('aTjIstri').value), 
-        tjAnak: unformatRupiah(document.getElementById('aTjAnak').value), 
-        jumlahKeluarga: unformatRupiah(document.getElementById('aJmlKeluarga').value), 
-        tjJabatan: unformatRupiah(document.getElementById('aTjJab').value), 
-        tjTerpencil: 0, tkd: 0, 
-        tjBeras: unformatRupiah(document.getElementById('aTjBeras').value), 
-        tjPajak: unformatRupiah(document.getElementById('aTjPajak').value), 
-        tjBPJS4: unformatRupiah(document.getElementById('aTjBPJS4').value), 
-        tjJKK: unformatRupiah(document.getElementById('aTjJKK').value), 
-        tjJKM: unformatRupiah(document.getElementById('aTjJKM').value), 
-        taperaPK: 0, 
-        pembulatan: unformatRupiah(document.getElementById('aBulat').value), 
-        jmlKotor: unformatRupiah(document.getElementById('aJmlKotor').value), 
-        potPajak: unformatRupiah(document.getElementById('aPotPajak').value), 
-        potBPJS: unformatRupiah(document.getElementById('aPotBPJS4').value), 
-        potIWP1: unformatRupiah(document.getElementById('aPotIWP1').value), 
-        potIWP8: unformatRupiah(document.getElementById('aPotIWP8').value), 
-        potTaperum: 0, 
-        potJKK: unformatRupiah(document.getElementById('aPotJKK').value), 
-        potJKM: unformatRupiah(document.getElementById('aPotJKM').value), 
-        jmlPotongan: unformatRupiah(document.getElementById('aJmlPotongan').value), 
-        jmlBersih: unformatRupiah(document.getElementById('aJmlBersih').value) 
-    };
-
-    let res = await fetchAPI("simpanGajiOtomatis", d); 
-  stopLoading(); 
-  
-  // PERBAIKAN DI SINI
-  if (res && res.status === "error") { 
-      alertError(res.pesan); 
-      isGajiTersimpan = false; 
-  } else { 
-      alertSukses(res.pesan);
-      if(window.cacheDetailPegawai) delete window.cacheDetailPegawai[asNIPAktif + "_" + globalBulanAktif];
-      isGajiTersimpan = true; 
-  }
-  }
 
   function ubahPolaHK() { let pola = document.getElementById('inpPolaHK').value; document.getElementById('inpHariKerja').value = (pola === "5") ? globalHariKerja : globalHariKerja6; hitungMatriksTPP(); }
+
+  // Fungsi baru pengganti submitGaji
+  async function simpanGajiSiluman() {
+      const d = { 
+          nip: asNIPAktif, bulan: globalBulanAktif, 
+          gapok: unformatRupiah(document.getElementById('aGapok').value), 
+          tjIstri: unformatRupiah(document.getElementById('aTjIstri').value), 
+          tjAnak: unformatRupiah(document.getElementById('aTjAnak').value), 
+          jumlahKeluarga: unformatRupiah(document.getElementById('aJmlKeluarga').value), 
+          tjJabatan: unformatRupiah(document.getElementById('aTjJab').value), 
+          tjTerpencil: 0, tkd: 0, 
+          tjBeras: unformatRupiah(document.getElementById('aTjBeras').value), 
+          tjPajak: unformatRupiah(document.getElementById('aTjPajak').value), 
+          tjBPJS4: unformatRupiah(document.getElementById('aTjBPJS4').value), 
+          tjJKK: unformatRupiah(document.getElementById('aTjJKK').value), 
+          tjJKM: unformatRupiah(document.getElementById('aTjJKM').value), 
+          taperaPK: 0, 
+          pembulatan: unformatRupiah(document.getElementById('aBulat').value), 
+          jmlKotor: unformatRupiah(document.getElementById('aJmlKotor').value), 
+          potPajak: unformatRupiah(document.getElementById('aPotPajak').value), 
+          potBPJS: unformatRupiah(document.getElementById('aPotBPJS4').value), 
+          potIWP1: unformatRupiah(document.getElementById('aPotIWP1').value), 
+          potIWP8: unformatRupiah(document.getElementById('aPotIWP8').value), 
+          potTaperum: 0, 
+          potJKK: unformatRupiah(document.getElementById('aPotJKK').value), 
+          potJKM: unformatRupiah(document.getElementById('aPotJKM').value), 
+          jmlPotongan: unformatRupiah(document.getElementById('aJmlPotongan').value), 
+          jmlBersih: unformatRupiah(document.getElementById('aJmlBersih').value) 
+      };
+
+      // Tembak server secara async tanpa memblokir layar (Siluman)
+      fetchAPI("simpanGajiOtomatis", d).then(res => {
+          if (res && res.status !== "error") {
+              isGajiTersimpan = true;
+              if(window.cacheDetailPegawai) delete window.cacheDetailPegawai[asNIPAktif + "_" + globalBulanAktif];
+          }
+      }).catch(e => console.log("Gagal simpan gaji otomatis", e));
+  }
+
 
   async function submitPerhitunganTPP(e) {
     e.preventDefault(); const getV = (id) => document.getElementById(id).value; startLoading("Menyimpan Kehadiran..."); let statusMenilai = document.getElementById('chkTidakMenilai').checked ? "Tidak Menilai" : "Menilai"; let gabunganSKP = getV('inpSKP') + "|" + statusMenilai; let hkDB = document.getElementById('inpHariKerja').value; const d = { nip: asNIPAktif, bulan: globalBulanAktif, hariKerja: hkDB, skp: gabunganSKP, dl: getV('vDL'), s: getV('vS'), c: getV('vC'), kp: getV('vKP'), tk: getV('vTK'), asub: getV('vASUB'), tl1: getV('vTL1'), tl2: getV('vTL2'), tl3: getV('vTL3'), tl4: getV('vTL4'), cp1: getV('vCP1'), cp2: getV('vCP2'), cp3: getV('vCP3'), cp4: getV('vCP4') };
@@ -1440,29 +1440,26 @@ function validasiNIP(input) {
   }
 
   function navigasiTab(target, force = false) {
-    if (!force && globalStatusLock !== "Kunci") { 
-      if (target !== 'tabGaji' && !isGajiTersimpan) { 
-          return alertPeringatan("Anda belum menyimpan data bulan ini! Silakan klik SIMPAN AMPRAH GAJI terlebih dahulu."); 
-      } 
-      if ((target === 'tabTahunan' || target === 'tabNominatif') && !isAbsenTersimpan) { 
-          return alertPeringatan("Anda belum menyimpan kehadiran! Silakan klik SIMPAN PERHITUNGAN TPP terlebih dahulu."); 
-      } 
-    }
-    
-    // 👇 TAMBAHAN ALERT KHUSUS: Cegat Tab 4 (Nominatif) jika Tab 3 (Pajak Tahunan) belum dibuka
-    if (target === 'tabNominatif' && !objNominatifSetahun) {
-        return alertPeringatan("Harap buka menu '3. Penghasilan Setahun / Pajak TER' terlebih dahulu agar sistem dapat mengkalkulasi nilai pajak TPP yang terbaru.");
-    }
+      if (!force && globalStatusLock !== "Kunci") { 
+          // Hapus peringatan Gaji, karena sudah otomatis disimpen
+          if ((target === 'tabTahunan' || target === 'tabNominatif') && !isAbsenTersimpan) { 
+              return alertPeringatan("Anda belum menyimpan kehadiran! Silakan klik SIMPAN PERHITUNGAN TPP terlebih dahulu."); 
+          } 
+      }
+      
+      if (target === 'tabNominatif' && !objNominatifSetahun) {
+          return alertPeringatan("Harap buka menu '3. Penghasilan Setahun / Pajak TER' terlebih dahulu agar sistem dapat mengkalkulasi nilai pajak TPP yang terbaru.");
+      }
 
-    ['navGaji', 'navAbsen', 'navTahunan', 'navNominatif'].forEach(id => document.getElementById(id).classList.remove('active')); 
-    ['tabGaji', 'tabAbsen', 'tabTahunan', 'tabNominatif'].forEach(id => document.getElementById(id).classList.remove('show', 'active'));
-    
-    let navId = "nav" + target.replace("tab", ""); 
-    document.getElementById(navId).classList.add('active'); 
-    document.getElementById(target).classList.add('show', 'active');
-    
-    if (target === 'tabTahunan') hitungPajakTahunan(); 
-    if (target === 'tabNominatif') muatNominatif();
+      ['navGaji', 'navAbsen', 'navTahunan', 'navNominatif'].forEach(id => document.getElementById(id).classList.remove('active')); 
+      ['tabGaji', 'tabAbsen', 'tabTahunan', 'tabNominatif'].forEach(id => document.getElementById(id).classList.remove('show', 'active'));
+      
+      let navId = "nav" + target.replace("tab", ""); 
+      document.getElementById(navId).classList.add('active'); 
+      document.getElementById(target).classList.add('show', 'active');
+      
+      if (target === 'tabTahunan') hitungPajakTahunan(); 
+      if (target === 'tabNominatif') muatNominatif();
   }
 
   function bukaModalImport(jenis) { document.getElementById('importJenis').value = jenis; document.getElementById('fileImport').value = ""; document.getElementById('importModalTitle').innerText = jenis === 'pegawai' ? "Import Data Pegawai (Excel)" : "Import Data (Excel)"; 

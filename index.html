@@ -851,7 +851,7 @@
                     </form>
                 </div>
 
-                <div class="tab-pane fade" id="tabTahunan">
+               <div class="tab-pane fade" id="tabTahunan">
                     <h5 class="text-center mb-1 fw-bold">LEMBAR PERTANGGUNGJAWABAN PPh 21 TKD</h5>
                     <p class="text-muted text-center small mb-3">Telah Disesuaikan dengan Peraturan Perpajakan Terbaru</p>
                     <div id="loaderTahunan" class="text-center text-danger fw-bold hidden">Memuat Logika Perhitungan...</div>
@@ -879,7 +879,7 @@
                                     </div>
                                 </div>
 
-                                <div class="card border-primary shadow-sm h-100">
+                                <div class="card border-primary shadow-sm">
                                     <div class="card-header bg-primary text-white fw-bold py-2" style="font-size: 0.8rem;">2. PPh 21 KOMULATIF (PROGRESIF)</div>
                                     <div class="card-body p-3">
                                         <table class="table table-sm table-borderless mb-0" style="font-size: 0.8rem;">
@@ -929,7 +929,7 @@
 
                                 <div class="card border-success shadow-sm flex-grow-1">
                                     <div class="card-header bg-success text-white fw-bold py-2" style="font-size: 0.8rem;">2. DASAR PENGENAAN PAJAK (TER)</div>
-                                    <div class="card-body p-3">
+                                    <div class="card-body p-3 d-flex flex-column">
                                         <table class="table table-sm table-borderless mb-0" style="font-size: 0.85rem;">
                                             <tr><td width="60%">Kategori TER</td><td class="text-end fw-bold">TER <span id="thKatTER"></span></td></tr>
                                             <tr class="border-bottom"><td>Tarif Efektif TER</td><td id="thPctTER" class="text-end fw-bold text-danger fs-6">0%</td></tr>
@@ -946,55 +946,56 @@
                                     </div>
                                 </div>
                                 
-              
-
-                        <div class="row hidden mt-4" id="boxTerGabungan">
-                            <div class="col-md-12">
-                                <div class="alert alert-danger fw-bold text-center mb-3 shadow-sm border-danger">
-                                    <i class="bi bi-exclamation-triangle-fill"></i> MODE PAJAK GABUNGAN KHUSUS (<span id="txtJenisKhusus"></span>)
-                                </div>
-                                <div class="card border-danger shadow-sm">
-                                    <div class="card-header bg-danger text-white fw-bold py-2">RINCIAN PERHITUNGAN PAJAK LINTAS BULAN</div>
-                                    <div class="card-body p-3 bg-light">
-                                        <table class="table table-bordered table-sm mb-0 align-middle" style="font-size: 0.85rem;">
-                                            <thead class="table-secondary text-center">
-                                                <tr><th width="50%">Uraian Penghasilan Bruto (DPP)</th><th>Nilai Pajak Terutang</th></tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td>1. Total Bruto Induk (<span id="txtBulanInduk" class="text-primary fw-bold"></span>)</td>
-                                                    <td class="text-end" id="gabBrutoInduk">0</td>
-                                                </tr>
-                                                <tr class="border-bottom">
-                                                    <td>2. Total Bruto <span id="txtJenisKhusus2" class="text-danger fw-bold"></span> (Bulan Ini)</td>
-                                                    <td class="text-end" id="gabBrutoBulanIni">0</td>
-                                                </tr>
-                                                <tr class="table-warning fw-bold text-dark border-dark">
-                                                    <td>3. TOTAL PENGHASILAN GABUNGAN (1 + 2)</td>
-                                                    <td class="text-end fs-6" id="gabTotalBruto">0</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>4. Tarif TER Berlaku (Kategori <span id="gabKatTer"></span>)</td>
-                                                    <td class="text-end fw-bold text-danger" id="gabTarifTer">0%</td>
-                                                </tr>
-                                                <tr class="table-primary fw-bold text-primary border-primary">
-                                                    <td>5. TOTAL PPh 21 TERUTANG (Baris 3 x Baris 4)</td>
-                                                    <td class="text-end" id="gabPajakTerutang">0</td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="text-danger">6. (-) PPh 21 yang Sudah Dipotong di Bulan Induk</td>
-                                                    <td class="text-end text-danger fw-bold" id="gabPajakSudahDibayar">0</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                        <div class="alert alert-danger py-3 px-3 mb-0 mt-3 border-danger shadow-sm" style="border-width: 2px;">
-                                            <h5 class="mb-0 fw-bold text-danger d-flex justify-content-between">
-                                                <span>7. SISA PPh 21 DIPOTONG DI <span id="txtJenisKhusus3"></span> :</span>
-                                                <span id="gabPajakFinalTKD" class="fs-4">0</span>
-                                            </h5>
+                                <div class="row hidden mt-4" id="boxTerGabungan">
+                                    <div class="col-md-12">
+                                        <div class="alert alert-danger fw-bold text-center mb-3 shadow-sm border-danger">
+                                            <i class="bi bi-exclamation-triangle-fill"></i> PAJAK GABUNGAN (<span id="txtJenisKhusus"></span>)
+                                        </div>
+                                        <div class="card border-danger shadow-sm">
+                                            <div class="card-header bg-danger text-white fw-bold py-2" style="font-size: 0.8rem;">RINCIAN PERHITUNGAN PAJAK LINTAS BULAN</div>
+                                            <div class="card-body p-3 bg-light">
+                                                <table class="table table-bordered table-sm mb-0 align-middle" style="font-size: 0.85rem;">
+                                                    <thead class="table-secondary text-center">
+                                                        <tr><th width="50%">Uraian Penghasilan Bruto (DPP)</th><th>Nilai Pajak Terutang</th></tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>1. Total Bruto Induk (<span id="txtBulanInduk" class="text-primary fw-bold"></span>)</td>
+                                                            <td class="text-end" id="gabBrutoInduk">0</td>
+                                                        </tr>
+                                                        <tr class="border-bottom">
+                                                            <td>2. Total Bruto <span id="txtJenisKhusus2" class="text-danger fw-bold"></span> (Bulan Ini)</td>
+                                                            <td class="text-end" id="gabBrutoBulanIni">0</td>
+                                                        </tr>
+                                                        <tr class="table-warning fw-bold text-dark border-dark">
+                                                            <td>3. TOTAL PENGHASILAN GABUNGAN (1 + 2)</td>
+                                                            <td class="text-end fs-6" id="gabTotalBruto">0</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>4. Tarif TER Berlaku (Kategori <span id="gabKatTer"></span>)</td>
+                                                            <td class="text-end fw-bold text-danger" id="gabTarifTer">0%</td>
+                                                        </tr>
+                                                        <tr class="table-primary fw-bold text-primary border-primary">
+                                                            <td>5. TOTAL PPh 21 TERUTANG (Baris 3 x Baris 4)</td>
+                                                            <td class="text-end" id="gabPajakTerutang">0</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="text-danger">6. (-) PPh 21 yang Sudah Dipotong di Bulan Induk</td>
+                                                            <td class="text-end text-danger fw-bold" id="gabPajakSudahDibayar">0</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                                <div class="alert alert-danger py-3 px-3 mb-0 mt-3 border-danger shadow-sm" style="border-width: 2px;">
+                                                    <h5 class="mb-0 fw-bold text-danger d-flex justify-content-between">
+                                                        <span>7. SISA PPh 21 DIPOTONG DI <span id="txtJenisKhusus3"></span> :</span>
+                                                        <span id="gabPajakFinalTKD" class="fs-4">0</span>
+                                                    </h5>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
+
                             </div>
                         </div>
 
@@ -1002,10 +1003,10 @@
                            <h5 class="fw-bold"><i class="bi bi-journal-check"></i> CATATAN PEMERIKSAAN / VERIFIKASI</h5>
                            <p class="text-muted" style="font-size: 0.85rem;">Seluruh perhitungan di atas telah disesuaikan dengan regulasi Perpajakan (PMK 168/2023) dan regulasi TPP Provinsi Jambi (Pergub 2025).</p>
                            <p class="mb-1 text-dark">Perhitungan pada aplikasi ini telah diperbarui dan dikoreksi dari format Excel lama untuk memenuhi kepatuhan pajak terbaru:</p>
-                          <ol class="mb-0 text-dark">
-                            <li><b>UU No. 7 Tahun 2021 (Harmonisasi Peraturan Perpajakan):</b> Memperbarui rentang PKP untuk tarif progresif terendah (5%), yang sebelumnya maksimal Rp 60 Juta kini dinaikkan menjadi <b>Rp 60 Juta</b>. Hal ini mencegah pemotongan pajak yang terlalu besar <i>(over-taxing)</i> pada pegawai. Serta memperbaiki bug rumus tarif 25% pada format lama.</li>
-                            <li><b>PP No. 58 Tahun 2023 & PMK No. 168 Tahun 2023:</b> Terhitung mulai 1 Januari 2024, pemotongan PPh 21 masa bulanan wajib menggunakan <b>Tarif Efektif Rata-rata (TER)</b> Kategori A/B/C yang dikalikan langsung dengan Penghasilan Bruto Sebulan.</li>
-                            <li><b>Penerapan Biaya Jabatan:</b> Biaya jabatan sebesar 5% (Maksimal Rp 6.000.000 setahun) dan Iuran Pensiun diaktifkan kembali secara sistem sebagai pengurang Penghasilan Bruto demi mencerminkan nilai PKP yang sah secara hukum.</li>
+                          <ol class="mb-0 text-dark small">
+                            <li><b>UU No. 7 Tahun 2021:</b> Memperbarui rentang PKP untuk tarif progresif terendah (5%), yang sebelumnya maksimal Rp 60 Juta kini dinaikkan menjadi <b>Rp 60 Juta</b>.</li>
+                            <li><b>PP No. 58 & PMK No. 168 Tahun 2023:</b> Mulai 1 Januari 2024, pemotongan PPh 21 menggunakan <b>Tarif Efektif Rata-rata (TER)</b> Kategori A/B/C.</li>
+                            <li><b>Penerapan Biaya Jabatan:</b> Biaya jabatan sebesar 5% (Maksimal Rp 6.000.000 setahun) dan Iuran Pensiun diaktifkan kembali secara sistem.</li>
                           </ol>
                         </div>
 
@@ -1013,7 +1014,6 @@
                           <h6 class="fw-bold text-dark mb-1"><i class="bi bi-info-circle-fill"></i> Info: Kenapa Potongan Pajak (TER) Bisa Rp 0?</h6>
                           <p class="mb-0 text-dark">Sesuai PMK No. 168/2023, Pajak PPh 21 TER memiliki <b>Batas Aman</b>. Jika total <b>Gaji Kotor + TPP Netto</b> di bulan ini belum melewati batas aman tersebut (Contoh TER A: <b>Rp 5.400.000</b>), maka tarif pemotongannya otomatis <b>0%</b>. Silakan cek menu "Dasar Hukum & Simulasi" untuk detailnya.</p>
                         </div>
-
                     </div>
                 </div>
 
@@ -1069,8 +1069,11 @@
                                     </button>
                                 </div>
 
-
-                             </div></div> </div> </div> </div> </div> </div> </div> </div> </div> 
+                            </div>
+                        </div>
+                    </div>
+                </div> </div> </div> </div> </div> </div> </div> </div> </div>
+                        
                             
                             
   <div id="printArea" class="hidden p-4 bg-white">

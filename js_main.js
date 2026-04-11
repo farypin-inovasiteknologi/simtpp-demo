@@ -245,11 +245,12 @@ async function doLogin(e) {
   }
 
   function switchView(viewId) { 
-    document.querySelectorAll('#viewLogin, #viewLanding, #viewPilihBulan, #viewDaftarPegawai, #viewMasterPergub, #viewManajemenASN, #viewSetting, #viewPanduan, #viewManajemenAkun').forEach(el => el.classList.add('hidden')); 
-    
-    let appContainer = document.getElementById('appContainer'); 
-    let mHeader = document.getElementById('mobileHeader'); 
-    let mBottomNav = document.getElementById('mobileBottomNav');
+      // PERHATIKAN: #viewManajemenASN sudah dihapus dari dalam kurung di bawah ini
+      document.querySelectorAll('#viewLogin, #viewLanding, #viewPilihBulan, #viewDaftarPegawai, #viewMasterPergub, #viewSetting, #viewPanduan, #viewManajemenAkun').forEach(el => el.classList.add('hidden')); 
+      
+      let appContainer = document.getElementById('appContainer'); 
+      let mHeader = document.getElementById('mobileHeader'); 
+      let mBottomNav = document.getElementById('mobileBottomNav');
 
     if(viewId === 'viewLogin') { 
         document.body.classList.add('bg-gradient-login'); 
@@ -1098,14 +1099,16 @@ function validasiNIP(input) {
     
     document.getElementById('formGaji').reset(); 
     document.getElementById('formAbsen').reset(); 
-    document.getElementById('inpBulan').value = globalBulanAktif; 
+    document.getElementById('inpBulan').value = globalBulanAktif;  
     document.getElementById('inpHariKerja').value = globalHariKerja; 
     
+    // 👇 TAMBAHKAN 1 BARIS INI UNTUK MENGHAPUS CLASS HIDDEN 👇
+    document.getElementById('viewManajemenASN').classList.remove('hidden');
+
     // Munculkan Panel sebagai Popup Raksasa!
-  let myModal = bootstrap.Modal.getInstance(document.getElementById('modalPopupASN')) || new bootstrap.Modal(document.getElementById('modalPopupASN'));
-  myModal.show();
+    let myModal = bootstrap.Modal.getInstance(document.getElementById('modalPopupASN')) || new bootstrap.Modal(document.getElementById('modalPopupASN'));
+    myModal.show();
     
-    // 👇 IMPLEMENTASI CACHE PINTAR (Sesuai Permintaan Anda) 👇
     window.cacheDetailPegawai = window.cacheDetailPegawai || {};
     let cacheKey = nip + "_" + globalBulanAktif;
     let res;

@@ -326,12 +326,23 @@ async function doLogin(e) {
       document.getElementById('btnTambahPegawai').classList.remove('hidden'); 
     }
     
+    // Simpan ke Sesi Browser
     sessionStorage.setItem('globalBulanAktif', globalBulanAktif); 
     sessionStorage.setItem('globalJenisASN', globalJenisASN); 
     updateFilterGolDropdown(); 
     
+    // Pindah Tampilan
     switchView('viewDaftarPegawai'); 
-    muatDataPegawai();
+
+    // 🧠 LOGIKA SMART CACHE: Cek apakah user pindah ke bulan yang berbeda
+    if (window.cacheDataPegawaiBulan !== globalBulanAktif) {
+        // Jika beda bulan: Hapus cache lama, wajib loading data baru
+        window.cacheDataPegawaiAll = null;
+        muatDataPegawai(true); 
+    } else {
+        // Jika bulan sama (hanya ganti PNS/PPPK): Jalur kilat tanpa loading!
+        muatDataPegawai(false); 
+    }
   }
 
   const escapeStr = (str) => String(str).replace(/'/g, "\\'").replace(/"/g, "&quot;");
@@ -732,7 +743,9 @@ async function doLogin(e) {
         return; 
     }
 
-    startLoading("Memuat Data Pegawai..."); 
+    // Pesan loading yang spesifik agar user tahu sistem tidak error dan sedang bekerja mencari data yang tepat
+    startLoading("Memuat Data " + globalJenisASN + " Bulan " + globalBulanAktif + "...");
+    
     let data = await fetchAPI("getDaftarPegawai", { bulanAktif: globalBulanAktif, roleUser: currentUser.role, unitkerjaUser: currentUser.unitkerja, jenisASN: "" }); 
     stopLoading();
     

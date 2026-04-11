@@ -233,48 +233,49 @@ async function buatExcelNominatifJS(res) {
 }
 
 // ==============================================================
-// 2. EXCEL REKAP GOLONGAN (KOLOM JUMLAH PEGAWAI DIKECILKAN)
+// 2. EXCEL REKAP GOLONGAN (1 KOLOM JUMLAH PEGAWAI NORMAL)
 // ==============================================================
 async function buatExcelRekapGolonganJS(res) {
     try {
         const wb = new ExcelJS.Workbook();
         const sheet = wb.addWorksheet('Rekap Golongan', { pageSetup: { paperSize: 5, orientation: 'landscape' } });
 
-        // Kolom ke-3 & 4 dikecilkan menjadi 8
+        // Total 17 Kolom (A sampai Q). Kolom C (Jumlah Pegawai) normal size 10.
         let cols = [ 
-            { width: 5 }, { width: 25 }, { width: 8 }, { width: 8 }, { width: 15 }, 
-            { width: 12 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 12 }, 
-            { width: 15 }, { width: 12 }, { width: 15 }, { width: 12 }, { width: 12 }, 
-            { width: 12 }, { width: 15 }, { width: 18 } 
+            { width: 5 }, { width: 25 }, { width: 10 }, { width: 12 }, { width: 12 }, 
+            { width: 12 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 15 }, 
+            { width: 12 }, { width: 15 }, { width: 12 }, { width: 12 }, { width: 12 }, 
+            { width: 15 }, { width: 18 } 
         ];
         sheet.columns = cols;
 
-        sheet.mergeCells('A1:R1'); sheet.getCell('A1').value = `REKAPITULASI PENGAJUAN TPP ASN OPD ${res.setting.Nama_Dinas || ''}`;
-        sheet.mergeCells('A2:R2'); sheet.getCell('A2').value = `${res.jenisASN || ''} ${res.unitCetak || ''}`;
-        sheet.mergeCells('A3:R3'); sheet.getCell('A3').value = `Bulan : ${res.bulanBesar || ''}`;
+        sheet.mergeCells('A1:Q1'); sheet.getCell('A1').value = `REKAPITULASI PENGAJUAN TPP ASN OPD ${res.setting.Nama_Dinas || ''}`;
+        sheet.mergeCells('A2:Q2'); sheet.getCell('A2').value = `${res.jenisASN || ''} ${res.unitCetak || ''}`;
+        sheet.mergeCells('A3:Q3'); sheet.getCell('A3').value = `Bulan : ${res.bulanBesar || ''}`;
         for (let i = 1; i <= 3; i++) { 
             sheet.getCell(`A${i}`).font = { bold: true, size: i === 1 ? 14 : 12 }; 
             sheet.getCell(`A${i}`).alignment = { horizontal: 'center' }; 
         }
 
+        // --- HEADER (Tanpa Merge di Jumlah Pegawai) ---
         sheet.mergeCells('A5:A6'); sheet.getCell('A5').value = "No.";
         sheet.mergeCells('B5:B6'); sheet.getCell('B5').value = "GOLONGAN";
         
-        // Teks diturunkan ke bawah
-        sheet.mergeCells('C5:D6'); sheet.getCell('C5').value = "Jumlah\nPegawai";
+        // Cukup 1 Kolom
+        sheet.mergeCells('C5:C6'); sheet.getCell('C5').value = "Jumlah\nPegawai";
         
-        sheet.mergeCells('E5:E6'); sheet.getCell('E5').value = "Gaji Kotor";
+        sheet.mergeCells('D5:D6'); sheet.getCell('D5').value = "Gaji Kotor";
         
-        sheet.mergeCells('F5:M5'); sheet.getCell('F5').value = "PERHITUNGAN TPP (NETTO)";
-        sheet.getCell('F6').value = 'BK'; sheet.getCell('G6').value = 'PK'; sheet.getCell('H6').value = 'KK';
-        sheet.getCell('I6').value = 'TB'; sheet.getCell('J6').value = 'KP'; sheet.getCell('K6').value = 'Jml TPP';
-        sheet.getCell('L6').value = 'BPJS 4%'; sheet.getCell('M6').value = 'Total Netto';
+        sheet.mergeCells('E5:L5'); sheet.getCell('E5').value = "PERHITUNGAN TPP (NETTO)";
+        sheet.getCell('E6').value = 'BK'; sheet.getCell('F6').value = 'PK'; sheet.getCell('G6').value = 'KK';
+        sheet.getCell('H6').value = 'TB'; sheet.getCell('I6').value = 'KP'; sheet.getCell('J6').value = 'Jml TPP';
+        sheet.getCell('K6').value = 'BPJS 4%'; sheet.getCell('L6').value = 'Total Netto';
 
-        sheet.mergeCells('N5:Q5'); sheet.getCell('N5').value = "PENGURANGAN TPP";
-        sheet.getCell('N6').value = 'IWP 1%'; sheet.getCell('O6').value = 'PPh 21';
-        sheet.getCell('P6').value = 'BPJS 4%'; sheet.getCell('Q6').value = 'TOTAL POT.';
+        sheet.mergeCells('M5:P5'); sheet.getCell('M5').value = "PENGURANGAN TPP";
+        sheet.getCell('M6').value = 'IWP 1%'; sheet.getCell('N6').value = 'PPh 21';
+        sheet.getCell('O6').value = 'BPJS 4%'; sheet.getCell('P6').value = 'TOTAL POT.';
 
-        sheet.mergeCells('R5:R6'); sheet.getCell('R5').value = "BERSIH DITERIMA";
+        sheet.mergeCells('Q5:Q6'); sheet.getCell('Q5').value = "BERSIH DITERIMA";
 
         for (let i = 5; i <= 6; i++) {
             sheet.getRow(i).eachCell({ includeEmpty: true }, (cell) => { 
@@ -286,6 +287,7 @@ async function buatExcelRekapGolonganJS(res) {
         }
         sheet.getRow(5).height = 25; sheet.getRow(6).height = 25;
 
+        // --- PROSES PENGELOMPOKAN ---
         let groups = res.jenisASN === "PPPK" ? ["XVII - XIII", "XII - IX", "VIII - V", "IV - I"] : ["IV", "III", "II", "I"];
         let rekap = {}; 
         groups.forEach(g => { rekap[g] = { peg:0, gaji:0, bk:0, pk:0, kk:0, tb:0, kp:0, bpjs:0, iwp:0, pph:0, bersih:0 }; });
@@ -312,33 +314,39 @@ async function buatExcelRekapGolonganJS(res) {
             rekap[groupName].bersih += parseFloat(c.tppBersih) || 0;
         });
 
-        let curRow = 7; let no = 1; let grandTotals = Array(18).fill(0); let maxChars = Array(19).fill(0);
+        let curRow = 7; let no = 1; let grandTotals = Array(17).fill(0); let maxChars = Array(18).fill(0);
 
+        // --- CETAK BARIS GOLONGAN ---
         groups.forEach(g => {
             let dat = rekap[g];
+            
             let rawTpp = dat.bk + dat.pk + dat.kk + dat.tb + dat.kp;
             let rawNetto = rawTpp + dat.bpjs;
             let rawPot = dat.iwp + dat.pph + dat.bpjs;
             let rawBersih = rawNetto - rawPot;
 
+            // RUMUS EXCEL BERGESER KE KIRI 1 KOLOM (Mulai Kolom D)
             let rValues = [ 
-                no++, `GOLONGAN ${g}`, dat.peg, "", dat.gaji, 
+                no++, `GOLONGAN ${g}`, dat.peg, dat.gaji, 
                 dat.bk, dat.pk, dat.kk, dat.tb, dat.kp, 
-                { formula: `SUM(F${curRow}:J${curRow})` }, dat.bpjs, 
-                { formula: `K${curRow}+L${curRow}` }, dat.iwp, dat.pph, dat.bpjs, 
-                { formula: `SUM(N${curRow}:P${curRow})` }, { formula: `M${curRow}-Q${curRow}` }
+                { formula: `SUM(E${curRow}:I${curRow})` }, // J: Jml TPP
+                dat.bpjs, 
+                { formula: `J${curRow}+K${curRow}` },     // L: Total Netto
+                dat.iwp, dat.pph, dat.bpjs, 
+                { formula: `SUM(M${curRow}:O${curRow})` }, // P: Total Pot
+                { formula: `L${curRow}-P${curRow}` }       // Q: Bersih Diterima
             ];
             
-            let rawDataForLength = [0, 0, dat.peg, 0, dat.gaji, dat.bk, dat.pk, dat.kk, dat.tb, dat.kp, rawTpp, dat.bpjs, rawNetto, dat.iwp, dat.pph, dat.bpjs, rawPot, rawBersih];
+            let rawDataForLength = [0, 0, dat.peg, dat.gaji, dat.bk, dat.pk, dat.kk, dat.tb, dat.kp, rawTpp, dat.bpjs, rawNetto, dat.iwp, dat.pph, dat.bpjs, rawPot, rawBersih];
+            
             let row = sheet.getRow(curRow); row.height = 30; row.values = rValues;
-
-            sheet.mergeCells(`C${curRow}:D${curRow}`);
 
             row.eachCell({ includeEmpty: true }, (cell, colN) => {
                 cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} }; 
-                cell.alignment = { vertical: 'middle', horizontal: colN <= 2 ? 'left' : (colN === 3 || colN === 4 ? 'center' : 'right') };
-                if (colN >= 5 || colN === 3) { 
-                    cell.numFmt = '#,##0'; grandTotals[colN - 1] += rawDataForLength[colN - 1]; 
+                cell.alignment = { vertical: 'middle', horizontal: colN <= 2 ? 'left' : (colN === 3 ? 'center' : 'right') };
+                if (colN >= 4 || colN === 3) { 
+                    cell.numFmt = '#,##0'; 
+                    grandTotals[colN - 1] += rawDataForLength[colN - 1]; 
                     let len = Math.round(rawDataForLength[colN - 1]).toLocaleString('id-ID').length; 
                     maxChars[colN] = Math.max(maxChars[colN], len); 
                 }
@@ -346,34 +354,47 @@ async function buatExcelRekapGolonganJS(res) {
             curRow++;
         });
 
+        // --- CETAK GRAND TOTAL ---
         let rowGrand = sheet.getRow(curRow); rowGrand.height = 30; 
         sheet.mergeCells(`A${curRow}:B${curRow}`); rowGrand.getCell(1).value = "TOTAL KESELURUHAN"; 
-        sheet.mergeCells(`C${curRow}:D${curRow}`); rowGrand.getCell(3).value = { formula: `SUM(C7:C${curRow-1})` };
         
-        for(let c = 5; c <= 18; c++) { rowGrand.getCell(c).value = { formula: `SUM(${numToLet(c - 1)}7:${numToLet(c - 1)}${curRow-1})` }; }
+        for(let c = 3; c <= 17; c++) { 
+            rowGrand.getCell(c).value = { formula: `SUM(${numToLet(c - 1)}7:${numToLet(c - 1)}${curRow-1})` }; 
+        }
         
         rowGrand.eachCell({ includeEmpty: true }, (cell, colN) => { 
             cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'E9ECEF' } }; 
             cell.border = { top: {style:'medium'}, left: {style:'thin'}, bottom: {style:'medium'}, right: {style:'thin'} }; 
             if (colN >= 3 || colN === 1) { 
                 cell.font = { bold: true }; 
-                cell.alignment = { horizontal: colN === 1 ? 'center' : (colN === 3 || colN === 4 ? 'center' : 'right'), vertical: 'middle' }; 
-                if (colN >= 5) cell.numFmt = '#,##0'; 
+                cell.alignment = { horizontal: colN === 1 ? 'center' : (colN === 3 ? 'center' : 'right'), vertical: 'middle' }; 
+                if (colN >= 4) cell.numFmt = '#,##0'; 
             } 
         });
 
-        for (let c = 5; c <= 18; c++) { 
-            if (grandTotals[c - 1] === 0) { sheet.getColumn(c).width = 4; } 
-            else { sheet.getColumn(c).width = Math.max(10, (maxChars[c] * 1.15) + 1.5); } 
+        // --- AUTOFIT & SHRINK KOLOM KOSONG (KOLOM D s/d Q) ---
+        for (let c = 4; c <= 17; c++) { 
+            if (grandTotals[c - 1] === 0) { 
+                sheet.getColumn(c).width = 4; // Ciutkan jika 0 Rupiah
+            } else { 
+                sheet.getColumn(c).width = Math.max(10, (maxChars[c] * 1.15) + 1.5); 
+            } 
         }
+        // Pastikan kolom C tetap proporsional
+        sheet.getColumn(3).width = 10;
 
-        cetakTTDAman(sheet, curRow + 3, res.setting, 18, res.unitCetak);
+        // --- POSISI TTD AMAN (KOLOM MAKSIMAL KE 17/Q) ---
+        cetakTTDAman(sheet, curRow + 3, res.setting, 17, res.unitCetak);
+        
         unduhFile(wb, `Rekap_Golongan_${res.bulanBesar}_${res.unitCetak}.xlsx`);
-    } catch (error) { Swal.close(); alertError("Gagal merakit Excel Rekap Golongan: " + error.message); }
+    } catch (error) { 
+        Swal.close(); 
+        alertError("Gagal merakit Excel Rekap Golongan: " + error.message); 
+    }
 }
 
 // ==============================================================
-// 3. EXCEL REKENING (RUMUS TPP BERSIH KEMBAR IDENTIK DGN NOMINATIF)
+// 3. EXCEL REKENING (FIX RUMUS DITERIMA: TPP BERSIH - KORPRI)
 // ==============================================================
 async function buatExcelRekeningJS(res) {
     try {
@@ -407,7 +428,6 @@ async function buatExcelRekeningJS(res) {
             let golDasar = String(c.golonganAsli).split("/")[0].trim().toUpperCase();
             if(res.jenisASN !== "PPPK" && (golDasar.includes("IX") || golDasar.includes("X") || golDasar.includes("PPPK"))) continue;
 
-            // 👇 RUMUS IDENTIK NOMINATIF (Dikalkulasi Ulang Berdasarkan Pembulatan Elemen)
             let tppBruto = parseFloat(c.tppBruto) || 0; 
             let tppNetto = parseFloat(c.tppNettoKinerja) || 0; 
             let rasio = tppBruto > 0 ? (tppNetto / tppBruto) : 0;
@@ -417,17 +437,24 @@ async function buatExcelRekeningJS(res) {
             let vKk = Math.round((parseFloat(c.kk) || 0) * rasio); 
             let vTb = Math.round((parseFloat(c.tb) || 0) * rasio); 
             let vKp = Math.round((parseFloat(c.kp) || 0) * rasio); 
-            let rawTpp = vBk + vPk + vKk + vTb + vKp; // Ini adalah TPP Netto di Nominatif
+            let rawTpp = vBk + vPk + vKk + vTb + vKp;
 
             let iwp1 = parseFloat(c.iwp1) || 0;
             let pph21TKD = parseFloat(c.pph21TKD) || 0;
-            
-            // Rumus Nominatif: TPP Netto - IWP 1% - PPh 21
             let tppBersihNominatif = rawTpp - iwp1 - pph21TKD;
-            let jmlDiterima = tppBersihNominatif - potKorpri; 
             
             let r = sheet.getRow(currentRow); r.height = 25;
-            r.values = [ no++, c.nama, c.rekening, tppBersihNominatif, res.setting.Rek_Korpri, potKorpri, jmlDiterima ];
+            
+            // 👇 INI DIA KUNCINYA: Kolom ke-7 menggunakan Formula `=D7 - F7` 👇
+            r.values = [ 
+                no++, 
+                c.nama, 
+                c.rekening, 
+                tppBersihNominatif, 
+                res.setting.Rek_Korpri, 
+                potKorpri, 
+                { formula: `D${currentRow}-F${currentRow}` } 
+            ];
             
             r.eachCell({ includeEmpty: true }, (cell, colN) => { 
                 cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} }; 
@@ -441,7 +468,10 @@ async function buatExcelRekeningJS(res) {
 
         let rGrand = sheet.getRow(currentRow); rGrand.height = 30; 
         rGrand.getCell('B').value = "TOTAL KESELURUHAN"; rGrand.getCell('B').font = {bold: true};
+        
+        // Sum D, F, G
         ['D', 'F', 'G'].forEach(col => { rGrand.getCell(col).value = { formula: `SUM(${col}7:${col}${currentRow-1})` }; });
+        
         rGrand.eachCell({ includeEmpty: true }, (cell, colN) => { 
             cell.font = {bold: true}; 
             cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'F3F3F3' } }; 
@@ -501,7 +531,7 @@ async function buatExcelRekapPajakJS(res) {
 }
 
 // ==============================================================
-// 5. EXCEL PERHITUNGAN KOLEKTIF 
+// 5. EXCEL PERHITUNGAN KOLEKTIF (FULL RUMUS EXCEL OTOMATIS)
 // ==============================================================
 async function buatExcelPerhitunganJS(res) {
     try {
@@ -523,13 +553,27 @@ async function buatExcelPerhitunganJS(res) {
         sheet.mergeCells('M6:P6'); sheet.getCell('M6').value = "Cepat Pulang"; sheet.getCell('M7').value = "CP1"; sheet.getCell('N7').value = "CP2"; sheet.getCell('O7').value = "CP3"; sheet.getCell('P7').value = "CP4";
         sheet.mergeCells('Q6:Q7'); sheet.getCell('Q6').value = "TK"; sheet.mergeCells('R6:R7'); sheet.getCell('R6').value = "AS/UB"; sheet.mergeCells('S5:S7'); sheet.getCell('S5').value = "Predikat\nKerja"; sheet.mergeCells('T5:T7'); sheet.getCell('T5').value = "Tidak\nMenilai";
         
-        sheet.mergeCells('U5:Z6'); sheet.getCell('U5').value = "Kriteria TPP Dasar (100%)"; ['BK','PK','KK','TB','KP','Total'].forEach((txt, i) => sheet.getCell(numToLet(20 + i) + '7').value = txt);
-        sheet.mergeCells('AA5:AR5'); sheet.getCell('AA5').value = "Perhitungan Produktivitas Kerja (PK 60%)"; sheet.mergeCells('AA6:AF6'); sheet.getCell('AA6').value = "Nilai PK (Setelah Bobot)"; ['BK','PK','KK','TB','KP','Total'].forEach((txt, i) => sheet.getCell(numToLet(26 + i) + '7').value = txt);
-        sheet.mergeCells('AG6:AL6'); sheet.getCell('AG6').value = "Potongan Absen PK"; ['BK','PK','KK','TB','KP','Total'].forEach((txt, i) => sheet.getCell(numToLet(32 + i) + '7').value = txt);
-        sheet.mergeCells('AM6:AR6'); sheet.getCell('AM6').value = "Akhir PK Netto"; ['BK','PK','KK','TB','KP','Total'].forEach((txt, i) => sheet.getCell(numToLet(38 + i) + '7').value = txt);
-        sheet.mergeCells('AS5:BJ5'); sheet.getCell('AS5').value = "Perhitungan Disiplin Kerja (DK 40%)"; sheet.mergeCells('AS6:AX6'); sheet.getCell('AS6').value = "Bobot DK Dasar (40%)"; ['BK','PK','KK','TB','KP','Total'].forEach((txt, i) => sheet.getCell(numToLet(44 + i) + '7').value = txt);
-        sheet.mergeCells('AY6:BD6'); sheet.getCell('AY6').value = "Potongan Absen DK"; ['BK','PK','KK','TB','KP','Total'].forEach((txt, i) => sheet.getCell(numToLet(50 + i) + '7').value = txt);
-        sheet.mergeCells('BE6:BJ6'); sheet.getCell('BE6').value = "Akhir DK Netto"; ['BK','PK','KK','TB','KP','Total'].forEach((txt, i) => sheet.getCell(numToLet(56 + i) + '7').value = txt);
+        sheet.mergeCells('U5:Z6'); sheet.getCell('U5').value = "Kriteria TPP Dasar (100%)"; 
+        ['BK','PK','KK','TB','KP','Total TPP'].forEach((txt, i) => sheet.getCell(numToLet(20 + i) + '7').value = txt);
+        
+        sheet.mergeCells('AA5:AR5'); sheet.getCell('AA5').value = "Perhitungan Produktivitas Kerja (PK 60%)"; sheet.mergeCells('AA6:AF6'); sheet.getCell('AA6').value = "Nilai PK (Setelah Bobot)"; 
+        ['BK','PK','KK','TB','KP','Total'].forEach((txt, i) => sheet.getCell(numToLet(26 + i) + '7').value = txt);
+        
+        sheet.mergeCells('AG6:AL6'); sheet.getCell('AG6').value = "Potongan Absen PK"; 
+        ['BK','PK','KK','TB','KP','Total'].forEach((txt, i) => sheet.getCell(numToLet(32 + i) + '7').value = txt);
+        
+        sheet.mergeCells('AM6:AR6'); sheet.getCell('AM6').value = "Akhir PK Netto"; 
+        ['BK','PK','KK','TB','KP','Total'].forEach((txt, i) => sheet.getCell(numToLet(38 + i) + '7').value = txt);
+        
+        sheet.mergeCells('AS5:BJ5'); sheet.getCell('AS5').value = "Perhitungan Disiplin Kerja (DK 40%)"; sheet.mergeCells('AS6:AX6'); sheet.getCell('AS6').value = "Bobot DK Dasar (40%)"; 
+        ['BK','PK','KK','TB','KP','Total'].forEach((txt, i) => sheet.getCell(numToLet(44 + i) + '7').value = txt);
+        
+        sheet.mergeCells('AY6:BD6'); sheet.getCell('AY6').value = "Potongan Absen DK"; 
+        ['BK','PK','KK','TB','KP','Total'].forEach((txt, i) => sheet.getCell(numToLet(50 + i) + '7').value = txt);
+        
+        sheet.mergeCells('BE6:BJ6'); sheet.getCell('BE6').value = "Akhir DK Netto"; 
+        ['BK','PK','KK','TB','KP','Total'].forEach((txt, i) => sheet.getCell(numToLet(56 + i) + '7').value = txt);
+        
         sheet.mergeCells('BK5:BK7'); sheet.getCell('BK5').value = "TPP Diterima\nSebelum Pajak";
 
         for(let i=1; i<=63; i++) { sheet.getCell(numToLet(i-1) + '8').value = i.toString(); }
@@ -551,11 +595,52 @@ async function buatExcelPerhitunganJS(res) {
             if(grouped[gol] && grouped[gol].length > 0) {
                 let startRowGroup = currentRow;
                 for (let c of grouped[gol]) {
-                    let a = c.rawAbsen; let kr = [c.bk, c.pk, c.kk, c.tb, c.kp, c.tppBruto]; let nSKP = kr.map(v => v * 0.6 * c.rasioSKP); let pAbsPK = nSKP.map(v => v * c.pctAbsPK); let akhPK = nSKP.map((v, i) => v - pAbsPK[i]); let bDK = kr.map(v => v * 0.4); let pAbsDK = bDK.map(v => v * c.pctAbsDK); let akhDK = bDK.map((v, i) => v - pAbsDK[i]);
-                    let rValues = [ noUrut++, `${c.nama}\nNIP. ${c.nip}\n${res.jenisASN} - Gol. ${c.golonganAsli}\n${c.jabatan}`, c.kelasJabatan || "-", c.hk, a.dl, a.s, a.c, a.kp, a.tl1, a.tl2, a.tl3, a.tl4, a.cp1, a.cp2, a.cp3, a.cp4, a.tk, a.asub, c.skp, c.menilai === "Tidak Menilai" ? "Tidak Menilai" : "", ...kr, ...nSKP, ...pAbsPK, ...akhPK, ...bDK, ...pAbsDK, ...akhDK, (akhPK[5] + akhDK[5]) ];
+                    let a = c.rawAbsen; 
+                    
+                    let vBk = parseFloat(c.bk) || 0, vPk = parseFloat(c.pk) || 0, vKk = parseFloat(c.kk) || 0, vTb = parseFloat(c.tb) || 0, vKp = parseFloat(c.kp) || 0;
+                    let nSKP_bk = vBk * 0.6 * c.rasioSKP, nSKP_pk = vPk * 0.6 * c.rasioSKP, nSKP_kk = vKk * 0.6 * c.rasioSKP, nSKP_tb = vTb * 0.6 * c.rasioSKP, nSKP_kp = vKp * 0.6 * c.rasioSKP;
+                    let pAbsPK_bk = nSKP_bk * c.pctAbsPK, pAbsPK_pk = nSKP_pk * c.pctAbsPK, pAbsPK_kk = nSKP_kk * c.pctAbsPK, pAbsPK_tb = nSKP_tb * c.pctAbsPK, pAbsPK_kp = nSKP_kp * c.pctAbsPK;
+                    let bDK_bk = vBk * 0.4, bDK_pk = vPk * 0.4, bDK_kk = vKk * 0.4, bDK_tb = vTb * 0.4, bDK_kp = vKp * 0.4;
+                    let pAbsDK_bk = bDK_bk * c.pctAbsDK, pAbsDK_pk = bDK_pk * c.pctAbsDK, pAbsDK_kk = bDK_kk * c.pctAbsDK, pAbsDK_tb = bDK_tb * c.pctAbsDK, pAbsDK_kp = bDK_kp * c.pctAbsDK;
+
+                    // 👇 RUMUS MATEMATIKA EXCEL DITERAPKAN DI SINI 👇
+                    let rValues = [ 
+                        noUrut++, `${c.nama}\nNIP. ${c.nip}\n${res.jenisASN} - Gol. ${c.golonganAsli}\n${c.jabatan}`, c.kelasJabatan || "-", c.hk,
+                        a.dl, a.s, a.c, a.kp, a.tl1, a.tl2, a.tl3, a.tl4, a.cp1, a.cp2, a.cp3, a.cp4, a.tk, a.asub,
+                        c.skp, c.menilai === "Tidak Menilai" ? "Tidak Menilai" : "",
+                        
+                        // U - Z (Kriteria Dasar)
+                        vBk, vPk, vKk, vTb, vKp, { formula: `SUM(U${currentRow}:Y${currentRow})` },
+                        // AA - AF (Nilai PK)
+                        nSKP_bk, nSKP_pk, nSKP_kk, nSKP_tb, nSKP_kp, { formula: `SUM(AA${currentRow}:AE${currentRow})` },
+                        // AG - AL (Potongan PK)
+                        pAbsPK_bk, pAbsPK_pk, pAbsPK_kk, pAbsPK_tb, pAbsPK_kp, { formula: `SUM(AG${currentRow}:AK${currentRow})` },
+                        // AM - AR (Akhir PK Netto) -> AM = AA - AG
+                        { formula: `AA${currentRow}-AG${currentRow}` }, { formula: `AB${currentRow}-AH${currentRow}` }, { formula: `AC${currentRow}-AI${currentRow}` }, { formula: `AD${currentRow}-AJ${currentRow}` }, { formula: `AE${currentRow}-AK${currentRow}` }, { formula: `SUM(AM${currentRow}:AQ${currentRow})` },
+                        // AS - AX (Bobot DK Dasar)
+                        bDK_bk, bDK_pk, bDK_kk, bDK_tb, bDK_kp, { formula: `SUM(AS${currentRow}:AW${currentRow})` },
+                        // AY - BD (Potongan DK)
+                        pAbsDK_bk, pAbsDK_pk, pAbsDK_kk, pAbsDK_tb, pAbsDK_kp, { formula: `SUM(AY${currentRow}:BC${currentRow})` },
+                        // BE - BJ (Akhir DK Netto) -> BE = AS - AY
+                        { formula: `AS${currentRow}-AY${currentRow}` }, { formula: `AT${currentRow}-AZ${currentRow}` }, { formula: `AU${currentRow}-BA${currentRow}` }, { formula: `AV${currentRow}-BB${currentRow}` }, { formula: `AW${currentRow}-BC${currentRow}` }, { formula: `SUM(BE${currentRow}:BI${currentRow})` },
+                        // BK (Total TPP Diterima) -> AR + BJ
+                        { formula: `AR${currentRow}+BJ${currentRow}` }
+                    ];
+
+                    let rawDataValues = [
+                        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 
+                        vBk, vPk, vKk, vTb, vKp, (vBk+vPk+vKk+vTb+vKp),
+                        nSKP_bk, nSKP_pk, nSKP_kk, nSKP_tb, nSKP_kp, (nSKP_bk+nSKP_pk+nSKP_kk+nSKP_tb+nSKP_kp),
+                        pAbsPK_bk, pAbsPK_pk, pAbsPK_kk, pAbsPK_tb, pAbsPK_kp, (pAbsPK_bk+pAbsPK_pk+pAbsPK_kk+pAbsPK_tb+pAbsPK_kp),
+                        (nSKP_bk-pAbsPK_bk), (nSKP_pk-pAbsPK_pk), (nSKP_kk-pAbsPK_kk), (nSKP_tb-pAbsPK_tb), (nSKP_kp-pAbsPK_kp), ((nSKP_bk-pAbsPK_bk)+(nSKP_pk-pAbsPK_pk)+(nSKP_kk-pAbsPK_kk)+(nSKP_tb-pAbsPK_tb)+(nSKP_kp-pAbsPK_kp)),
+                        bDK_bk, bDK_pk, bDK_kk, bDK_tb, bDK_kp, (bDK_bk+bDK_pk+bDK_kk+bDK_tb+bDK_kp),
+                        pAbsDK_bk, pAbsDK_pk, pAbsDK_kk, pAbsDK_tb, pAbsDK_kp, (pAbsDK_bk+pAbsDK_pk+pAbsDK_kk+pAbsDK_tb+pAbsDK_kp),
+                        (bDK_bk-pAbsDK_bk), (bDK_pk-pAbsDK_pk), (bDK_kk-pAbsDK_kk), (bDK_tb-pAbsDK_tb), (bDK_kp-pAbsDK_kp), ((bDK_bk-pAbsDK_bk)+(bDK_pk-pAbsDK_pk)+(bDK_kk-pAbsDK_kk)+(bDK_tb-pAbsDK_tb)+(bDK_kp-pAbsDK_kp)),
+                        (((nSKP_bk-pAbsPK_bk)+(nSKP_pk-pAbsPK_pk)+(nSKP_kk-pAbsPK_kk)+(nSKP_tb-pAbsPK_tb)+(nSKP_kp-pAbsPK_kp)) + ((bDK_bk-pAbsDK_bk)+(bDK_pk-pAbsDK_pk)+(bDK_kk-pAbsDK_kk)+(bDK_tb-pAbsDK_tb)+(bDK_kp-pAbsDK_kp)))
+                    ];
 
                     let row = sheet.getRow(currentRow); row.height = 85; row.values = rValues;
-                    for(let k = 20; k < 63; k++) { deteksiKolomNol[k + 1] += parseFloat(rValues[k]) || 0; }
+                    for(let k = 20; k < 63; k++) { deteksiKolomNol[k + 1] += parseFloat(rawDataValues[k]) || 0; }
 
                     row.eachCell({ includeEmpty: true }, (cell, colN) => {
                         cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} }; cell.alignment = { vertical: 'middle', wrapText: true, horizontal: colN === 2 ? 'left' : (colN <= 20 ? 'center' : 'right') }; if(colN >= 21) cell.numFmt = '#,##0'; if(cell.value === undefined && colN >= 21) cell.value = 0;
@@ -582,6 +667,7 @@ async function buatExcelPerhitunganJS(res) {
 
         cetakTTDAman(sheet, currentRow + 3, res.setting, 63, res.unitCetak); 
         unduhFile(wb, `Perhitungan_TPP_${res.bulanBesar}_${res.unitCetak}.xlsx`);
+        Swal.close();
     } catch (error) { Swal.close(); alertError("Gagal merakit Excel: " + error.message); }
 }
 

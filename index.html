@@ -228,26 +228,56 @@
     <div class="p-4 no-print">
 
 
-        <div id="viewPilihBulan" class="text-center mt-5 hidden">
-            <div class="card mx-auto shadow-sm" style="max-width: 450px; border-top: 4px solid #0d6efd;">
-                <div class="card-body py-5">
-                    <h4 class="fw-bold text-primary mb-2">Pilih Periode TPP</h4>
-                    <p class="text-muted mb-4 small">Anda hanya dapat mengelola TPP pada periode bulan yang telah ditambahkan dan diaktifkan secara berurutan.</p>
-                    <div class="mb-3 text-start">
-                        <label class="fw-bold">Periode Aktif:</label>
-                        <select id="pilihPeriodeUtama" class="form-select form-select-lg text-center fw-bold border-primary mb-3">
-                            <option value="">-- Memuat Data Periode --</option>
-                        </select>
-                        <label class="fw-bold text-success">Kelola Jenis ASN:</label>
-                        <select id="pilihJenisASN" class="form-select form-select-lg text-center fw-bold border-success">
-                            <option value="PNS">PNS</option>
-                            <option value="PPPK">PPPK</option>
-                        </select>
+        <div id="viewPilihBulan" class="hidden" style="margin-top: 2rem;">
+            <div class="row g-4 justify-content-center">
+                <div class="col-md-7">
+                    <div class="card shadow-sm border-0 rounded-4 h-100">
+                        <div class="card-header bg-primary text-white fw-bold py-3 rounded-top-4">
+                            <i class="bi bi-calendar-week"></i> Plih Periode TPP
+                        </div>
+                        <div class="card-body p-4">
+                            <p class="text-muted small mb-3">Klik salah satu bulan di bawah ini untuk mengelola data. Periode akan muncul otomatis setelah ditambahkan.</p>
+                            
+                            <div id="containerTombolPeriode" class="d-flex flex-wrap gap-2 mb-4">
+                                <span class="text-muted small">Memuat periode...</span>
+                            </div>
+                            
+                            <hr class="text-secondary">
+                            
+                            <div class="d-flex flex-column flex-md-row gap-2">
+                                <button id="btnTambahBulan" class="btn btn-outline-primary fw-bold hidden w-100" onclick="bukaModalTambahPeriode()">
+                                    <i class="bi bi-plus-circle"></i> Tambah Periode Baru
+                                </button>
+                                <button id="btnKelolaBulan" class="btn btn-outline-danger fw-bold hidden w-100" onclick="bukaModalEditPeriode()">
+                                    <i class="bi bi-gear-wide-connected"></i> Edit / Kunci / Hapus
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <button class="btn btn-primary btn-lg w-100 fw-bold mb-3" onclick="masukAplikasi()">MASUK KELOLA TPP ➔</button>
-                    <hr>
-                    <button id="btnTambahBulan" class="btn btn-outline-secondary w-100 fw-bold hidden" onclick="bukaModalTambahPeriode()">+ Tambah Periode Bulan Baru</button>
-                    <button id="btnKelolaBulan" class="btn btn-outline-danger w-100 fw-bold mt-2 hidden" onclick="bukaModalEditPeriode()">⚙️ Kelola (Edit / Kunci / Hapus) Periode Aktif</button>
+                </div>
+
+                <div class="col-md-5">
+                    <div class="card shadow-lg border-0 rounded-4 sticky-md-top h-100" style="top: 80px; z-index: 10;">
+                        <div class="card-body p-4 text-center d-flex flex-column justify-content-center h-100">
+                            
+                            <h6 class="text-muted fw-bold mb-2">Bulan yang Anda Pilih:</h6>
+                            <h2 id="displayBulanAktif" class="text-primary fw-bold mb-4 px-3 py-2 bg-light rounded-pill border">Belum Dipilih</h2>
+                            
+                            <h6 class="fw-bold mb-3 text-dark text-start border-bottom pb-2"><i class="bi bi-person-badge"></i> Pilih Kategori ASN:</h6>
+                            
+                            <div class="d-flex justify-content-center gap-3 mb-4">
+                                <button id="btnPilihPNS" class="btn btn-success fw-bold w-50 py-2 fs-5 shadow-sm rounded-3" onclick="ubahJenisASN('PNS')">PNS</button>
+                                <button id="btnPilihPPPK" class="btn btn-outline-warning text-dark fw-bold w-50 py-2 fs-5 shadow-sm rounded-3" onclick="ubahJenisASN('PPPK')">PPPK</button>
+                            </div>
+                            
+                            <input type="hidden" id="pilihJenisASN" value="PNS">
+                            <input type="hidden" id="pilihPeriodeUtama" value="">
+
+                            <button class="btn btn-primary btn-lg w-100 fw-bold rounded-pill shadow-lg mt-auto py-3" style="font-size: 1.15rem; background: linear-gradient(90deg, #0d6efd, #0dcaf0);" onclick="masukAplikasi()">
+                                MASUK KELOLA TPP <i class="bi bi-arrow-right-circle ms-2"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

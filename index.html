@@ -927,7 +927,7 @@
                                     </div>
                                 </div>
 
-                                <div class="card border-success shadow-sm flex-grow-1">
+                                <div class="card border-success shadow-sm flex">
                                     <div class="card-header bg-success text-white fw-bold py-2" style="font-size: 0.8rem;">2. DASAR PENGENAAN PAJAK (TER)</div>
                                     <div class="card-body p-3 d-flex flex-column">
                                         <table class="table table-sm table-borderless mb-0" style="font-size: 0.85rem;">
@@ -1003,10 +1003,10 @@
                            <h5 class="fw-bold"><i class="bi bi-journal-check"></i> CATATAN PEMERIKSAAN / VERIFIKASI</h5>
                            <p class="text-muted" style="font-size: 0.85rem;">Seluruh perhitungan di atas telah disesuaikan dengan regulasi Perpajakan (PMK 168/2023) dan regulasi TPP Provinsi Jambi (Pergub 2025).</p>
                            <p class="mb-1 text-dark">Perhitungan pada aplikasi ini telah diperbarui dan dikoreksi dari format Excel lama untuk memenuhi kepatuhan pajak terbaru:</p>
-                          <ol class="mb-0 text-dark small">
-                            <li><b>UU No. 7 Tahun 2021:</b> Memperbarui rentang PKP untuk tarif progresif terendah (5%), yang sebelumnya maksimal Rp 60 Juta kini dinaikkan menjadi <b>Rp 60 Juta</b>.</li>
-                            <li><b>PP No. 58 & PMK No. 168 Tahun 2023:</b> Mulai 1 Januari 2024, pemotongan PPh 21 menggunakan <b>Tarif Efektif Rata-rata (TER)</b> Kategori A/B/C.</li>
-                            <li><b>Penerapan Biaya Jabatan:</b> Biaya jabatan sebesar 5% (Maksimal Rp 6.000.000 setahun) dan Iuran Pensiun diaktifkan kembali secara sistem.</li>
+                          <ol class="mb-0 text-dark">
+                            <li><b>UU No. 7 Tahun 2021 (Harmonisasi Peraturan Perpajakan):</b> Memperbarui rentang PKP untuk tarif progresif terendah (5%), yang sebelumnya maksimal Rp 50 Juta kini dinaikkan menjadi <b>Rp 60 Juta</b>. Hal ini mencegah pemotongan pajak yang terlalu besar <i>(over-taxing)</i> pada pegawai. Serta memperbaiki bug rumus tarif 25% pada format lama.</li>
+                            <li><b>PP No. 58 Tahun 2023 & PMK No. 168 Tahun 2023:</b> Terhitung mulai 1 Januari 2024, pemotongan PPh 21 masa bulanan wajib menggunakan <b>Tarif Efektif Rata-rata (TER)</b> Kategori A/B/C yang dikalikan langsung dengan Penghasilan Bruto Sebulan.</li>
+                            <li><b>Penerapan Biaya Jabatan:</b> Biaya jabatan sebesar 5% (Maksimal Rp 6.000.000 setahun) dan Iuran Pensiun diaktifkan kembali secara sistem sebagai pengurang Penghasilan Bruto demi mencerminkan nilai PKP yang sah secara hukum.</li>
                           </ol>
                         </div>
 
@@ -1052,7 +1052,7 @@
 
                             <div class="col-lg-5 col-md-12 d-flex flex-column">
                                 
-                                <div class="table-responsive bg-white border rounded shadow-sm mb-3">
+                                <div class="table-responsive bg-white border rounded shadow-sm h-20">
                                     <table class="table table-bordered table-sm mb-0 align-middle" style="font-size: 0.85rem;">
                                         <tr class="table-info fw-bold text-dark"><td colspan="3">VI. TRANSFER BANK</td></tr>
                                         <tr><td width="60%" class="ps-3">a. Jumlah Bersih TPP</td><td id="nomTrfBersih" class="text-end fw-bold">0</td></tr>
@@ -1060,7 +1060,7 @@
                                     </table>
                                 </div>
                                 
-                                <div class="alert alert-info d-flex flex-column align-items-center mt-auto shadow-sm border-info box-jml-bersih py-4 h-100 justify-content-center">
+                                <div class="alert alert-info d-flex flex-column align-items-center mt-auto shadow-sm border-info box-jml-bersih py-4 h-50 justify-content-center">
                                     <h6 class="mb-3 fw-bold text-dark text-center">VII. MASUK REKENING</h6>
                                     <input type="text" id="nomMasukRekening" class="form-control bg-white fw-bold w-100 text-center text-primary fs-1 shadow-sm" style="height: auto; border: 2px solid #0dcaf0;" readonly>
                                     

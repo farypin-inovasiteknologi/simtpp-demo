@@ -239,7 +239,7 @@
                         <div class="card-body p-4">
                             <p class="text-muted small mb-3">Klik salah satu bulan di bawah ini. Tombol akan otomatis menyesuaikan barisnya.</p>
                             
-                            <div id="containerTombolPeriode" class="d-flex flex-wrap gap-2 mb-4">
+                            <div id="containerTombolPeriode" class="row g-2 mb-4">
                                 <span class="text-muted small">Memuat periode...</span>
                             </div>
                             
@@ -1022,55 +1022,49 @@
                     <div id="loaderNominatif" class="text-center text-primary fw-bold hidden">Memuat Sinkronisasi...</div>
                     
                     <div id="hasilNominatif" class="hidden mt-4">
-                        <div class="row g-4">
-                            <div class="col-lg-7 col-md-12">
-                                <div class="table-responsive bg-white border rounded shadow-sm h-100">
-                                    <table class="table table-bordered table-sm mb-0 align-middle" style="font-size: 0.85rem;">
-                                        <tr class="table-primary fw-bold"><td colspan="2">I. GAJI KOTOR (Dari Amprah)</td><td id="nomGajiKotor" class="text-end text-primary fs-6">0</td></tr>
-                                        
-                                        <tr class="table-success fw-bold"><td colspan="3">II. PERHITUNGAN TPP</td></tr>
-                                        <tr><td class="ps-4 text-center" width="5%">1.</td><td width="55%">Beban Kerja (BK)</td><td id="nomBK" class="text-end">0</td></tr>
-                                        <tr><td class="ps-4 text-center">2.</td><td>Prestasi Kerja (PK)</td><td id="nomPK" class="text-end">0</td></tr>
-                                        <tr><td class="ps-4 text-center">3.</td><td>Kondisi Kerja (KK)</td><td id="nomKK" class="text-end">0</td></tr>
-                                        <tr><td class="ps-4 text-center">4.</td><td>Tempat Bertugas (TB)</td><td id="nomTB" class="text-end">0</td></tr>
-                                        <tr><td class="ps-4 text-center">5.</td><td>Kelangkaan Profesi (KP)</td><td id="nomKP" class="text-end">0</td></tr>
-                                        <tr class="fw-bold bg-light"><td colspan="2" class="text-end">Jumlah TPP Netto (1+2+3+4+5)</td><td id="nomTppNetto" class="text-end text-success">0</td></tr>
-                                        <tr class="fw-bold"><td colspan="2" class="ps-3">b. Tambahan Tunjangan BPJS 4%</td><td id="nomTambahanBpjs" class="text-end">0</td></tr>
-                                        <tr class="table-warning fw-bold fs-6"><td colspan="2" class="ps-3">c. JUMLAH TPP + BPJS 4% (a + b)</td><td id="nomTppPlusBpjs" class="text-end">0</td></tr>
-                                        
-                                        <tr class="table-danger fw-bold"><td colspan="3">III. PERHITUNGAN PENGURANGAN TPP</td></tr>
-                                        <tr><td colspan="2" class="ps-3">a. Potongan IWP 1%</td><td id="nomPotIwp" class="text-end text-danger">0</td></tr>
-                                        <tr><td colspan="2" class="ps-3">b. Potongan PPh 21 (TER)</td><td id="nomPotPph" class="text-end text-danger">0</td></tr>
-                                        <tr><td colspan="2" class="ps-3">c. Potongan BPJS 4%</td><td id="nomPotBpjs" class="text-end text-danger">0</td></tr>
-                                        <tr class="fw-bold text-danger bg-light"><td colspan="2" class="text-end">d. JUMLAH POTONGAN (a + b + c)</td><td id="nomJmlPotongan" class="text-end">0</td></tr>
-                                        
-                                        <tr class="table-dark fw-bold fs-6"><td colspan="2">IV. TOTAL JUMLAH (II.c - III.d)</td><td id="nomTotalDiterima" class="text-end">0</td></tr>
-                                        <tr class="table-success fw-bold text-success" style="font-size: 1.1rem;"><td colspan="2">V. JUMLAH BERSIH</td><td id="nomBersih" class="text-end">0</td></tr>
-                                    </table>
-                                </div>
-                            </div>
-
-                            <div class="col-lg-5 col-md-12 d-flex flex-column">
+                        <div class="table-responsive bg-white border rounded shadow-sm">
+                            <table class="table table-bordered table-sm mb-0 align-middle" style="font-size: 0.85rem;">
+                                <tr class="table-primary fw-bold"><td colspan="2">I. GAJI KOTOR (Dari Amprah)</td><td id="nomGajiKotor" class="text-end text-primary fs-6">0</td></tr>
                                 
-                                <div class="table-responsive bg-white border rounded shadow-sm h-20">
-                                    <table class="table table-bordered table-sm mb-0 align-middle" style="font-size: 0.85rem;">
-                                        <tr class="table-info fw-bold text-dark"><td colspan="3">VI. TRANSFER BANK</td></tr>
-                                        <tr><td width="60%" class="ps-3">a. Jumlah Bersih TPP</td><td id="nomTrfBersih" class="text-end fw-bold">0</td></tr>
-                                        <tr><td class="ps-3 text-danger">b. Potongan KORPRI</td><td id="nomTrfKorpri" class="text-end text-danger fw-bold">0</td></tr>
-                                    </table>
-                                </div>
+                                <tr class="table-success fw-bold"><td colspan="3">II. PERHITUNGAN TPP</td></tr>
+                                <tr><td class="ps-4 text-center" width="5%">1.</td><td width="55%">Beban Kerja (BK)</td><td id="nomBK" class="text-end">0</td></tr>
+                                <tr><td class="ps-4 text-center">2.</td><td>Prestasi Kerja (PK)</td><td id="nomPK" class="text-end">0</td></tr>
+                                <tr><td class="ps-4 text-center">3.</td><td>Kondisi Kerja (KK)</td><td id="nomKK" class="text-end">0</td></tr>
+                                <tr><td class="ps-4 text-center">4.</td><td>Tempat Bertugas (TB)</td><td id="nomTB" class="text-end">0</td></tr>
+                                <tr><td class="ps-4 text-center">5.</td><td>Kelangkaan Profesi (KP)</td><td id="nomKP" class="text-end">0</td></tr>
+                                <tr class="fw-bold bg-light"><td colspan="2" class="text-end">Jumlah TPP Netto (1+2+3+4+5)</td><td id="nomTppNetto" class="text-end text-success">0</td></tr>
+                                <tr class="fw-bold"><td colspan="2" class="ps-3">b. Tambahan Tunjangan BPJS 4%</td><td id="nomTambahanBpjs" class="text-end">0</td></tr>
+                                <tr class="table-warning fw-bold fs-6"><td colspan="2" class="ps-3">c. JUMLAH TPP + BPJS 4% (a + b)</td><td id="nomTppPlusBpjs" class="text-end">0</td></tr>
                                 
-                                <div class="alert alert-info d-flex flex-column align-items-center mt-auto shadow-sm border-info box-jml-bersih py-4 h-50 justify-content-center">
-                                    <h6 class="mb-3 fw-bold text-dark text-center">VII. MASUK REKENING</h6>
-                                    <input type="text" id="nomMasukRekening" class="form-control bg-white fw-bold w-100 text-center text-primary fs-1 shadow-sm" style="height: auto; border: 2px solid #0dcaf0;" readonly>
-                                    
-                                    <button type="button" class="btn btn-danger w-100 fw-bold fs-5 py-3 mt-4 shadow" onclick="cetakPDFPerorangan('tabNominatif', 'Nominatif_TPP')">
-                                        <i class="bi bi-file-pdf-fill"></i> UNDUH PDF NOMINATIF
-                                    </button>
-                                </div>
-
-                            </div>
+                                <tr class="table-danger fw-bold"><td colspan="3">III. PERHITUNGAN PENGURANGAN TPP</td></tr>
+                                <tr><td colspan="2" class="ps-3">a. Potongan IWP 1%</td><td id="nomPotIwp" class="text-end text-danger">0</td></tr>
+                                <tr><td colspan="2" class="ps-3">b. Potongan PPh 21 (TER)</td><td id="nomPotPph" class="text-end text-danger">0</td></tr>
+                                <tr><td colspan="2" class="ps-3">c. Potongan BPJS 4%</td><td id="nomPotBpjs" class="text-end text-danger">0</td></tr>
+                                <tr class="fw-bold text-danger bg-light"><td colspan="2" class="text-end">d. JUMLAH POTONGAN (a + b + c)</td><td id="nomJmlPotongan" class="text-end">0</td></tr>
+                                
+                                <tr class="table-dark fw-bold fs-6"><td colspan="2" class="py-2">IV. TOTAL JUMLAH (II.c - III.d)</td><td id="nomTotalDiterima" class="text-end py-2">0</td></tr>
+                                
+                                <tr class="table-success fw-bold text-success" style="font-size: 1.3rem;">
+                                    <td colspan="2" class="py-4 text-center" style="letter-spacing: 1px;">V. JUMLAH BERSIH</td>
+                                    <td id="nomBersih" class="text-end py-4">0</td>
+                                </tr>
+                            </table>
                         </div>
+
+                        <div class="text-center mt-4">
+                            <button type="button" class="btn btn-danger fw-bold px-5 py-2 shadow-sm rounded-pill" onclick="cetakPDFPerorangan('tabNominatif', 'Nominatif_TPP')">
+                                <i class="bi bi-file-pdf-fill"></i> UNDUH PDF NOMINATIF
+                            </button>
+                        </div>
+                        
+                        <div class="hidden">
+                            <span id="nomTrfBersih">0</span>
+                            <span id="nomTrfKorpri">0</span>
+                            <input type="text" id="nomMasukRekening" value="0">
+                        </div>
+
+                    </div>
+                </div>
                     </div>
                 </div> </div> </div> </div> </div> </div> </div> </div> </div>
                         

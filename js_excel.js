@@ -683,15 +683,25 @@ function buatPdfRekapPajakJS(res) { prosesCetakPdfKolektif(res, 'PajakTER'); }
 async function prosesCetakPdfKolektif(res, jenis) {
     try {
         const { jsPDF } = window.jspdf;
+        // Kertas Legal Landscape
         const doc = new jsPDF({ orientation: 'landscape', format: 'legal' });
+        const pageWidth = doc.internal.pageSize.width;
 
+        // --- KOP SURAT (RATA TENGAH SAMA PERSIS EXCEL) ---
+        // Y = 12 (Margin Atas kurang lebih 1 cm)
         doc.setFontSize(12); doc.setFont("helvetica", "bold");
-        doc.text(`LAPORAN ${jenis.toUpperCase()} TPP - ${res.setting.Nama_Dinas}`, 14, 15);
+        let judul1 = `LAPORAN ${jenis.toUpperCase()} TPP ${res.setting.Nama_Dinas || ''} PEMERINTAH PROVINSI JAMBI`;
+        doc.text(judul1.toUpperCase(), pageWidth / 2, 12, { align: 'center' });
+        
+        doc.setFontSize(11); 
+        doc.text(`${res.jenisASN || ''} ${res.unitCetak || ''}`.toUpperCase(), pageWidth / 2, 18, { align: 'center' });
+        
         doc.setFontSize(10); doc.setFont("helvetica", "normal");
-        doc.text(`Periode: ${res.bulanBesar} | Kategori ASN: ${res.jenisASN} ${res.unitCetak}`, 14, 21);
+        doc.text(`PERIODE BULAN: ${res.bulanBesar || ''}`.toUpperCase(), pageWidth / 2, 24, { align: 'center' });
 
         let head = []; let body = []; let fRp = (num) => Math.round(num || 0).toLocaleString('id-ID');
 
+        // --- MAPPING DATA ---
         if (jenis === 'Rekening') {
             head = [['No', 'Nama Pegawai', 'NIP', 'No. Rekening', 'TPP Bersih', 'Pot. Korpri', 'Diterima']];
             let potKorpri = parseFloat(res.setting.Pot_Korpri) || 0;
@@ -707,37 +717,56 @@ async function prosesCetakPdfKolektif(res, jenis) {
             body = res.data.map((c, i) => [ i+1, `${c.nama}\n${c.nip}`, c.golonganAsli, c.jabatan, fRp(c.tppBruto), fRp(c.bpjs4 + c.iwp1 + c.pph21TKD), fRp(c.tppBersih) ]);
         }
 
+        // --- RENDER TABEL (AUTOTABLE) DENGAN MARGIN CUSTOM ---
         doc.autoTable({
-            startY: 25, head: head, body: body, theme: 'grid',
-            headStyles: { fillColor: [41, 128, 185], textColor: 255, fontSize: 9, halign: 'center' },
-            bodyStyles: { fontSize: 8 }, columnStyles: { 0: { halign: 'center', cellWidth: 10 } },
-            didParseCell: function (data) { if (data.section === 'body' && data.column.index > 2) { if (/[0-9]/.test(data.cell.text[0])) { data.cell.styles.halign = 'right'; } } }
+            startY: 30, 
+            margin: { left: 7, right: 7, top: 10, bottom: 10 }, // Kiri-Kanan 0.7cm (7mm), Atas-Bawah 1cm (10mm)
+            head: head, 
+            body: body, 
+            theme: 'grid',
+            headStyles: { fillColor: [41, 128, 185], textColor: 255, fontSize: 9, halign: 'center', valign: 'middle' },
+            bodyStyles: { fontSize: 8 }, 
+            columnStyles: { 0: { halign: 'center', cellWidth: 10 } },
+            showHead: 'everyPage', // Otomatis ngulang judul kolom tiap halaman baru
+            didParseCell: function (data) { 
+                if (data.section === 'body' && data.column.index > 2) { 
+                    if (/[0-9]/.test(data.cell.text[0])) { data.cell.styles.halign = 'right'; } 
+                } 
+            }
         });
 
-        // MESIN PENCARI NAMA TTD MULTI-UNIT KHUSUS PDF
+        // --- MESIN PENCARI NAMA TTD MULTI-UNIT ---
         const getVal = (key) => {
             if (res.unitCetak && res.setting[`${res.unitCetak}_${key}`]) return res.setting[`${res.unitCetak}_${key}`];
             return res.setting[key];
         };
 
         let finalY = doc.lastAutoTable.finalY + 15;
-        if (finalY > 170) { doc.addPage(); finalY = 20; } 
+        // Cek jika sisa halaman di bawah mentok, paksa pindah halaman untuk TTD
+        if (finalY > 175) { doc.addPage(); finalY = 20; } 
         
-        doc.setFontSize(9); doc.text(`Jambi, ........................ ${new Date().getFullYear()}`, 280, finalY, { align: 'center' });
-        doc.text("Mengetahui,", 70, finalY + 5, { align: 'center' });
-        doc.text(getVal('Kepala_Jabatan') || "KEPALA DINAS", 70, finalY + 10, { align: 'center' });
-        doc.text("BENDAHARA PENGELUARAN", 280, finalY + 10, { align: 'center' });
+        let xKiri = 50; 
+        let xKanan = pageWidth - 50;
+
+        doc.setFontSize(9); 
+        doc.text(`Jambi, ........................ ${new Date().getFullYear()}`, xKanan, finalY, { align: 'center' });
+        doc.text("Mengetahui,", xKiri, finalY + 5, { align: 'center' });
+        doc.text(getVal('Kepala_Jabatan') || "KEPALA DINAS", xKiri, finalY + 10, { align: 'center' });
+        doc.text("BENDAHARA PENGELUARAN", xKanan, finalY + 10, { align: 'center' });
 
         doc.setFont("helvetica", "bold");
-        doc.text(getVal('Kepala_Nama') || "Nama Kepala", 70, finalY + 35, { align: 'center' });
-        doc.text(getVal('Bendahara_Nama') || "Nama Bendahara", 280, finalY + 35, { align: 'center' });
+        doc.text(getVal('Kepala_Nama') || "Nama Kepala", xKiri, finalY + 35, { align: 'center' });
+        doc.text(getVal('Bendahara_Nama') || "Nama Bendahara", xKanan, finalY + 35, { align: 'center' });
         
         doc.setFont("helvetica", "normal");
-        doc.text(`NIP. ${getVal('Kepala_NIP') || "-"}`, 70, finalY + 40, { align: 'center' });
-        doc.text(`NIP. ${getVal('Bendahara_NIP') || "-"}`, 280, finalY + 40, { align: 'center' });
+        doc.text(`NIP. ${getVal('Kepala_NIP') || "-"}`, xKiri, finalY + 40, { align: 'center' });
+        doc.text(`NIP. ${getVal('Bendahara_NIP') || "-"}`, xKanan, finalY + 40, { align: 'center' });
 
+        // --- SIMPAN PDF ---
         doc.save(`PDF_${jenis}_${res.bulanBesar}_${res.unitCetak}.pdf`);
         Swal.close(); alertSukses(`File PDF ${jenis} Berhasil Diunduh!`);
 
-    } catch(err) { Swal.close(); alertError("Gagal menyusun PDF: " + err.message); }
+    } catch(err) { 
+        Swal.close(); alertError("Gagal menyusun PDF: " + err.message); 
+    }
 }

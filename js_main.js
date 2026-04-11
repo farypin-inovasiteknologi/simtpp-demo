@@ -42,6 +42,26 @@ async function fetchAPI(actionName, payloadData) {
 let globalBulanAktif = "", globalHariKerja = 0, globalHariKerja6 = 0, globalStatusLock = "Buka", globalPotKorpri = 0, globalRefBulanGaji = "", globalJenisASN = "", asNIPAktif = "", statusTERAktif = "", objNominatifSetahun = null, baseTPP = {bk: 0, pk: 0, kk: 0, tb: 0, kp: 0, total: 0}, arrayPeriode = [], arrayUnitKerjaValid = [], arrayJabatanValid = [], isGajiTersimpan = false, isAbsenTersimpan = false;
 let currentUser = { role: "", unitkerja: "", username: "", email: "", uuid: "" };
 
+// ==========================================
+// MESIN FORMAT TITIK RIBUAN (AUTO CURRENCY)
+// ==========================================
+function formatRupiah(angka) {
+    let number_string = String(angka).replace(/[^,\d]/g, '').toString();
+    let split = number_string.split(',');
+    let sisa = split[0].length % 3;
+    let rupiah = split[0].substr(0, sisa);
+    let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+    if (ribuan) {
+        let separator = sisa ? '.' : '';
+        rupiah += separator + ribuan.join('.');
+    }
+    return split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+}
+
+function unformatRupiah(rupiah) {
+    return parseInt(String(rupiah).replace(/[^0-9]/g, '')) || 0;
+}
+
 // =========================================================================
 // 4. SAAT APLIKASI PERTAMA KALI DIBUKA (AUTO-FETCH DAFTAR OPD)
 // =========================================================================
@@ -754,7 +774,14 @@ async function doLogin(e) {
   }
 
   function bukaModalPegawai(aksi, nip="", nama="", tglLahir="", golongan="", unorInduk="", unitkerja="", jabatan="", jenis="Struktural", status="TK/0 = 1", gapok=0, tjJab=0, rekening="", skp="", uuid="") {
-    document.getElementById('mAksi').value = aksi; document.getElementById('mNipLama').value = nip; document.getElementById('mTglLahir').value = tglLahir; document.getElementById('mGolongan').value = golongan; document.getElementById('mUuid').value = uuid; renderDropdownGolongan(golongan); document.getElementById('mJenis').value = jenis; document.getElementById('mStatus').value = status; document.getElementById('mGapok').value = gapok; document.getElementById('mTjJab').value = tjJab; document.getElementById('mRekening').value = rekening;
+    document.getElementById('mAksi').value = aksi; document.getElementById('mNipLama').value = nip; document.getElementById('mTglLahir').value = tglLahir; document.getElementById('mGolongan').value = golongan; document.getElementById('mUuid').value = uuid; renderDropdownGolongan(golongan); document.getElementById('mJenis').value = jenis; 
+    
+    document.getElementById('mStatus').value = status; 
+
+  document.getElementById('mGapok').value = formatRupiah(gapok); 
+  document.getElementById('mTjJab').value = formatRupiah(tjJab); 
+    
+    document.getElementById('mRekening').value = rekening;
     document.getElementById('mSkp').value = skp || "";
     
     let elNip = document.getElementById('mNip'); let elNama = document.getElementById('mNama'); let elUnitKerja = document.getElementById('mUnitKerja'); let elUnorInduk = document.getElementById('mUnorInduk');
@@ -812,8 +839,9 @@ async function doLogin(e) {
       namaJabatan: j, 
       jenisJab: document.getElementById('mJenis').value, 
       statusKawin: document.getElementById('mStatus').value, 
-      gapok: document.getElementById('mGapok').value, 
-      tjJab: document.getElementById('mTjJab').value, 
+     
+      gapok: unformatRupiah(document.getElementById('mGapok').value), 
+      tjJab: unformatRupiah(document.getElementById('mTjJab').value),
       rekening: document.getElementById('mRekening').value, 
       skp: document.getElementById('mSkp').value, 
       bulan: globalBulanAktif, 
@@ -887,19 +915,30 @@ async function doLogin(e) {
   // Paste kode ini di js_main.js Anda
 
 // 1. Kunci keyboard saat ngetik (Mentok 18 angka & nolak huruf)
+// 1. Kunci keyboard saat ngetik & Ubah input uang ke TEXT
 document.addEventListener('DOMContentLoaded', function() {
     let inputNip = document.getElementById('mNip');
     if(inputNip) {
         inputNip.addEventListener('input', function(e) {
-            // Hapus semua huruf/simbol, sisakan angka saja
             this.value = this.value.replace(/[^0-9]/g, ''); 
-            
-            // Kunci mentok di 18 karakter
-            if(this.value.length > 18) {
-                this.value = this.value.slice(0, 18); 
-            }
+            if(this.value.length > 18) this.value = this.value.slice(0, 18); 
         });
     }
+
+    // Ubah otomatis input angka menjadi text agar bisa pakai titik ribuan
+    let inputsUang = ['mGapok', 'mTjJab', 'aGapok', 'aTjJab', 'aBulat', 'aTjIstri', 'aTjAnak', 'aJmlKeluarga', 'aTjBeras', 'aTjPajak', 'aTjBPJS4', 'aTjJKK', 'aTjJKM', 'aJmlKotor', 'aPotIWP8', 'aPotIWP1', 'aPotBPJS4', 'aPotPajak', 'aPotJKK', 'aPotJKM', 'aJmlPotongan', 'aJmlBersih'];
+    
+    inputsUang.forEach(id => {
+        let el = document.getElementById(id);
+        if(el) {
+            el.type = 'text'; // Paksa HTML ganti jadi Text
+            if(id === 'mGapok' || id === 'mTjJab' || id === 'aTjPajak' || id === 'aPotPajak') {
+                el.addEventListener('input', function() {
+                    this.value = formatRupiah(this.value); // Pasang titik real-time
+                });
+            }
+        }
+    });
 });
 
 // 2. Peringatan saat user pindah kolom (onblur)
@@ -1067,8 +1106,9 @@ function validasiNIP(input) {
   }
 
   function hitungAmprah(isManualPajak = false) {
-    let gapok = parseFloat(document.getElementById('aGapok')?.value) || 0; 
-    let tjJab = parseFloat(document.getElementById('aTjJab')?.value) || 0; 
+    // 1. Baca nilai dan hapus titiknya dulu
+    let gapok = unformatRupiah(document.getElementById('aGapok')?.value); 
+    let tjJab = unformatRupiah(document.getElementById('aTjJab')?.value); 
     let statTer = statusTERAktif || "TK/0 = 1"; 
     let isKawin = statTer.startsWith("K"); 
     let jmlJiwa = parseInt(statTer.split("=")[1]) || 1; 
@@ -1078,7 +1118,6 @@ function validasiNIP(input) {
     let tjIstri = Math.round(isKawin ? (gapok * 0.10) : 0); 
     let tjAnak = Math.round(gapok * 0.02 * jmlAnak); 
     let jmlKeluarga = gapok + tjIstri + tjAnak; 
-    
     let tjBeras = (gapok > 0) ? Math.round(72420 * jmlJiwa) : 0; 
     
     let basisBPJS = jmlKeluarga + tjJab; 
@@ -1107,13 +1146,13 @@ function validasiNIP(input) {
       }
       let tjPajakOtomatis = Math.round(dppTER * (pctTER / 100)); 
       if(document.getElementById('aTjPajak')) { 
-        document.getElementById('aTjPajak').value = tjPajakOtomatis; 
-        document.getElementById('aPotPajak').value = tjPajakOtomatis; 
+        document.getElementById('aTjPajak').value = formatRupiah(tjPajakOtomatis); 
+        document.getElementById('aPotPajak').value = formatRupiah(tjPajakOtomatis); 
       }
     }
     
-    let tjPajak = parseFloat(document.getElementById('aTjPajak')?.value) || 0; 
-    let potPajak = parseFloat(document.getElementById('aPotPajak')?.value) || 0; 
+    let tjPajak = unformatRupiah(document.getElementById('aTjPajak')?.value); 
+    let potPajak = unformatRupiah(document.getElementById('aPotPajak')?.value); 
     let potIWP8 = Math.round(jmlKeluarga * 0.08); 
     let potIWP1 = Math.round(basisBPJS * 0.01); 
     let potJKK = tjJKK; 
@@ -1129,23 +1168,24 @@ function validasiNIP(input) {
     let jmlKotor = kotorSementara + pembulatan; 
     let gajiBersih = jmlKotor - totalPotongan;
     
+    // 2. Kembalikan nilainya ke HTML dengan format Titik Ribuan
     if(document.getElementById('aJmlKeluarga')) { 
-      document.getElementById('aJmlKeluarga').value = jmlKeluarga; 
-      document.getElementById('aTjIstri').value = tjIstri; 
-      document.getElementById('aTjAnak').value = tjAnak; 
-      document.getElementById('aTjBeras').value = tjBeras; 
-      document.getElementById('aTjBPJS4').value = tjBPJS4; 
-      document.getElementById('aTjJKK').value = tjJKK; 
-      document.getElementById('aTjJKM').value = tjJKM; 
-      document.getElementById('aPotJKK').value = potJKK; 
-      document.getElementById('aPotJKM').value = potJKM; 
-      document.getElementById('aPotBPJS4').value = tjBPJS4; 
-      document.getElementById('aPotIWP1').value = potIWP1; 
-      document.getElementById('aPotIWP8').value = potIWP8; 
-      document.getElementById('aBulat').value = pembulatan; 
-      document.getElementById('aJmlKotor').value = jmlKotor; 
-      document.getElementById('aJmlPotongan').value = totalPotongan; 
-      document.getElementById('aJmlBersih').value = gajiBersih; 
+      document.getElementById('aJmlKeluarga').value = formatRupiah(jmlKeluarga); 
+      document.getElementById('aTjIstri').value = formatRupiah(tjIstri); 
+      document.getElementById('aTjAnak').value = formatRupiah(tjAnak); 
+      document.getElementById('aTjBeras').value = formatRupiah(tjBeras); 
+      document.getElementById('aTjBPJS4').value = formatRupiah(tjBPJS4); 
+      document.getElementById('aTjJKK').value = formatRupiah(tjJKK); 
+      document.getElementById('aTjJKM').value = formatRupiah(tjJKM); 
+      document.getElementById('aPotJKK').value = formatRupiah(potJKK); 
+      document.getElementById('aPotJKM').value = formatRupiah(potJKM); 
+      document.getElementById('aPotBPJS4').value = formatRupiah(tjBPJS4); 
+      document.getElementById('aPotIWP1').value = formatRupiah(potIWP1); 
+      document.getElementById('aPotIWP8').value = formatRupiah(potIWP8); 
+      document.getElementById('aBulat').value = formatRupiah(pembulatan); 
+      document.getElementById('aJmlKotor').value = formatRupiah(jmlKotor); 
+      document.getElementById('aJmlPotongan').value = formatRupiah(totalPotongan); 
+      document.getElementById('aJmlBersih').value = formatRupiah(gajiBersih); 
     }
   }
 
@@ -1216,7 +1256,34 @@ function validasiNIP(input) {
 
   async function submitGaji(e) {
     e.preventDefault(); startLoading("Menyimpan Amprah..."); 
-    const d = { nip: asNIPAktif, bulan: globalBulanAktif, gapok: document.getElementById('aGapok').value, tjIstri: document.getElementById('aTjIstri').value, tjAnak: document.getElementById('aTjAnak').value, jumlahKeluarga: document.getElementById('aJmlKeluarga').value, tjJabatan: document.getElementById('aTjJab').value, tjTerpencil: 0, tkd: 0, tjBeras: document.getElementById('aTjBeras').value, tjPajak: document.getElementById('aTjPajak').value, tjBPJS4: document.getElementById('aTjBPJS4').value, tjJKK: document.getElementById('aTjJKK').value, tjJKM: document.getElementById('aTjJKM').value, taperaPK: 0, pembulatan: document.getElementById('aBulat').value, jmlKotor: document.getElementById('aJmlKotor').value, potPajak: document.getElementById('aPotPajak').value, potBPJS: document.getElementById('aPotBPJS4').value, potIWP1: document.getElementById('aPotIWP1').value, potIWP8: document.getElementById('aPotIWP8').value, potTaperum: 0, potJKK: document.getElementById('aPotJKK').value, potJKM: document.getElementById('aPotJKM').value, jmlPotongan: document.getElementById('aJmlPotongan').value, jmlBersih: document.getElementById('aJmlBersih').value };
+
+    const d = { 
+        nip: asNIPAktif, bulan: globalBulanAktif, 
+        gapok: unformatRupiah(document.getElementById('aGapok').value), 
+        tjIstri: unformatRupiah(document.getElementById('aTjIstri').value), 
+        tjAnak: unformatRupiah(document.getElementById('aTjAnak').value), 
+        jumlahKeluarga: unformatRupiah(document.getElementById('aJmlKeluarga').value), 
+        tjJabatan: unformatRupiah(document.getElementById('aTjJab').value), 
+        tjTerpencil: 0, tkd: 0, 
+        tjBeras: unformatRupiah(document.getElementById('aTjBeras').value), 
+        tjPajak: unformatRupiah(document.getElementById('aTjPajak').value), 
+        tjBPJS4: unformatRupiah(document.getElementById('aTjBPJS4').value), 
+        tjJKK: unformatRupiah(document.getElementById('aTjJKK').value), 
+        tjJKM: unformatRupiah(document.getElementById('aTjJKM').value), 
+        taperaPK: 0, 
+        pembulatan: unformatRupiah(document.getElementById('aBulat').value), 
+        jmlKotor: unformatRupiah(document.getElementById('aJmlKotor').value), 
+        potPajak: unformatRupiah(document.getElementById('aPotPajak').value), 
+        potBPJS: unformatRupiah(document.getElementById('aPotBPJS4').value), 
+        potIWP1: unformatRupiah(document.getElementById('aPotIWP1').value), 
+        potIWP8: unformatRupiah(document.getElementById('aPotIWP8').value), 
+        potTaperum: 0, 
+        potJKK: unformatRupiah(document.getElementById('aPotJKK').value), 
+        potJKM: unformatRupiah(document.getElementById('aPotJKM').value), 
+        jmlPotongan: unformatRupiah(document.getElementById('aJmlPotongan').value), 
+        jmlBersih: unformatRupiah(document.getElementById('aJmlBersih').value) 
+    };
+
     let res = await fetchAPI("simpanGajiOtomatis", d); stopLoading(); let pesan = String(res).toLowerCase();
     if (pesan.includes("gagal") || pesan.includes("error") || pesan.includes("peringatan") || pesan.includes("ditolak")) { alertError(res.pesan || res); isGajiTersimpan = false; } else { alertSukses(res); isGajiTersimpan = true; }
   }
@@ -1249,10 +1316,29 @@ function validasiNIP(input) {
   }
 
   function navigasiTab(target, force = false) {
-    if (!force && globalStatusLock !== "Kunci") { if (target !== 'tabGaji' && !isGajiTersimpan) { return alertPeringatan("Anda belum menyimpan data bulan ini! Silakan klik SIMPAN AMPRAH GAJI terlebih dahulu."); } if ((target === 'tabTahunan' || target === 'tabNominatif') && !isAbsenTersimpan) { return alertPeringatan("Anda belum menyimpan kehadiran! Silakan klik SIMPAN PERHITUNGAN TPP terlebih dahulu."); } }
-    ['navGaji', 'navAbsen', 'navTahunan', 'navNominatif'].forEach(id => document.getElementById(id).classList.remove('active')); ['tabGaji', 'tabAbsen', 'tabTahunan', 'tabNominatif'].forEach(id => document.getElementById(id).classList.remove('show', 'active'));
-    let navId = "nav" + target.replace("tab", ""); document.getElementById(navId).classList.add('active'); document.getElementById(target).classList.add('show', 'active');
-    if (target === 'tabTahunan') hitungPajakTahunan(); if (target === 'tabNominatif') muatNominatif();
+    if (!force && globalStatusLock !== "Kunci") { 
+      if (target !== 'tabGaji' && !isGajiTersimpan) { 
+          return alertPeringatan("Anda belum menyimpan data bulan ini! Silakan klik SIMPAN AMPRAH GAJI terlebih dahulu."); 
+      } 
+      if ((target === 'tabTahunan' || target === 'tabNominatif') && !isAbsenTersimpan) { 
+          return alertPeringatan("Anda belum menyimpan kehadiran! Silakan klik SIMPAN PERHITUNGAN TPP terlebih dahulu."); 
+      } 
+    }
+    
+    // 👇 TAMBAHAN ALERT KHUSUS: Cegat Tab 4 (Nominatif) jika Tab 3 (Pajak Tahunan) belum dibuka
+    if (target === 'tabNominatif' && !objNominatifSetahun) {
+        return alertPeringatan("Harap buka menu '3. Penghasilan Setahun / Pajak TER' terlebih dahulu agar sistem dapat mengkalkulasi nilai pajak TPP yang terbaru.");
+    }
+
+    ['navGaji', 'navAbsen', 'navTahunan', 'navNominatif'].forEach(id => document.getElementById(id).classList.remove('active')); 
+    ['tabGaji', 'tabAbsen', 'tabTahunan', 'tabNominatif'].forEach(id => document.getElementById(id).classList.remove('show', 'active'));
+    
+    let navId = "nav" + target.replace("tab", ""); 
+    document.getElementById(navId).classList.add('active'); 
+    document.getElementById(target).classList.add('show', 'active');
+    
+    if (target === 'tabTahunan') hitungPajakTahunan(); 
+    if (target === 'tabNominatif') muatNominatif();
   }
 
   function bukaModalImport(jenis) { document.getElementById('importJenis').value = jenis; document.getElementById('fileImport').value = ""; document.getElementById('importModalTitle').innerText = jenis === 'pegawai' ? "Import Data Pegawai (Excel)" : "Import Data (Excel)"; 

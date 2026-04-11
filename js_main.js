@@ -1032,7 +1032,14 @@ function validasiNIP(input) {
     
     switchView('viewManajemenASN');
     
+    // 👇 1. TAMBAHKAN LOADING DI SINI BIAR GAK TERASA NGE-HANG
+    startLoading("Menarik Riwayat Gaji & Absen...");
+
     let res = await fetchAPI("getDetailASN", {nip: nip, bulan: globalBulanAktif});
+    
+    // 👇 2. MATIKAN LOADING SETELAH DATA DATANG DARI SERVER
+    stopLoading();
+
     if(res && !res.error) { 
       isGajiTersimpan = (res.gaji) ? true : false; 
       isAbsenTersimpan = (res.absen) ? true : false; 
@@ -1041,8 +1048,9 @@ function validasiNIP(input) {
       if(res.pergub) { baseTPP = res.pergub; } 
       
       if(res.pegawaiInfo) { 
-        document.getElementById('aGapok').value = res.pegawaiInfo.gapok || 0; 
-        document.getElementById('aTjJab').value = res.pegawaiInfo.tjJab || 0; 
+        // 👇 3. BUNGKUS DENGAN formatRupiah AGAR TITIKNYA LANGSUNG MUNCUL DI FORM GAJI
+        document.getElementById('aGapok').value = formatRupiah(res.pegawaiInfo.gapok || 0); 
+        document.getElementById('aTjJab').value = formatRupiah(res.pegawaiInfo.tjJab || 0); 
         
         if(res.pegawaiInfo.skpBulanan && res.pegawaiInfo.skpBulanan !== "") {
           document.getElementById('inpSKP').value = res.pegawaiInfo.skpBulanan;
@@ -1057,8 +1065,9 @@ function validasiNIP(input) {
       }; 
       
       if(res.gaji) { 
-        setV('aTjPajak', res.gaji[10]); 
-        setV('aPotPajak', res.gaji[17]); 
+        // 👇 PAJAK YANG TERSIMPAN JUGA DIBERI TITIK RIBUAN
+        if(document.getElementById('aTjPajak')) document.getElementById('aTjPajak').value = formatRupiah(res.gaji[10]); 
+        if(document.getElementById('aPotPajak')) document.getElementById('aPotPajak').value = formatRupiah(res.gaji[17]); 
       } else { 
         if(document.getElementById('aTjPajak')) document.getElementById('aTjPajak').value = 0; 
         if(document.getElementById('aPotPajak')) document.getElementById('aPotPajak').value = 0; 

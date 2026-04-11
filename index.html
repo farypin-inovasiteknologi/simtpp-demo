@@ -950,62 +950,6 @@
             </div>
         </div>
 
-        <div id="viewPilihBulan" class="hidden" style="margin-top: 3rem;">
-            <div class="row g-4 justify-content-center mx-auto" style="max-width: 1100px;">
-                
-                <div class="col-lg-8 col-md-12">
-                    <div class="card shadow-sm border-0 rounded-4 h-100" style="background-color: #f4f8ff; border: 1px solid #dbeafe !important;">
-                        <div class="card-header text-white fw-bold py-3 rounded-top-4" style="background: linear-gradient(135deg, #4e73df, #224abe);">
-                            <i class="bi bi-calendar-week"></i> Pilih Periode TPP
-                        </div>
-                        <div class="card-body p-4">
-                            <p class="text-muted small mb-3">Klik salah satu bulan di bawah ini. Tombol akan otomatis menyesuaikan barisnya.</p>
-                            
-                            <div id="containerTombolPeriode" class="row g-2 mb-4">
-                                <span class="text-muted small">Memuat periode...</span>
-                            </div>
-                            
-                            <hr class="text-secondary" style="opacity: 0.2;">
-                            
-                            <div class="d-flex flex-column flex-md-row gap-2">
-                                <button id="btnTambahBulan" class="btn btn-outline-primary fw-bold hidden w-100" onclick="bukaModalTambahPeriode()">
-                                    <i class="bi bi-plus-circle"></i> Tambah Periode
-                                </button>
-                                <button id="btnKelolaBulan" class="btn btn-outline-danger fw-bold hidden w-100" onclick="bukaModalEditPeriode()">
-                                    <i class="bi bi-gear"></i> Kelola Periode
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-4 col-md-12">
-                    <div class="card shadow-lg border-0 rounded-4 h-100" style="background-color: #fffbf0; border: 1px solid #fef0c7 !important;">
-                        <div class="card-body p-4 text-center d-flex flex-column justify-content-center h-100">
-                            
-                            <h6 class="text-muted fw-bold mb-2">Bulan yang Diaktifkan:</h6>
-                            <h2 id="displayBulanAktif" class="fw-bold mb-4 px-3 py-2 rounded-pill border shadow-sm" style="color: #b45309; background-color: #fef3c7; border-color: #fde68a !important;">BELUM DIPILIH</h2>
-                            
-                            <h6 class="fw-bold mb-3 text-dark text-start border-bottom pb-2" style="border-color: #fde68a !important;"><i class="bi bi-person-badge"></i> Kategori ASN:</h6>
-                            
-                            <div class="d-flex justify-content-center gap-3 mb-4">
-                                <button id="btnPilihPNS" class="btn btn-success fw-bold w-50 py-2 fs-5 shadow-sm rounded-3" onclick="ubahJenisASN('PNS')">PNS</button>
-                                <button id="btnPilihPPPK" class="btn btn-outline-warning text-dark fw-bold w-50 py-2 fs-5 shadow-sm rounded-3" onclick="ubahJenisASN('PPPK')">PPPK</button>
-                            </div>
-                            
-                            <input type="hidden" id="pilihJenisASN" value="PNS">
-                            <input type="hidden" id="pilihPeriodeUtama" value="">
-
-                            <button class="btn btn-primary btn-lg w-100 fw-bold rounded-pill shadow-lg mt-auto py-3" style="font-size: 1.15rem; background: linear-gradient(90deg, #0d6efd, #0a58ca); border: none;" onclick="masukAplikasi()">
-                                MASUK KELOLA TPP <i class="bi bi-arrow-right-circle ms-1"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-            </div>
-        </div>
-
        
 <datalist id="listUnitKerjaUtama"></datalist>
 <datalist id="listJabatanUtama"></datalist>

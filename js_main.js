@@ -1101,7 +1101,9 @@ function validasiNIP(input) {
     document.getElementById('inpBulan').value = globalBulanAktif; 
     document.getElementById('inpHariKerja').value = globalHariKerja; 
     
-    switchView('viewManajemenASN');
+    // Munculkan Panel sebagai Popup Raksasa!
+  let myModal = bootstrap.Modal.getInstance(document.getElementById('modalPopupASN')) || new bootstrap.Modal(document.getElementById('modalPopupASN'));
+  myModal.show();
     
     // 👇 IMPLEMENTASI CACHE PINTAR (Sesuai Permintaan Anda) 👇
     window.cacheDetailPegawai = window.cacheDetailPegawai || {};

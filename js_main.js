@@ -871,7 +871,11 @@ async function doLogin(e) {
     if (isError) { 
         alertError(pesanInfo); 
     } else { 
-        alertSukses(pesanInfo); 
+        alertSukses(pesanInfo);
+        if(window.cacheDetailPegawai) {
+      delete window.cacheDetailPegawai[d.nip + "_" + d.bulan];
+      if (aksi === 'edit') delete window.cacheDetailPegawai[d.nipLama + "_" + d.bulan];
+  } 
         let modalObj = bootstrap.Modal.getInstance(document.getElementById('modalKelolaPegawai'));
         if (modalObj) modalObj.hide(); 
         document.getElementById('formPegawai').reset(); 
@@ -1032,14 +1036,28 @@ function validasiNIP(input) {
     
     switchView('viewManajemenASN');
     
-    // 👇 1. TAMBAHKAN LOADING DI SINI BIAR GAK TERASA NGE-HANG
-    startLoading("Menarik Riwayat Gaji & Absen...");
+    // 👇 IMPLEMENTASI CACHE PINTAR (Sesuai Permintaan Anda) 👇
+    window.cacheDetailPegawai = window.cacheDetailPegawai || {};
+    let cacheKey = nip + "_" + globalBulanAktif;
+    let res;
 
-    let res = await fetchAPI("getDetailASN", {nip: nip, bulan: globalBulanAktif});
-    
-    // 👇 2. MATIKAN LOADING SETELAH DATA DATANG DARI SERVER
-    stopLoading();
+    if (window.cacheDetailPegawai[cacheKey]) {
+        // Data sudah ada di memori! Tarik instan tanpa loading ke server
+        res = window.cacheDetailPegawai[cacheKey];
+    } else {
+        // Data belum ada, tarik dari server (Loading 5 detik)
+        startLoading("Menarik Riwayat Gaji & Absen...");
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        res = await fetchAPI("getDetailASN", {nip: nip, bulan: globalBulanAktif});
+        stopLoading();
+        
+        if (res && !res.error) {
+            window.cacheDetailPegawai[cacheKey] = res; // Simpan ke memori agar besok gak loading lagi
+        }
+    }
 
+    // --- Sisa kodenya sama persis ---
     if(res && !res.error) { 
       isGajiTersimpan = (res.gaji) ? true : false; 
       isAbsenTersimpan = (res.absen) ? true : false; 
@@ -1048,7 +1066,6 @@ function validasiNIP(input) {
       if(res.pergub) { baseTPP = res.pergub; } 
       
       if(res.pegawaiInfo) { 
-        // 👇 3. BUNGKUS DENGAN formatRupiah AGAR TITIKNYA LANGSUNG MUNCUL DI FORM GAJI
         document.getElementById('aGapok').value = formatRupiah(res.pegawaiInfo.gapok || 0); 
         document.getElementById('aTjJab').value = formatRupiah(res.pegawaiInfo.tjJab || 0); 
         
@@ -1065,7 +1082,6 @@ function validasiNIP(input) {
       }; 
       
       if(res.gaji) { 
-        // 👇 PAJAK YANG TERSIMPAN JUGA DIBERI TITIK RIBUAN
         if(document.getElementById('aTjPajak')) document.getElementById('aTjPajak').value = formatRupiah(res.gaji[10]); 
         if(document.getElementById('aPotPajak')) document.getElementById('aPotPajak').value = formatRupiah(res.gaji[17]); 
       } else { 
@@ -1294,7 +1310,9 @@ function validasiNIP(input) {
     };
 
     let res = await fetchAPI("simpanGajiOtomatis", d); stopLoading(); let pesan = String(res).toLowerCase();
-    if (pesan.includes("gagal") || pesan.includes("error") || pesan.includes("peringatan") || pesan.includes("ditolak")) { alertError(res.pesan || res); isGajiTersimpan = false; } else { alertSukses(res); isGajiTersimpan = true; }
+    if (pesan.includes("gagal") || pesan.includes("error") || pesan.includes("peringatan") || pesan.includes("ditolak")) { alertError(res.pesan || res); isGajiTersimpan = false; } else { alertSukses(res);
+    if(window.cacheDetailPegawai) delete window.cacheDetailPegawai[asNIPAktif + "_" + globalBulanAktif];
+    isGajiTersimpan = true; }
   }
 
   function ubahPolaHK() { let pola = document.getElementById('inpPolaHK').value; document.getElementById('inpHariKerja').value = (pola === "5") ? globalHariKerja : globalHariKerja6; hitungMatriksTPP(); }
@@ -1302,7 +1320,9 @@ function validasiNIP(input) {
   async function submitPerhitunganTPP(e) {
     e.preventDefault(); const getV = (id) => document.getElementById(id).value; startLoading("Menyimpan Kehadiran..."); let statusMenilai = document.getElementById('chkTidakMenilai').checked ? "Tidak Menilai" : "Menilai"; let gabunganSKP = getV('inpSKP') + "|" + statusMenilai; let hkDB = document.getElementById('inpHariKerja').value; const d = { nip: asNIPAktif, bulan: globalBulanAktif, hariKerja: hkDB, skp: gabunganSKP, dl: getV('vDL'), s: getV('vS'), c: getV('vC'), kp: getV('vKP'), tk: getV('vTK'), asub: getV('vASUB'), tl1: getV('vTL1'), tl2: getV('vTL2'), tl3: getV('vTL3'), tl4: getV('vTL4'), cp1: getV('vCP1'), cp2: getV('vCP2'), cp3: getV('vCP3'), cp4: getV('vCP4') };
     let res = await fetchAPI("simpanPerhitunganTPP", d); stopLoading(); 
-    if(String(res).includes("Error")) { alertError(res.pesan || res); } else { alertSukses(res); isAbsenTersimpan = true; hitungPajakTahunan(); muatNominatif(); }
+    if(String(res).includes("Error")) { alertError(res.pesan || res); } else { alertSukses(res);
+    if(window.cacheDetailPegawai) delete window.cacheDetailPegawai[asNIPAktif + "_" + globalBulanAktif];
+    isAbsenTersimpan = true; hitungPajakTahunan(); muatNominatif(); }
   }
 
   async function hitungPajakTahunan() {
@@ -2093,21 +2113,51 @@ async function unduhTemplatePergub() {
   // ==============================================================
   // ALAT BANTU (HELPER) WAJIB FRONTEND - ANTI GHOST TIMER
   // ==============================================================
-  function startLoading(text) { 
-      Swal.fire({ 
-          title: text, 
-          html: `<div class="mt-2 text-primary fw-bold">Sedang memproses, mohon tunggu sebentar...</div>`, 
-          allowOutsideClick: false, 
-          showConfirmButton: false, 
-          didOpen: () => { 
-              Swal.showLoading(); 
-          } 
-      }); 
-  }
-  
-  function stopLoading() { 
-      Swal.close(); 
-  }
+  let loadingInterval; // Variabel global untuk menyimpan timer
+
+function startLoading(titleAwal) {
+    let detik = 0;
+    
+    Swal.fire({
+        title: titleAwal,
+        html: `<div id="pesanLoading" class="mt-2 text-primary fw-bold">Menghubungkan ke server...</div>`,
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        didOpen: () => {
+            Swal.showLoading();
+            
+            // Jalankan Timer Interaktif
+            loadingInterval = setInterval(() => {
+                detik++;
+                let el = document.getElementById('pesanLoading');
+                if (!el) return;
+
+                // LOGIKA FLEKSIBEL: Teks berubah sesuai durasi tunggu
+                if (detik === 2) {
+                    el.innerText = "Membongkar arsip database...";
+                    el.className = "mt-2 text-success fw-bold";
+                } 
+                else if (detik === 5) {
+                    el.innerText = "Mohon tunggu sebentar lagi, server sedang sibuk...";
+                    el.className = "mt-2 text-warning fw-bold";
+                } 
+                else if (detik === 10) {
+                    el.innerText = "Sedikit lagi selesai, hampir siap...";
+                    el.className = "mt-2 text-danger fw-bold";
+                }
+                else if (detik === 15) {
+                    el.innerText = "Koneksi internet agak lambat, tetap menunggu...";
+                }
+            }, 1000); // Cek setiap 1 detik
+        }
+    });
+}
+
+function stopLoading() {
+    // Hentikan timer interaktif agar tidak makan memori
+    if (loadingInterval) clearInterval(loadingInterval);
+    Swal.close();
+}
 
   function alertSukses(pesan) { Swal.fire({ icon: 'success', title: 'Berhasil!', text: pesan, confirmButtonColor: '#198754' }); }
   function alertError(pesan) { Swal.fire({ icon: 'error', title: 'Oops...', text: pesan, confirmButtonColor: '#dc3545' }); }

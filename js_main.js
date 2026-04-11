@@ -1099,7 +1099,7 @@ function validasiNIP(input) {
     let elUnit = document.getElementById('labelUnitKerjaASN'); 
     if(elUnit) elUnit.innerText = "Unit: " + (unitKerja || "");
     
-    document.getElementById('formGaji').reset(); 
+    //  TIDAK DI PAKAI ---document.getElementById('formGaji').reset(); 
     document.getElementById('formAbsen').reset(); 
     document.getElementById('inpBulan').value = globalBulanAktif;  
     document.getElementById('inpHariKerja').value = globalHariKerja; 

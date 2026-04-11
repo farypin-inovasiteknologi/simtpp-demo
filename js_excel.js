@@ -764,9 +764,14 @@ async function prosesCetakPdfKolektif(res, jenis) {
 
         // --- SIMPAN PDF ---
         doc.save(`PDF_${jenis}_${res.bulanBesar}_${res.unitCetak}.pdf`);
-        Swal.close(); alertSukses(`File PDF ${jenis} Berhasil Diunduh!`);
+        
+        // PERBAIKAN DI SINI (Ganti Swal.close() menjadi stopLoading())
+        stopLoading(); 
+        alertSukses(`File PDF ${jenis} Berhasil Diunduh!`);
 
     } catch(err) { 
-        Swal.close(); alertError("Gagal menyusun PDF: " + err.message); 
+        // DI SINI JUGA
+        stopLoading(); 
+        alertError("Gagal menyusun PDF: " + err.message); 
     }
 }

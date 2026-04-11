@@ -482,48 +482,104 @@ async function doLogin(e) {
 
   function renderDropdownPeriode(data) {
     if (data && data.length > 0) {
-        // Algoritma Smart Sorting
+        // Algoritma Smart Sorting (Tetap sama, ini sudah oke)
         const getSortValue = (p) => {
             let baseBulan = parseInt(p.bulanAngka) || 0;
             let year = parseInt(p.tahun) || 0;
-            
             if (p.jenisPeriode !== "Reguler" && p.indukPajak) {
-                // Jika ini THR/Gaji13, intip bulan induknya
                 let induk = data.find(x => x.namaPeriode === p.indukPajak);
-                if (induk) {
-                    baseBulan = parseInt(induk.bulanAngka) || 0;
-                    year = parseInt(induk.tahun) || 0;
-                }
-                // Tambah desimal agar THR nempel tepat di bawah bulan induknya
+                if (induk) { baseBulan = parseInt(induk.bulanAngka) || 0; year = parseInt(induk.tahun) || 0; }
                 if (p.jenisPeriode === "THR") baseBulan += 0.1;
                 else if (p.jenisPeriode === "Gaji 13") baseBulan += 0.2;
                 else baseBulan += 0.3;
             }
-            // Kombinasikan Tahun dan Bulan jadi 1 angka unik (Contoh: 202601)
             return (year * 100) + baseBulan;
         };
-
-        // Lakukan pengurutan dari yang terkecil (awal tahun) ke terbesar (akhir tahun)
         data.sort((a, b) => getSortValue(a) - getSortValue(b));
     }
 
     arrayPeriode = data; 
-    let sel = document.getElementById('pilihPeriodeUtama'); 
-    sel.innerHTML = "";
+    
+    // GANTI TARGET DARI DROPDOWN MENJADI CONTAINER TOMBOL KIRI
+    let container = document.getElementById('containerTombolPeriode'); 
+    let hiddenInput = document.getElementById('pilihPeriodeUtama');
+    let displayTeks = document.getElementById('displayBulanAktif');
+    
+    container.innerHTML = "";
     
     if(!data || data.length === 0) { 
-        sel.innerHTML = `<option value="">Belum ada periode. Klik Tambah!</option>`; 
+        container.innerHTML = `<div class="alert alert-warning w-100 mb-0 fw-bold"><i class="bi bi-info-circle"></i> Belum ada data bulan. Silakan klik "Tambah Periode Baru" di bawah!</div>`; 
+        displayTeks.innerText = "KOSONG";
+        hiddenInput.value = "";
     } else { 
-        data.forEach(p => { sel.innerHTML += `<option value="${p.namaPeriode}">${p.namaPeriode}</option>`; }); 
+        data.forEach(p => { 
+            // Render tombol-tombol bulan
+            container.innerHTML += `<button type="button" class="btn btn-outline-secondary fw-bold px-3 py-2 btn-periode-select shadow-sm" onclick="klikBulan('${p.namaPeriode}', this)">${p.namaPeriode}</button>`; 
+        }); 
         
-        // Cek jika ada globalBulanAktif di sesi
+        // Pengecekan otomatis (Pilih bulan yang paling baru / terakhir jika tidak ada histori)
+        let selectedBulan = "";
         if (globalBulanAktif && data.some(p => p.namaPeriode === globalBulanAktif)) {
-            sel.value = globalBulanAktif;
+            selectedBulan = globalBulanAktif;
         } else {
-            // Jika tidak ada, pilih periode urutan paling bawah
-            sel.value = data[data.length - 1].namaPeriode; 
+            selectedBulan = data[data.length - 1].namaPeriode; 
         }
+        
+        // Simulasi Klik otomatis setelah tombol di-render
+        setTimeout(() => {
+            let btns = container.querySelectorAll('.btn-periode-select');
+            btns.forEach(btn => {
+                if (btn.innerText === selectedBulan) {
+                    klikBulan(selectedBulan, btn);
+                }
+            });
+        }, 50);
     }
+  }
+
+  // --- LOGIKA BARU UNTUK KLIK TOMBOL BULAN & ASN ---
+  
+  function klikBulan(namaBulan, btnElement) {
+      // 1. Masukkan nilai ke hidden input
+      document.getElementById('pilihPeriodeUtama').value = namaBulan;
+      // 2. Ubah teks di panel kanan jadi mencolok
+      document.getElementById('displayBulanAktif').innerText = namaBulan.toUpperCase();
+      
+      // 3. Reset warna semua tombol bulan (Kembali jadi putih/outline)
+      let btns = document.querySelectorAll('.btn-periode-select');
+      btns.forEach(b => {
+          b.classList.replace('btn-primary', 'btn-outline-secondary');
+          b.classList.remove('text-white');
+      });
+      
+      // 4. Beri warna Primer ke tombol yang barusan di-klik
+      btnElement.classList.replace('btn-outline-secondary', 'btn-primary');
+      btnElement.classList.add('text-white');
+  }
+
+  function ubahJenisASN(jenis) {
+      document.getElementById('pilihJenisASN').value = jenis;
+      
+      let btnPNS = document.getElementById('btnPilihPNS');
+      let btnPPPK = document.getElementById('btnPilihPPPK');
+      
+      if (jenis === 'PNS') {
+          // Tombol PNS menyala hijau (Aktif)
+          btnPNS.classList.replace('btn-outline-success', 'btn-success');
+          btnPNS.classList.add('text-white');
+          
+          // Tombol PPPK redup kuning (Pasif)
+          btnPPPK.classList.replace('btn-warning', 'btn-outline-warning');
+          btnPPPK.classList.remove('text-white');
+      } else {
+          // Tombol PPPK menyala kuning gelap (Aktif)
+          btnPPPK.classList.replace('btn-outline-warning', 'btn-warning');
+          btnPPPK.classList.add('text-dark');
+          
+          // Tombol PNS redup hijau (Pasif)
+          btnPNS.classList.replace('btn-success', 'btn-outline-success');
+          btnPNS.classList.remove('text-white');
+      }
   }
 
   function bukaModalEditPeriode() {

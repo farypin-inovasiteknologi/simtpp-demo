@@ -509,13 +509,18 @@ async function doLogin(e) {
     container.innerHTML = "";
     
     if(!data || data.length === 0) { 
-        container.innerHTML = `<div class="alert alert-warning w-100 mb-0 fw-bold"><i class="bi bi-info-circle"></i> Belum ada data bulan. Silakan klik "Tambah Periode Baru" di bawah!</div>`; 
+        container.innerHTML = `<div class="col-12"><div class="alert alert-warning w-100 mb-0 fw-bold"><i class="bi bi-info-circle"></i> Belum ada data bulan. Silakan klik "Tambah Periode Baru" di bawah!</div></div>`; 
         displayTeks.innerText = "KOSONG";
         hiddenInput.value = "";
     } else { 
         data.forEach(p => { 
-            // Render tombol-tombol bulan
-            container.innerHTML += `<button type="button" class="btn btn-outline-secondary fw-bold px-3 py-2 btn-periode-select shadow-sm" onclick="klikBulan('${p.namaPeriode}', this)">${p.namaPeriode}</button>`; 
+            // PERUBAHAN DI SINI: Dibungkus col-6 (2 di HP) dan col-md-3 (4 di Laptop), tombol diset w-100 agar memenuhi kotak
+            container.innerHTML += `
+            <div class="col-6 col-md-3">
+                <button type="button" class="btn btn-outline-secondary w-100 fw-bold py-2 btn-periode-select shadow-sm text-truncate" onclick="klikBulan('${p.namaPeriode}', this)" title="${p.namaPeriode}">
+                    ${p.namaPeriode}
+                </button>
+            </div>`; 
         }); 
         
         // Pengecekan otomatis (Pilih bulan yang paling baru / terakhir jika tidak ada histori)
@@ -530,7 +535,7 @@ async function doLogin(e) {
         setTimeout(() => {
             let btns = container.querySelectorAll('.btn-periode-select');
             btns.forEach(btn => {
-                if (btn.innerText === selectedBulan) {
+                if (btn.innerText.trim() === selectedBulan) {
                     klikBulan(selectedBulan, btn);
                 }
             });

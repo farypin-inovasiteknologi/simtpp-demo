@@ -622,7 +622,18 @@ async function doLogin(e) {
   async function submitPergub(e) { 
     e.preventDefault(); let aksi = document.getElementById('pAksi').value; startLoading("Menyimpan Master...");
     const d = { jabatanLama: document.getElementById('pJabatanLama').value, namaJabatan: document.getElementById('pJabatan').value, kelasJabatan: document.getElementById('pKelas').value, bk: document.getElementById('pBK').value, pk: document.getElementById('pPK').value, kk: document.getElementById('pKK').value, tb: document.getElementById('pTB').value, kp: document.getElementById('pKP').value, totalTpp: document.getElementById('pTotal').value, statusPegawai: document.getElementById('pStatusPegawai').value }; 
-    let res = await fetchAPI(aksi === 'edit' ? "updatePergub" : "simpanPergub", d); stopLoading(); if(res && !res.status) { alertSukses(res); bootstrap.Modal.getInstance(document.getElementById('modalKelolaPergub')).hide(); muatDataPergub(); } else { alertError(res.pesan || res); }
+
+    let res = await fetchAPI(aksi === 'edit' ? "updatePergub" : "simpanPergub", d); 
+  stopLoading(); 
+  
+  // PERBAIKAN DI SINI
+  if(res && res.status === "sukses") { 
+      alertSukses(res.pesan); 
+      bootstrap.Modal.getInstance(document.getElementById('modalKelolaPergub')).hide(); 
+      muatDataPergub(); 
+  } else { 
+      alertError(res.pesan || "Terjadi kesalahan!"); 
+  }
   }
 
   function hitungTotalPergub() { let inputs = ['pBK', 'pPK', 'pKK', 'pTB', 'pKP'].map(id => parseFloat(document.getElementById(id).value) || 0); document.getElementById('pTotal').value = inputs.reduce((a,b)=>a+b, 0); }
@@ -1309,20 +1320,38 @@ function validasiNIP(input) {
         jmlBersih: unformatRupiah(document.getElementById('aJmlBersih').value) 
     };
 
-    let res = await fetchAPI("simpanGajiOtomatis", d); stopLoading(); let pesan = String(res).toLowerCase();
-    if (pesan.includes("gagal") || pesan.includes("error") || pesan.includes("peringatan") || pesan.includes("ditolak")) { alertError(res.pesan || res); isGajiTersimpan = false; } else { alertSukses(res);
-    if(window.cacheDetailPegawai) delete window.cacheDetailPegawai[asNIPAktif + "_" + globalBulanAktif];
-    isGajiTersimpan = true; }
+    let res = await fetchAPI("simpanGajiOtomatis", d); 
+  stopLoading(); 
+  
+  // PERBAIKAN DI SINI
+  if (res && res.status === "error") { 
+      alertError(res.pesan); 
+      isGajiTersimpan = false; 
+  } else { 
+      alertSukses(res.pesan);
+      if(window.cacheDetailPegawai) delete window.cacheDetailPegawai[asNIPAktif + "_" + globalBulanAktif];
+      isGajiTersimpan = true; 
+  }
   }
 
   function ubahPolaHK() { let pola = document.getElementById('inpPolaHK').value; document.getElementById('inpHariKerja').value = (pola === "5") ? globalHariKerja : globalHariKerja6; hitungMatriksTPP(); }
 
   async function submitPerhitunganTPP(e) {
     e.preventDefault(); const getV = (id) => document.getElementById(id).value; startLoading("Menyimpan Kehadiran..."); let statusMenilai = document.getElementById('chkTidakMenilai').checked ? "Tidak Menilai" : "Menilai"; let gabunganSKP = getV('inpSKP') + "|" + statusMenilai; let hkDB = document.getElementById('inpHariKerja').value; const d = { nip: asNIPAktif, bulan: globalBulanAktif, hariKerja: hkDB, skp: gabunganSKP, dl: getV('vDL'), s: getV('vS'), c: getV('vC'), kp: getV('vKP'), tk: getV('vTK'), asub: getV('vASUB'), tl1: getV('vTL1'), tl2: getV('vTL2'), tl3: getV('vTL3'), tl4: getV('vTL4'), cp1: getV('vCP1'), cp2: getV('vCP2'), cp3: getV('vCP3'), cp4: getV('vCP4') };
-    let res = await fetchAPI("simpanPerhitunganTPP", d); stopLoading(); 
-    if(String(res).includes("Error")) { alertError(res.pesan || res); } else { alertSukses(res);
-    if(window.cacheDetailPegawai) delete window.cacheDetailPegawai[asNIPAktif + "_" + globalBulanAktif];
-    isAbsenTersimpan = true; hitungPajakTahunan(); muatNominatif(); }
+    
+    let res = await fetchAPI("simpanPerhitunganTPP", d); 
+  stopLoading(); 
+  
+  // PERBAIKAN DI SINI
+  if(res && res.status === "error") { 
+      alertError(res.pesan); 
+  } else { 
+      alertSukses(res.pesan);
+      if(window.cacheDetailPegawai) delete window.cacheDetailPegawai[asNIPAktif + "_" + globalBulanAktif];
+      isAbsenTersimpan = true; 
+      hitungPajakTahunan(); 
+      muatNominatif(); 
+  }
   }
 
   async function hitungPajakTahunan() {

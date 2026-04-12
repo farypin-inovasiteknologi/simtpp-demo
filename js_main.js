@@ -395,29 +395,30 @@ async function doLogin(e) {
   }
 
   function toggleIndukPajak() {
-      let jenis = document.getElementById('pJenisPeriode').value; 
-      let inputNama = document.getElementById('pBulanNama'); 
-      let inputAngka = document.getElementById('pBulanAngka'); 
-      let tahun = document.getElementById('pTahun').value || new Date().getFullYear(); 
-      let nextBulanAngka = getSmartBulanAngka(); 
-      
-      let boxInduk = document.getElementById('boxIndukPajak'); 
-      if (jenis === "Reguler") { boxInduk.classList.add("hidden"); } else { boxInduk.classList.remove("hidden"); }
-      
-      const namaBulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-      
-      if(jenis === "Reguler") { 
-          inputNama.value = namaBulan[nextBulanAngka] + " " + tahun; 
-          inputAngka.value = nextBulanAngka; 
-          document.getElementById('pHariKerja').value = ""; 
-          document.getElementById('pHariKerja6').value = ""; 
-      } else { 
-          inputNama.value = jenis + " " + tahun; 
-          inputAngka.value = (jenis === "THR") ? 14 : 13; 
-          document.getElementById('pHariKerja').value = 22; 
-          document.getElementById('pHariKerja6').value = 26; 
-      }
-  }
+    let jenis = document.getElementById('pJenisPeriode').value;
+    let inputNama = document.getElementById('pBulanNama');
+    let inputAngka = document.getElementById('pBulanAngka');
+    let tahun = document.getElementById('pTahun').value || new Date().getFullYear();
+    let nextBulanAngka = getSmartBulanAngka(); 
+    
+    // --- MODIFIKASI DI SINI ---
+    // Kita hapus logika yang menyembunyikan boxIndukPajak
+    let boxInduk = document.getElementById('boxIndukPajak');
+    boxInduk.classList.remove("hidden"); // Paksa tampil terus
+    
+    const namaBulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    
+    if(jenis === "Reguler") { 
+        inputNama.value = namaBulan[nextBulanAngka] + " " + tahun; 
+        inputAngka.value = nextBulanAngka;
+        // Biarkan user memilih gaji bulan mana yang jadi acuan
+    } else { 
+        inputNama.value = jenis + " " + tahun; 
+        inputAngka.value = (jenis === "THR") ? 14 : 13; 
+        document.getElementById('pHariKerja').value = 22; 
+        document.getElementById('pHariKerja6').value = 26; 
+    }
+}
 
   function sinkronHariKerja() { let namaInduk = document.getElementById('pIndukPajak').value; if(!namaInduk) return; let dataInduk = arrayPeriode.find(p => p.namaPeriode === namaInduk); if(dataInduk) { document.getElementById('pHariKerja').value = dataInduk.hariKerja; document.getElementById('pHariKerja6').value = dataInduk.hariKerja6; } }
 
@@ -1445,7 +1446,7 @@ function validasiNIP(input) {
     document.getElementById('loaderTahunan').classList.add('hidden'); if(res.error) return alertPeringatan("Peringatan: " + res.error);
     objNominatifSetahun = res; document.getElementById('hasilTahunan').classList.remove('hidden'); const fRp = (angka) => "Rp " + Math.round(angka).toLocaleString('id-ID');
     if(document.getElementById('labelBulanPencairan')) document.getElementById('labelBulanPencairan').innerText = globalRefBulanGaji || globalBulanAktif;
-    document.getElementById('thGajiBulanOnly').innerText = fRp(res.gajiKotor); document.getElementById('thGajiTahunOnly').innerText = fRp(res.brutoGajiSetahun); document.getElementById('thBiayaJabGaji').innerText = "- " + fRp(res.biayaJabatanGaji); document.getElementById('thIwpGaji').innerText = "- " + fRp(res.iwpSetahun); document.getElementById('thNettoGaji').innerText = fRp(res.nettoGajiSetahun); document.getElementById('thPtkpGaji').innerText = "- " + fRp(res.ptkp); if(document.getElementById('thStatusKwnGaji')) document.getElementById('thStatusKwnGaji').innerText = res.statusTER; document.getElementById('thPkpGaji').innerText = fRp(res.pkpGaji); document.getElementById('thPphGajiBulan').innerText = fRp(res.pph21GajiSebulanSimulasi); document.getElementById('thGajiBulan').innerText = fRp(res.gajiKotor); document.getElementById('thTPPBruto').innerText = fRp(res.tppBruto); document.getElementById('thPotPK').innerText = "- " + fRp(res.totalPotPK); document.getElementById('thPotDK').innerText = "- " + fRp(res.totalPotDK); document.getElementById('thTPPBulan').innerText = fRp(res.tppNettoKinerja); document.getElementById('thBrutoBulan').innerText = fRp(res.brutoSebulan); document.getElementById('thBruto').innerText = fRp(res.brutoSetahun); document.getElementById('thBiayaJab').innerText = "- " + fRp(res.biayaJabatan); document.getElementById('thIWP').innerText = "- " + fRp(res.iwpSetahun); document.getElementById('thNetto').innerText = fRp(res.nettoSetahun); if(document.getElementById('thStatusKwnTotal')) document.getElementById('thStatusKwnTotal').innerText = res.statusTER; document.getElementById('thPTKP').innerText = "- " + fRp(res.ptkp); document.getElementById('thPKP').innerText = fRp(res.pkp); document.getElementById('thPph5').innerText = fRp(res.pph5); document.getElementById('thPph15').innerText = fRp(res.pph15); document.getElementById('thPph25').innerText = fRp(res.pph25); document.getElementById('thPph30').innerText = fRp(res.pph30); document.getElementById('thPph35').innerText = fRp(res.pph35); document.getElementById('thPajakTahun').innerText = fRp(res.pph21Setahun); document.getElementById('thPajakSebulanProg').innerText = fRp(res.pph21Setahun / 12); document.getElementById('thTerGajiAwal').innerText = fRp(res.gajiKotorTER); document.getElementById('thTerPphGajiPengurang').innerText = "- " + fRp(res.pphGajiTER); document.getElementById('thTerGajiBersih').innerText = fRp(res.gajiKotorTER - res.pphGajiTER); document.getElementById('thTerTpp').innerText = "+ " + fRp(res.tppBruto); document.getElementById('thTerDasar').innerText = fRp(res.dasarPajakTER); document.getElementById('thKatTER').innerText = res.katTER; document.getElementById('thPctTER').innerText = res.pctTER + "%"; if(document.getElementById('teksRumusTER')) document.getElementById('teksRumusTER').innerText = `Total PPh21 (${fRp(res.dasarPajakTER)} x ${res.pctTER}%)`; document.getElementById('thPphTER').innerText = fRp(res.pph21TotalSebulanTER); document.getElementById('thPphGajiLunas').innerText = "- " + fRp(res.pphGajiTER); document.getElementById('thPphTKD').innerText = fRp(res.pph21TKD);
+    document.getElementById('thGajiBulanOnly').innerText = fRp(res.gajiKotor); document.getElementById('thGajiTahunOnly').innerText = fRp(res.brutoGajiSetahun); document.getElementById('thBiayaJabGaji').innerText = "- " + fRp(res.biayaJabatanGaji); document.getElementById('thIwpGaji').innerText = "- " + fRp(res.iwpSetahun); document.getElementById('thNettoGaji').innerText = fRp(res.nettoGajiSetahun); document.getElementById('thPtkpGaji').innerText = "- " + fRp(res.ptkp); if(document.getElementById('thStatusKwnGaji')) document.getElementById('thStatusKwnGaji').innerText = res.statusTER; document.getElementById('thPkpGaji').innerText = fRp(res.pkpGaji); document.getElementById('thPphGajiBulan').innerText = fRp(res.pph21GajiSebulanSimulasi); document.getElementById('thGajiBulan').innerText = fRp(res.gajiKotor); document.getElementById('thTPPBruto').innerText = fRp(res.tppBruto); document.getElementById('thPotPK').innerText = "- " + fRp(res.totalPotPK); document.getElementById('thPotDK').innerText = "- " + fRp(res.totalPotDK); document.getElementById('thTPPBulan').innerText = fRp(res.tppNettoKinerja); document.getElementById('thBrutoBulan').innerText = fRp(res.brutoSebulan); document.getElementById('thBruto').innerText = fRp(res.brutoSetahun); document.getElementById('thBiayaJab').innerText = "- " + fRp(res.biayaJabatan); document.getElementById('thIWP').innerText = "- " + fRp(res.iwpSetahun); document.getElementById('thNetto').innerText = fRp(res.nettoSetahun); if(document.getElementById('thStatusKwnTotal')) document.getElementById('thStatusKwnTotal').innerText = res.statusTER; document.getElementById('thPTKP').innerText = "- " + fRp(res.ptkp); document.getElementById('thPKP').innerText = fRp(res.pkp); document.getElementById('thPph5').innerText = fRp(res.pph5); document.getElementById('thPph15').innerText = fRp(res.pph15); document.getElementById('thPph25').innerText = fRp(res.pph25); document.getElementById('thPph30').innerText = fRp(res.pph30); document.getElementById('thPph35').innerText = fRp(res.pph35); document.getElementById('thPajakTahun').innerText = fRp(res.pph21Setahun); document.getElementById('thPajakSebulanProg').innerText = fRp(res.pph21Setahun / 12); document.getElementById('thTerGajiAwal').innerText = fRp(res.gajiKotorTER); document.getElementById('thTerPphGajiPengurang').innerText = "- " + fRp(res.pphGajiTER); document.getElementById('thTerGajiBersih').innerText = fRp(res.gajiKotorTER - res.pphGajiTER); document.getElementById('thTerTpp').innerText = "+ " + fRp(res.tppNettoKinerja); document.getElementById('thTerDasar').innerText = fRp(res.dasarPajakTER); document.getElementById('thKatTER').innerText = res.katTER; document.getElementById('thPctTER').innerText = res.pctTER + "%"; if(document.getElementById('teksRumusTER')) document.getElementById('teksRumusTER').innerText = `Total PPh21 (${fRp(res.dasarPajakTER)} x ${res.pctTER}%)`; document.getElementById('thPphTER').innerText = fRp(res.pph21TotalSebulanTER); document.getElementById('thPphGajiLunas').innerText = "- " + fRp(res.pphGajiTER); document.getElementById('thPphTKD').innerText = fRp(res.pph21TKD);
   }
 
   function muatNominatif() {

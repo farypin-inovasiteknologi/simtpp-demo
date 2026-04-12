@@ -2,7 +2,7 @@
 // 1. KONFIGURASI SUPER MASTER (CUKUP 1 URL UNTUK SELURUH PROVINSI)
 // =========================================================================
 // Masukkan URL hasil Deploy Super Master Anda di sini:
-const API_URL = "https://script.google.com/macros/s/AKfycbxARwOXXZUXDSJgiNPhnBqITHMzP61bDSlrQY4S5ullUd4XOlo-5d0abPcON1Od0PhQ/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbxB9FsN4pQyYenPleD-iu7Tp0G5x_vfBuip9lXJGxAXBMPcYJ4inJMypfOnkAdDB3mS/exec"; 
 
 let listOPD = []; // Dikosongkan, karena akan ditarik otomatis dari Super Master
 
@@ -1477,21 +1477,22 @@ function validasiNIP(input) {
 
     document.getElementById('loaderTahunan').classList.add('hidden');
     
-    // 👇 FIX FRONTEND 1: CEGAT ERROR DARI SERVER AGAR LAYAR TIDAK ZONK 👇
+    // 👇 CEGAT ERROR DARI SERVER AGAR LAYAR TIDAK ZONK / NaN 👇
     if (res.status === "error") return alertError(res.pesan);
     if (res.error) return alertPeringatan("Peringatan: " + res.error);
 
     objNominatifSetahun = res;
     document.getElementById('hasilTahunan').classList.remove('hidden');
     
-    // Fallback angka 0 untuk format Rupiah
     const fRp = (angka) => "Rp " + Math.round(angka || 0).toLocaleString('id-ID');
 
     if(document.getElementById('labelBulanPencairan')) document.getElementById('labelBulanPencairan').innerText = globalRefBulanGaji || globalBulanAktif;
     if(document.getElementById('labelBulanPencairan2')) document.getElementById('labelBulanPencairan2').innerText = globalRefBulanGaji || globalBulanAktif;
 
+    // 👇 LOGIKA LAYOUT DESEMBER vs TER 👇
     if (res.isModeDesember === true && res.akumulasi) {
-        // TAMPILAN DESEMBER
+        
+        // BUKA DESEMBER, TUTUP TER
         if(document.getElementById('layoutTER')) document.getElementById('layoutTER').classList.add('hidden');
         if(document.getElementById('layoutDesember')) document.getElementById('layoutDesember').classList.remove('hidden');
 
@@ -1509,12 +1510,14 @@ function validasiNIP(input) {
                     <td class="text-end text-danger">${fRp(h.pphTpp)}</td>
                 </tr>`;
             });
+        } else {
+            tbodyRiwayat.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-3">Belum ada riwayat pajak.</td></tr>`;
         }
 
         let iwpBulanIni = ((res.gapok || 0) + (res.tjKeluarga || 0)) * 0.0475;
         tbodyRiwayat.innerHTML += `
             <tr class="table-primary border-primary">
-                <td class="text-center fw-bold text-primary">${globalBulanAktif.toUpperCase()} (Bulan Ini)</td>
+                <td class="text-center fw-bold text-primary">${globalBulanAktif.toUpperCase()} <br><small>(Bulan Ini)</small></td>
                 <td class="text-end fw-bold text-primary">${fRp(res.gajiKotorTER)}</td>
                 <td class="text-end fw-bold text-primary">${fRp(res.tppBruto)}</td>
                 <td class="text-end fw-bold text-danger">${fRp(iwpBulanIni)}</td>
@@ -1538,13 +1541,12 @@ function validasiNIP(input) {
         document.getElementById('desPphTKD').innerText = fRp(res.pph21TKD);
 
     } else {
-        // TAMPILAN TER (JAN-NOV)
+        
+        // BUKA TER, TUTUP DESEMBER
         if(document.getElementById('layoutDesember')) document.getElementById('layoutDesember').classList.add('hidden');
         if(document.getElementById('layoutTER')) document.getElementById('layoutTER').classList.remove('hidden');
 
         document.getElementById('thTerGajiAwal').innerText = fRp(res.gajiKotorTER);
-        // document.getElementById('thTerPphGajiPengurang').innerText = "- " + fRp(res.pphGajiTER); 
-        // document.getElementById('thTerGajiBersih').innerText = fRp(res.gajiKotorTER - res.pphGajiTER); 
         document.getElementById('thTerTppBruto').innerText = "+ " + fRp(res.tppBruto);
         document.getElementById('thTerDasar').innerText = fRp(res.dasarPajakTER);
         document.getElementById('thKatTER').innerText = res.katTER;
@@ -1553,7 +1555,7 @@ function validasiNIP(input) {
         document.getElementById('thPphTER').innerText = fRp(res.pph21TotalSebulanTER);
         document.getElementById('thPphGajiLunas').innerText = "- " + fRp(res.pphGajiTER);
         document.getElementById('thPphTKD').innerText = fRp(res.pph21TKD);
-        
+                
         // Data Simulasi Progresif
         document.getElementById('thGajiBulanOnly').innerText = fRp(res.gajiKotor); 
         document.getElementById('thGajiTahunOnly').innerText = fRp(res.brutoGajiSetahun); 

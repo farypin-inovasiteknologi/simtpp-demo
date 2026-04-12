@@ -557,7 +557,7 @@
                         </thead>
                         <tbody>
                           <tr class="table-secondary fw-bold text-dark">
-                            <td class="text-start">I. TPP KOTOR</td>
+                            <td class="text-start">I. PAGU TPP (100% KEPGUB)</td>
                             <td id="mKotor_bk">0</td><td id="mKotor_pk">0</td><td id="mKotor_kk">0</td><td id="mKotor_tb">0</td><td id="mKotor_kp">0</td><td id="mKotor_total" class="text-primary">0</td>
                           </tr>
                           <tr class="bg-soft-blue fw-bold">
@@ -589,15 +589,15 @@
                             <td id="mAkhdk_bk">0</td><td id="mAkhdk_pk">0</td><td id="mAkhdk_kk">0</td><td id="mAkhdk_tb">0</td><td id="mAkhdk_kp">0</td><td id="mAkhdk_total">0</td>
                           </tr>
                           <tr class="table-secondary fw-bold mt-2">
-                            <td class="text-start">IV. JUMLAH TOTAL TPP KOTOR</td>
+                            <td class="text-start">IV. JUMLAH TOTAL TPP KEPGUB</td>
                             <td id="mTotKotor_bk">0</td><td id="mTotKotor_pk">0</td><td id="mTotKotor_kk">0</td><td id="mTotKotor_tb">0</td><td id="mTotKotor_kp">0</td><td id="mTotKotor_total">0</td>
                           </tr>
                           <tr class="table-danger text-danger fw-bold">
-                            <td class="text-start">V. JUMLAH TOTAL POTONGAN</td>
+                            <td class="text-start">V. JUMLAH TOTAL PENGURANGAN</td>
                             <td id="mTotPot_bk">0</td><td id="mTotPot_pk">0</td><td id="mTotPot_kk">0</td><td id="mTotPot_tb">0</td><td id="mTotPot_kp">0</td><td id="mTotPot_total">0</td>
                           </tr>
                           <tr class="table-success text-success fw-bold fs-6">
-                            <td class="text-start">VI. HASIL AKHIR TPP NETTO</td>
+                            <td class="text-start">VI. TPP BRUTO (DASAR PAJAK)</td>
                             <td id="mHasil_bk">0</td><td id="mHasil_pk">0</td><td id="mHasil_kk">0</td><td id="mHasil_tb">0</td><td id="mHasil_kp">0</td><td id="mHasil_total" class="fs-5">0</td>
                           </tr>
                         </tbody>
@@ -677,7 +677,7 @@
                               <tr><td width="60%">Gaji Kotor (Amprah)</td><td id="thTerGajiAwal" class="text-end">0</td></tr>
                               <tr class="text-danger border-bottom"><td>(-) PPh 21 Gaji (Lunas)</td><td id="thTerPphGajiPengurang" class="text-end">0</td></tr>
                               <tr class="fw-bold text-dark"><td>Gaji Bruto (Bersih PPh)</td><td id="thTerGajiBersih" class="text-end">0</td></tr>
-                              <tr class="border-bottom"><td>(+) TPP / TKD Bruto</td><td id="thTerTpp" class="text-end">0</td></tr>
+                              <tr class="border-bottom"><td>(+) TPP Bruto (Setelah pengurangan Disiplin/Produktifitas)</td><td id="thTerTpp" class="text-end">0</td></tr>
                               <tr class="text-primary fw-bold fs-6 mt-2 border-top"><td>TOTAL DPP TER SEBULAN</td><td id="thTerDasar" class="text-end">0</td></tr>
                             </table>
                           </div>
@@ -770,7 +770,7 @@
                             <tr><td class="ps-4 text-center">3.</td><td>Kondisi Kerja (KK)</td><td id="nomKK" class="text-end">0</td></tr>
                             <tr><td class="ps-4 text-center">4.</td><td>Tempat Bertugas (TB)</td><td id="nomTB" class="text-end">0</td></tr>
                             <tr><td class="ps-4 text-center">5.</td><td>Kelangkaan Profesi (KP)</td><td id="nomKP" class="text-end">0</td></tr>
-                            <tr class="fw-bold bg-light"><td colspan="2" class="text-end">Jumlah TPP Netto (1+2+3+4+5)</td><td id="nomTppNetto" class="text-end text-success">0</td></tr>
+                            <tr class="fw-bold bg-light"><td colspan="2" class="text-end">Jumlah TPP Bruto (Setelah pengurangan Disiplin/Produktifitas)</td><td id="nomTppNetto" class="text-end text-success">0</td></tr>
                             <tr class="fw-bold"><td colspan="2" class="ps-3">b. Tambahan Tunjangan BPJS 4%</td><td id="nomTambahanBpjs" class="text-end">0</td></tr>
                             <tr class="table-warning fw-bold fs-6"><td colspan="2" class="ps-3">c. JUMLAH TPP + BPJS 4% (a + b)</td><td id="nomTppPlusBpjs" class="text-end">0</td></tr>
                             <tr class="table-danger fw-bold"><td colspan="3">III. PERHITUNGAN PENGURANGAN TPP</td></tr>
@@ -1201,10 +1201,10 @@
                 </select>
               </div>
               
-              <div class="mb-3 hidden" id="boxIndukPajak">
-                <label class="fw-bold text-danger">Pilih bulan pencairan gaji</label>
+              <div class="mb-3" id="boxIndukPajak"> 
+                <label class="fw-bold text-danger">Pilih bulan pencairan gaji (Referensi Pajak TER)</label>
                 <select id="pIndukPajak" class="form-select border-danger fw-bold" onchange="sinkronHariKerja()"></select>
-                <small class="text-muted d-block mt-1">Pilih bulan reguler tempat Gaji 14 THR/Gaji 13 ini dicairkan.</small>
+                <small class="text-muted d-block mt-1">Sistem akan mengambil data Gaji dari bulan yang dipilih di sini.</small>
               </div>
               
               <div class="row">

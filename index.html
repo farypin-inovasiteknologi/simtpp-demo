@@ -1403,14 +1403,6 @@
                 </div>
               </div>
 
-              <div class="mb-3">
-                <label class="fw-bold text-primary">Referensi Gaji Lintas Bulan (Pajak TER)</label>
-                <select id="editRefBulanGaji" class="form-select border-primary fw-bold" onchange="cekBulanReferensi(this.value, 'warningEditRef')"></select>
-                <div id="warningEditRef" class="alert alert-warning text-dark fw-bold small hidden mt-2 py-2 mb-0">
-                <i class="bi bi-exclamation-triangle-fill text-danger"></i> Peringatan: Periode gaji ini belum dibuat di sistem. Pastikan Anda segera menambahkannya!
-                </div>
-              </div>
-              
               <div class="row">
                 <div class="col-6 mb-3"><label>HK (5 Hari Kerja)</label><input type="number" id="pHariKerja" class="form-control border-primary fw-bold" required></div>
                 <div class="col-6 mb-3"><label>HK (6 Hari Kerja)</label><input type="number" id="pHariKerja6" class="form-control border-primary fw-bold" required></div>
@@ -1461,10 +1453,14 @@
                   <input type="number" id="eHariKerja6" class="form-control border-primary fw-bold" required>
                 </div>
               </div>
-              <div class="mb-3">
+               <div class="mb-3">
                 <label class="fw-bold text-primary">Referensi Gaji Lintas Bulan (Pajak TER)</label>
-                <select id="editRefBulanGaji" class="form-select border-primary fw-bold"></select>
+                <select id="editRefBulanGaji" class="form-select border-primary fw-bold" onchange="cekBulanReferensi(this.value, 'warningEditRef')"></select>
+                <div id="warningEditRef" class="alert alert-warning text-dark fw-bold small hidden mt-2 py-2 mb-0">
+                <i class="bi bi-exclamation-triangle-fill text-danger"></i> Peringatan: Periode gaji ini belum dibuat di sistem. Pastikan Anda segera menambahkannya!
+                </div>
               </div>
+              
               <div class="mb-3">
                 <label>Status Periode</label>
                 <select id="eStatusLock" class="form-select border-danger fw-bold">

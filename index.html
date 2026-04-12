@@ -133,6 +133,47 @@
 .tab-pane:not(.active) {
     display: none !important;
 }
+
+/* ========================================= */
+    /* UI MODERN UNTUK TAB MENU ASN (1, 2, 3, 4) */
+    /* ========================================= */
+    .nav-pills-custom {
+        display: flex;
+        gap: 10px;
+        width: 100%;
+    }
+    .nav-pills-custom .nav-item {
+        flex: 1; /* Membuat lebar ke-4 tombol sama rata */
+    }
+    .btn-tab-custom {
+        width: 100%;
+        background-color: #f8f9fa; /* Warna dasar abu-abu terang */
+        color: #6c757d !important; /* Warna teks abu-abu tua */
+        border: 2px solid #e9ecef;
+        border-radius: 12px !important;
+        transition: all 0.3s ease-in-out;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 10px !important;
+    }
+    /* Efek saat mouse mengarah ke tombol (Hover) */
+    .btn-tab-custom:hover {
+        background-color: #e2e6ea;
+        color: #495057 !important;
+        transform: translateY(-2px);
+    }
+    /* EFEK SAAT TOMBOL SEDANG AKTIF (DIKLIK) */
+    .btn-tab-custom.active {
+        /* Gradien Ungu ke Biru Elegan */
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%) !important;
+        color: #ffffff !important; /* Teks putih */
+        border: 2px solid transparent;
+        box-shadow: 0 8px 20px rgba(37, 117, 252, 0.4) !important; /* Bayangan menyala */
+        transform: translateY(-3px); /* Tombol sedikit terangkat */
+    }
+
   </style>
 </head>
 <body class="app-padding">
@@ -373,13 +414,28 @@
           <div class="modal-body" style="background-color: #f4f6f9;">
             
             <div id="viewManajemenASN">
-              <ul class="nav nav-pills mb-3 mt-3 d-flex gap-2">
-                <li class="nav-item border border-primary rounded shadow-sm"><button id="navGaji" class="nav-link active fw-bold text-white px-4" style="background-color: #0d6efd;" onclick="navigasiTab('tabGaji')">1. Amprah Gaji</button></li>
-                <li class="nav-item border border-warning rounded shadow-sm"><button id="navAbsen" class="nav-link fw-bold text-dark px-4" style="background-color: #ffc107;" onclick="navigasiTab('tabAbsen')">2. Perhitungan TPP</button></li>
-                <li class="nav-item border border-danger rounded shadow-sm"><button id="navTahunan" class="nav-link fw-bold text-white px-4" style="background-color: #dc3545;" onclick="navigasiTab('tabTahunan')">3. Penghasilan Setahun / Pajak TER</button></li>
-                <li class="nav-item border border-success rounded shadow-sm"><button id="navNominatif" class="nav-link fw-bold text-white px-4" style="background-color: #198754;" onclick="navigasiTab('tabNominatif')">4. Nominatif TPP</button></li>
-              </ul>
-
+              <ul class="nav nav-pills mb-4 mt-3 nav-pills-custom">
+  <li class="nav-item">
+    <button id="navGaji" class="nav-link btn-tab-custom active fw-bold" onclick="navigasiTab('tabGaji')">
+      <i class="bi bi-wallet2 d-none d-md-inline me-1"></i> 1. Amprah Gaji
+    </button>
+  </li>
+  <li class="nav-item">
+    <button id="navAbsen" class="nav-link btn-tab-custom fw-bold" onclick="navigasiTab('tabAbsen')">
+      <i class="bi bi-calendar-check d-none d-md-inline me-1"></i> 2. Absensi & Hitung TPP
+    </button>
+  </li>
+  <li class="nav-item">
+    <button id="navTahunan" class="nav-link btn-tab-custom fw-bold" onclick="navigasiTab('tabTahunan')">
+      <i class="bi bi-calculator d-none d-md-inline me-1"></i> 3. PPh TER/Pajak Setahun
+    </button>
+  </li>
+  <li class="nav-item">
+    <button id="navNominatif" class="nav-link btn-tab-custom fw-bold" onclick="navigasiTab('tabNominatif')">
+      <i class="bi bi-receipt d-none d-md-inline me-1"></i> 4. Nominatif TPP
+    </button>
+  </li>
+</ul>
               <div class="alert alert-info border-info p-2 d-flex justify-content-between align-items-center mb-1">
                 <div>
                   <h5 id="labelNamaASN" class="mb-1 fw-bold">NAMA PEGAWAI</h5>

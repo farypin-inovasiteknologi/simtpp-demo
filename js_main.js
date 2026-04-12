@@ -1454,67 +1454,51 @@ function validasiNIP(input) {
   }
   }
 
+    
  async function hitungPajakTahunan() {
-    document.getElementById('loaderTahunan').classList.remove('hidden'); document.getElementById('hasilTahunan').classList.add('hidden'); const getV = (id) => document.getElementById(id).value; let statusMenilai = document.getElementById('chkTidakMenilai').checked ? "Tidak Menilai" : "Menilai"; let gabunganSKP = getV('inpSKP') + "|" + statusMenilai; let customAbsen = { skp: gabunganSKP, s: getV('vS'), c: getV('vC'), tk: getV('vTK'), tl1: getV('vTL1'), tl2: getV('vTL2'), tl3: getV('vTL3'), tl4: getV('vTL4'), cp1: getV('vCP1'), cp2: getV('vCP2'), cp3: getV('vCP3'), cp4: getV('vCP4'), asub: getV('vASUB') };
-    let res = await fetchAPI("hitungNominatif", {nip: asNIPAktif, bulanAktif: globalBulanAktif, customAbsen: customAbsen, refBulanGaji: globalRefBulanGaji});
-    document.getElementById('loaderTahunan').classList.add('hidden'); if(res.error) return alertPeringatan("Peringatan: " + res.error);
-    objNominatifSetahun = res; document.getElementById('hasilTahunan').classList.remove('hidden'); const fRp = (angka) => "Rp " + Math.round(angka).toLocaleString('id-ID');
+    document.getElementById('loaderTahunan').classList.remove('hidden'); 
+    document.getElementById('hasilTahunan').classList.add('hidden'); 
+    
+    const getV = (id) => document.getElementById(id).value; 
+    let statusMenilai = document.getElementById('chkTidakMenilai').checked ? "Tidak Menilai" : "Menilai"; 
+    let gabunganSKP = getV('inpSKP') + "|" + statusMenilai; 
+    let customAbsen = { 
+        skp: gabunganSKP, s: getV('vS'), c: getV('vC'), tk: getV('vTK'), 
+        tl1: getV('vTL1'), tl2: getV('vTL2'), tl3: getV('vTL3'), tl4: getV('vTL4'), 
+        cp1: getV('vCP1'), cp2: getV('vCP2'), cp3: getV('vCP3'), cp4: getV('vCP4'), asub: getV('vASUB') 
+    };
+    
+    let res = await fetchAPI("hitungNominatif", {
+        nip: asNIPAktif, 
+        bulanAktif: globalBulanAktif, 
+        customAbsen: customAbsen, 
+        refBulanGaji: globalRefBulanGaji
+    });
+    
+    document.getElementById('loaderTahunan').classList.add('hidden'); 
+    if(res.error) return alertPeringatan("Peringatan: " + res.error);
+    
+    objNominatifSetahun = res; 
+    document.getElementById('hasilTahunan').classList.remove('hidden'); 
+    
+    // 👇 FIX 1: Tangkal NaN dengan memberikan fallback angka 0 👇
+    const fRp = (angka) => "Rp " + Math.round(angka || 0).toLocaleString('id-ID');
     
     if(document.getElementById('labelBulanPencairan')) document.getElementById('labelBulanPencairan').innerText = globalRefBulanGaji || globalBulanAktif;
     if(document.getElementById('labelBulanPencairan2')) document.getElementById('labelBulanPencairan2').innerText = globalRefBulanGaji || globalBulanAktif;
     
-    // --- Data Simulasi & TER Biasa ---
-    document.getElementById('thGajiBulanOnly').innerText = fRp(res.gajiKotor); 
-    document.getElementById('thGajiTahunOnly').innerText = fRp(res.brutoGajiSetahun); 
-    document.getElementById('thBiayaJabGaji').innerText = "- " + fRp(res.biayaJabatanGaji); 
-    document.getElementById('thIwpGaji').innerText = "- " + fRp(res.iwpSetahun); 
-    document.getElementById('thNettoGaji').innerText = fRp(res.nettoGajiSetahun); 
-    document.getElementById('thPtkpGaji').innerText = "- " + fRp(res.ptkp); 
-    if(document.getElementById('thStatusKwnGaji')) document.getElementById('thStatusKwnGaji').innerText = res.statusTER; 
-    document.getElementById('thPkpGaji').innerText = fRp(res.pkpGaji); 
-    document.getElementById('thPphGajiBulan').innerText = fRp(res.pph21GajiSebulanSimulasi); 
-    document.getElementById('thGajiBulan').innerText = fRp(res.gajiKotor); 
-    document.getElementById('thTppKepgub').innerText = fRp(res.tppKepgub); 
-    document.getElementById('thPotPK').innerText = "- " + fRp(res.totalPotPK); 
-    document.getElementById('thPotDK').innerText = "- " + fRp(res.totalPotDK); 
-    document.getElementById('thTppBrutoBulan').innerText = fRp(res.tppBruto); 
-    document.getElementById('thBrutoBulan').innerText = fRp(res.brutoSebulan); 
-    document.getElementById('thBruto').innerText = fRp(res.brutoSetahun); 
-    document.getElementById('thBiayaJab').innerText = "- " + fRp(res.biayaJabatan); 
-    document.getElementById('thIWP').innerText = "- " + fRp(res.iwpSetahun); 
-    document.getElementById('thNetto').innerText = fRp(res.nettoSetahun); 
-    if(document.getElementById('thStatusKwnTotal')) document.getElementById('thStatusKwnTotal').innerText = res.statusTER; 
-    document.getElementById('thPTKP').innerText = "- " + fRp(res.ptkp); 
-    document.getElementById('thPKP').innerText = fRp(res.pkp); 
-    document.getElementById('thPph5').innerText = fRp(res.pph5); 
-    document.getElementById('thPph15').innerText = fRp(res.pph15); 
-    document.getElementById('thPph25').innerText = fRp(res.pph25); 
-    document.getElementById('thPph30').innerText = fRp(res.pph30); 
-    document.getElementById('thPph35').innerText = fRp(res.pph35); 
-    document.getElementById('thPajakTahun').innerText = fRp(res.pph21Setahun); 
-    document.getElementById('thPajakSebulanProg').innerText = fRp(res.pph21Setahun / 12); 
-    document.getElementById('thTerGajiAwal').innerText = fRp(res.gajiKotorTER); 
-    // document.getElementById('thTerPphGajiPengurang').innerText = "- " + fRp(res.pphGajiTER); 
-    // document.getElementById('thTerGajiBersih').innerText = fRp(res.gajiKotorTER - res.pphGajiTER); 
-    document.getElementById('thTerTppBruto').innerText = "+ " + fRp(res.tppBruto); 
-    document.getElementById('thTerDasar').innerText = fRp(res.dasarPajakTER); 
-    document.getElementById('thKatTER').innerText = res.katTER; 
-    document.getElementById('thPctTER').innerText = res.pctTER + "%"; 
-    if(document.getElementById('teksRumusTER')) document.getElementById('teksRumusTER').innerText = `Total PPh21 (${fRp(res.dasarPajakTER)} x ${res.pctTER}%)`; 
-    document.getElementById('thPphTER').innerText = fRp(res.pph21TotalSebulanTER); 
-    document.getElementById('thPphGajiLunas').innerText = "- " + fRp(res.pphGajiTER); 
-    document.getElementById('thPphTKD').innerText = fRp(res.pph21TKD);
-
-    // 👇 LOGIKA TAMPILAN KHUSUS DESEMBER 👇
-    let isDesember = (res.pctTER === "CLEAR"); 
+    // 👇 FIX 2: Tentukan ini mode clearing Desember atau bukan 👇
+    let isDesember = (res.pctTER === "CLEAR" || res.akumulasi); 
 
     if (isDesember && res.akumulasi) {
+        // --- JIKA DESEMBER: BUKA TABEL AKUMULASI, TUTUP TABEL TER ---
         document.getElementById('layoutTER').classList.add('hidden');
         document.getElementById('layoutDesember').classList.remove('hidden');
         
-        // --- LOOPING DATA RIWAYAT KE TABEL BARU ---
+        // 1. Looping Data Riwayat ke Tabel Baru
         let tbodyRiwayat = document.getElementById('tabelRiwayatDesember');
         tbodyRiwayat.innerHTML = "";
+        
         if(res.akumulasi.history && res.akumulasi.history.length > 0) {
             res.akumulasi.history.forEach(h => {
                 tbodyRiwayat.innerHTML += `<tr>
@@ -1530,7 +1514,7 @@ function validasiNIP(input) {
             tbodyRiwayat.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-3">Belum ada riwayat penghasilan bulan sebelumnya yang tersimpan di Database.</td></tr>`;
         }
 
-        // --- MENGISI TOTAL AKUMULASI ---
+        // 2. Mengisi Total Akumulasi Clearing
         let pajakSudahDibayarJanNov = res.pph21Setahun - res.pph21TotalSebulanTER;
         if(pajakSudahDibayarJanNov < 0) pajakSudahDibayarJanNov = 0;
         
@@ -1548,13 +1532,61 @@ function validasiNIP(input) {
         document.getElementById('desPajakDibayar').innerText = "- " + fRp(res.akumulasi.pajakSudahDibayarJanNov);
         document.getElementById('desPphGajiDes').innerText = "- " + fRp(res.pphGajiTER);
         
-        document.getElementById('desSisaTerutang').innerText = fRp(res.pph21TotalSebulanTER);
+        if (document.getElementById('desSisaTerutang')) document.getElementById('desSisaTerutang').innerText = fRp(res.pph21TotalSebulanTER);
         document.getElementById('desPphTKD').innerText = fRp(res.pph21TKD);
+
     } else {
+        // --- JIKA JAN-NOV: BUKA TABEL TER, TUTUP TABEL DESEMBER ---
         document.getElementById('layoutDesember').classList.add('hidden');
         document.getElementById('layoutTER').classList.remove('hidden');
+        
+        document.getElementById('thGajiBulanOnly').innerText = fRp(res.gajiKotor); 
+        document.getElementById('thGajiTahunOnly').innerText = fRp(res.brutoGajiSetahun); 
+        document.getElementById('thBiayaJabGaji').innerText = "- " + fRp(res.biayaJabatanGaji); 
+        document.getElementById('thIwpGaji').innerText = "- " + fRp(res.iwpSetahun); 
+        document.getElementById('thNettoGaji').innerText = fRp(res.nettoGajiSetahun); 
+        document.getElementById('thPtkpGaji').innerText = "- " + fRp(res.ptkp); 
+        if(document.getElementById('thStatusKwnGaji')) document.getElementById('thStatusKwnGaji').innerText = res.statusTER; 
+        document.getElementById('thPkpGaji').innerText = fRp(res.pkpGaji); 
+        document.getElementById('thPphGajiBulan').innerText = fRp(res.pph21GajiSebulanSimulasi); 
+        document.getElementById('thGajiBulan').innerText = fRp(res.gajiKotor); 
+        document.getElementById('thTppKepgub').innerText = fRp(res.tppKepgub); 
+        document.getElementById('thPotPK').innerText = "- " + fRp(res.totalPotPK); 
+        document.getElementById('thPotDK').innerText = "- " + fRp(res.totalPotDK); 
+        document.getElementById('thTppBrutoBulan').innerText = fRp(res.tppBruto); 
+        document.getElementById('thBrutoBulan').innerText = fRp(res.brutoSebulan); 
+        document.getElementById('thBruto').innerText = fRp(res.brutoSetahun); 
+        document.getElementById('thBiayaJab').innerText = "- " + fRp(res.biayaJabatan); 
+        document.getElementById('thIWP').innerText = "- " + fRp(res.iwpSetahun); 
+        document.getElementById('thNetto').innerText = fRp(res.nettoSetahun); 
+        if(document.getElementById('thStatusKwnTotal')) document.getElementById('thStatusKwnTotal').innerText = res.statusTER; 
+        document.getElementById('thPTKP').innerText = "- " + fRp(res.ptkp); 
+        document.getElementById('thPKP').innerText = fRp(res.pkp); 
+        document.getElementById('thPph5').innerText = fRp(res.pph5); 
+        document.getElementById('thPph15').innerText = fRp(res.pph15); 
+        document.getElementById('thPph25').innerText = fRp(res.pph25); 
+        document.getElementById('thPph30').innerText = fRp(res.pph30); 
+        document.getElementById('thPph35').innerText = fRp(res.pph35); 
+        document.getElementById('thPajakTahun').innerText = fRp(res.pph21Setahun); 
+        document.getElementById('thPajakSebulanProg').innerText = fRp(res.pph21Setahun / 12); 
+        
+        // (Sesuai perbaikan PMK 168 kita di langkah sebelumnya)
+        document.getElementById('thTerGajiAwal').innerText = fRp(res.gajiKotorTER); 
+        // document.getElementById('thTerPphGajiPengurang').innerText = "- " + fRp(res.pphGajiTER); 
+        // document.getElementById('thTerGajiBersih').innerText = fRp(res.gajiKotorTER - res.pphGajiTER); 
+        document.getElementById('thTerTppBruto').innerText = "+ " + fRp(res.tppBruto); 
+        document.getElementById('thTerDasar').innerText = fRp(res.dasarPajakTER); 
+        document.getElementById('thKatTER').innerText = res.katTER; 
+        document.getElementById('thPctTER').innerText = res.pctTER + "%"; 
+        
+        // Mencegah teks menampilkan "x CLEAR%" jika ada glitch
+        if(document.getElementById('teksRumusTER')) document.getElementById('teksRumusTER').innerText = `Total PPh21 (${fRp(res.dasarPajakTER)} x ${res.pctTER === 'CLEAR' ? '0' : res.pctTER}%)`; 
+        
+        document.getElementById('thPphTER').innerText = fRp(res.pph21TotalSebulanTER); 
+        document.getElementById('thPphGajiLunas').innerText = "- " + fRp(res.pphGajiTER); 
+        document.getElementById('thPphTKD').innerText = fRp(res.pph21TKD);
     }
-  }
+}
 
   function muatNominatif() {
     if(!objNominatifSetahun) { hitungPajakTahunan(); return; } 

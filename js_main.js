@@ -2,7 +2,7 @@
 // 1. KONFIGURASI SUPER MASTER (CUKUP 1 URL UNTUK SELURUH PROVINSI)
 // =========================================================================
 // Masukkan URL hasil Deploy Super Master Anda di sini:
-const API_URL = "https://script.google.com/macros/s/AKfycbzb4SAuxvVGhOvsKfH_KGZEcQymYSLCGtaL_Q4McV_B8A8_KYpHFtCa8AI-GoI27Rvb8w/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbykJk8QkemkSPHORyDwZn5dm0UJkx3KZ_W4IoOXZnXxU5ezygRf0mDIianrTg17Q1Y/exec"; 
 
 let listOPD = []; // Dikosongkan, karena akan ditarik otomatis dari Super Master
 
@@ -923,7 +923,7 @@ async function doLogin(e) {
       namaJabatan: j, 
       jenisJab: document.getElementById('mJenis').value, 
       statusKawin: document.getElementById('mStatus').value, 
-     
+      
       gapok: unformatRupiah(document.getElementById('mGapok').value), 
       tjJab: unformatRupiah(document.getElementById('mTjJab').value),
       rekening: document.getElementById('mRekening').value, 
@@ -1205,11 +1205,11 @@ function validasiNIP(input) {
       let btnTPP = document.getElementById('btnSimpanTPP'); 
       
       if (globalStatusLock === "Kunci") { 
-        btnGaji.disabled = true; btnGaji.innerHTML = "<i class='bi bi-lock'></i> TERKUNCI"; btnGaji.classList.replace('btn-primary', 'btn-secondary'); 
-        btnTPP.disabled = true; btnTPP.innerHTML = "<i class='bi bi-lock'></i> TERKUNCI"; btnTPP.classList.replace('btn-primary', 'btn-secondary'); 
+        if(btnGaji) { btnGaji.disabled = true; btnGaji.innerHTML = "<i class='bi bi-lock'></i> TERKUNCI"; btnGaji.classList.replace('btn-primary', 'btn-secondary'); }
+        if(btnTPP) { btnTPP.disabled = true; btnTPP.innerHTML = "<i class='bi bi-lock'></i> TERKUNCI"; btnTPP.classList.replace('btn-primary', 'btn-secondary'); }
       } else { 
-        btnGaji.disabled = false; btnGaji.innerHTML = "<i class='bi bi-save'></i> SIMPAN AMPRAH GAJI"; btnGaji.classList.replace('btn-secondary', 'btn-primary'); 
-        btnTPP.disabled = false; btnTPP.innerHTML = "<i class='bi bi-save'></i> SIMPAN PERHITUNGAN TPP"; btnTPP.classList.replace('btn-secondary', 'btn-primary'); 
+        if(btnGaji) { btnGaji.disabled = false; btnGaji.innerHTML = "<i class='bi bi-save'></i> SIMPAN AMPRAH GAJI"; btnGaji.classList.replace('btn-secondary', 'btn-primary'); }
+        if(btnTPP) { btnTPP.disabled = false; btnTPP.innerHTML = "<i class='bi bi-save'></i> SIMPAN PERHITUNGAN TPP"; btnTPP.classList.replace('btn-secondary', 'btn-primary'); }
       }
       
       if(res.absen) { 
@@ -1446,17 +1446,93 @@ function validasiNIP(input) {
     document.getElementById('loaderTahunan').classList.add('hidden'); if(res.error) return alertPeringatan("Peringatan: " + res.error);
     objNominatifSetahun = res; document.getElementById('hasilTahunan').classList.remove('hidden'); const fRp = (angka) => "Rp " + Math.round(angka).toLocaleString('id-ID');
     if(document.getElementById('labelBulanPencairan')) document.getElementById('labelBulanPencairan').innerText = globalRefBulanGaji || globalBulanAktif;
-    document.getElementById('thGajiBulanOnly').innerText = fRp(res.gajiKotor); document.getElementById('thGajiTahunOnly').innerText = fRp(res.brutoGajiSetahun); document.getElementById('thBiayaJabGaji').innerText = "- " + fRp(res.biayaJabatanGaji); document.getElementById('thIwpGaji').innerText = "- " + fRp(res.iwpSetahun); document.getElementById('thNettoGaji').innerText = fRp(res.nettoGajiSetahun); document.getElementById('thPtkpGaji').innerText = "- " + fRp(res.ptkp); if(document.getElementById('thStatusKwnGaji')) document.getElementById('thStatusKwnGaji').innerText = res.statusTER; document.getElementById('thPkpGaji').innerText = fRp(res.pkpGaji); document.getElementById('thPphGajiBulan').innerText = fRp(res.pph21GajiSebulanSimulasi); document.getElementById('thGajiBulan').innerText = fRp(res.gajiKotor); document.getElementById('thTPPBruto').innerText = fRp(res.tppBruto); document.getElementById('thPotPK').innerText = "- " + fRp(res.totalPotPK); document.getElementById('thPotDK').innerText = "- " + fRp(res.totalPotDK); document.getElementById('thTPPBulan').innerText = fRp(res.tppNettoKinerja); document.getElementById('thBrutoBulan').innerText = fRp(res.brutoSebulan); document.getElementById('thBruto').innerText = fRp(res.brutoSetahun); document.getElementById('thBiayaJab').innerText = "- " + fRp(res.biayaJabatan); document.getElementById('thIWP').innerText = "- " + fRp(res.iwpSetahun); document.getElementById('thNetto').innerText = fRp(res.nettoSetahun); if(document.getElementById('thStatusKwnTotal')) document.getElementById('thStatusKwnTotal').innerText = res.statusTER; document.getElementById('thPTKP').innerText = "- " + fRp(res.ptkp); document.getElementById('thPKP').innerText = fRp(res.pkp); document.getElementById('thPph5').innerText = fRp(res.pph5); document.getElementById('thPph15').innerText = fRp(res.pph15); document.getElementById('thPph25').innerText = fRp(res.pph25); document.getElementById('thPph30').innerText = fRp(res.pph30); document.getElementById('thPph35').innerText = fRp(res.pph35); document.getElementById('thPajakTahun').innerText = fRp(res.pph21Setahun); document.getElementById('thPajakSebulanProg').innerText = fRp(res.pph21Setahun / 12); document.getElementById('thTerGajiAwal').innerText = fRp(res.gajiKotorTER); document.getElementById('thTerPphGajiPengurang').innerText = "- " + fRp(res.pphGajiTER); document.getElementById('thTerGajiBersih').innerText = fRp(res.gajiKotorTER - res.pphGajiTER); document.getElementById('thTerTpp').innerText = "+ " + fRp(res.tppNettoKinerja); document.getElementById('thTerDasar').innerText = fRp(res.dasarPajakTER); document.getElementById('thKatTER').innerText = res.katTER; document.getElementById('thPctTER').innerText = res.pctTER + "%"; if(document.getElementById('teksRumusTER')) document.getElementById('teksRumusTER').innerText = `Total PPh21 (${fRp(res.dasarPajakTER)} x ${res.pctTER}%)`; document.getElementById('thPphTER').innerText = fRp(res.pph21TotalSebulanTER); document.getElementById('thPphGajiLunas').innerText = "- " + fRp(res.pphGajiTER); document.getElementById('thPphTKD').innerText = fRp(res.pph21TKD);
+    
+    // 👇 PERUBAHAN VARIABEL 👇
+    document.getElementById('thGajiBulanOnly').innerText = fRp(res.gajiKotor); 
+    document.getElementById('thGajiTahunOnly').innerText = fRp(res.brutoGajiSetahun); 
+    document.getElementById('thBiayaJabGaji').innerText = "- " + fRp(res.biayaJabatanGaji); 
+    document.getElementById('thIwpGaji').innerText = "- " + fRp(res.iwpSetahun); 
+    document.getElementById('thNettoGaji').innerText = fRp(res.nettoGajiSetahun); 
+    document.getElementById('thPtkpGaji').innerText = "- " + fRp(res.ptkp); 
+    if(document.getElementById('thStatusKwnGaji')) document.getElementById('thStatusKwnGaji').innerText = res.statusTER; 
+    document.getElementById('thPkpGaji').innerText = fRp(res.pkpGaji); 
+    document.getElementById('thPphGajiBulan').innerText = fRp(res.pph21GajiSebulanSimulasi); 
+    document.getElementById('thGajiBulan').innerText = fRp(res.gajiKotor); 
+    document.getElementById('thTppKepgub').innerText = fRp(res.tppKepgub); 
+    document.getElementById('thPotPK').innerText = "- " + fRp(res.totalPotPK); 
+    document.getElementById('thPotDK').innerText = "- " + fRp(res.totalPotDK); 
+    document.getElementById('thTppBrutoBulan').innerText = fRp(res.tppBruto); 
+    document.getElementById('thBrutoBulan').innerText = fRp(res.brutoSebulan); 
+    document.getElementById('thBruto').innerText = fRp(res.brutoSetahun); 
+    document.getElementById('thBiayaJab').innerText = "- " + fRp(res.biayaJabatan); 
+    document.getElementById('thIWP').innerText = "- " + fRp(res.iwpSetahun); 
+    document.getElementById('thNetto').innerText = fRp(res.nettoSetahun); 
+    if(document.getElementById('thStatusKwnTotal')) document.getElementById('thStatusKwnTotal').innerText = res.statusTER; 
+    document.getElementById('thPTKP').innerText = "- " + fRp(res.ptkp); 
+    document.getElementById('thPKP').innerText = fRp(res.pkp); 
+    document.getElementById('thPph5').innerText = fRp(res.pph5); 
+    document.getElementById('thPph15').innerText = fRp(res.pph15); 
+    document.getElementById('thPph25').innerText = fRp(res.pph25); 
+    document.getElementById('thPph30').innerText = fRp(res.pph30); 
+    document.getElementById('thPph35').innerText = fRp(res.pph35); 
+    document.getElementById('thPajakTahun').innerText = fRp(res.pph21Setahun); 
+    document.getElementById('thPajakSebulanProg').innerText = fRp(res.pph21Setahun / 12); 
+    document.getElementById('thTerGajiAwal').innerText = fRp(res.gajiKotorTER); 
+    document.getElementById('thTerPphGajiPengurang').innerText = "- " + fRp(res.pphGajiTER); 
+    document.getElementById('thTerGajiBersih').innerText = fRp(res.gajiKotorTER - res.pphGajiTER); 
+    document.getElementById('thTerTppBruto').innerText = "+ " + fRp(res.tppBruto); 
+    document.getElementById('thTerDasar').innerText = fRp(res.dasarPajakTER); 
+    document.getElementById('thKatTER').innerText = res.katTER; 
+    document.getElementById('thPctTER').innerText = res.pctTER + "%"; 
+    if(document.getElementById('teksRumusTER')) document.getElementById('teksRumusTER').innerText = `Total PPh21 (${fRp(res.dasarPajakTER)} x ${res.pctTER}%)`; 
+    document.getElementById('thPphTER').innerText = fRp(res.pph21TotalSebulanTER); 
+    document.getElementById('thPphGajiLunas').innerText = "- " + fRp(res.pphGajiTER); 
+    document.getElementById('thPphTKD').innerText = fRp(res.pph21TKD);
   }
 
   function muatNominatif() {
-    if(!objNominatifSetahun) { hitungPajakTahunan(); return; } let res = objNominatifSetahun; document.getElementById('loaderNominatif').classList.add('hidden'); document.getElementById('hasilNominatif').classList.remove('hidden'); const fRp = (angka) => "Rp " + Math.round(angka).toLocaleString('id-ID');
-    let isSpesial = (res.jenisPeriode !== "Reguler"); let rasio = res.tppBruto > 0 ? (res.tppNettoKinerja / res.tppBruto) : 0;
-    document.getElementById('nomGajiKotor').innerText = fRp(res.gajiKotor); document.getElementById('nomBK').innerText = fRp(res.bk * rasio); document.getElementById('nomPK').innerText = fRp(res.pk * rasio); document.getElementById('nomKK').innerText = fRp(res.kk * rasio); document.getElementById('nomTB').innerText = fRp(res.tb * rasio); document.getElementById('nomKP').innerText = fRp(res.kp * rasio); document.getElementById('nomTppNetto').innerText = fRp(res.tppNettoKinerja); document.getElementById('nomTambahanBpjs').innerText = fRp(res.bpjs4);
-    let tppPlusBpjs = res.tppNettoKinerja + res.bpjs4; document.getElementById('nomTppPlusBpjs').innerText = fRp(tppPlusBpjs);
-    let infoBebas = isSpesial ? ` <span class="badge bg-danger ms-1">Bebas Pot. ${res.jenisPeriode}</span>` : ""; document.getElementById('nomPotIwp').innerHTML = "- " + fRp(res.iwp1) + infoBebas; document.getElementById('nomPotBpjs').innerHTML = "- " + fRp(res.bpjs4) + infoBebas; document.getElementById('nomPotPph').innerHTML = "- " + fRp(res.pph21TKD); 
-    let jmlPotongan = res.iwp1 + res.pph21TKD + res.bpjs4; document.getElementById('nomJmlPotongan').innerText = "- " + fRp(jmlPotongan); let totalDiterima = tppPlusBpjs - jmlPotongan; document.getElementById('nomTotalDiterima').innerText = fRp(totalDiterima); document.getElementById('nomBersih').innerText = fRp(totalDiterima);
-    let potonganKorpriAktual = globalPotKorpri; document.getElementById('nomTrfBersih').innerText = fRp(totalDiterima); document.getElementById('nomTrfKorpri').innerText = "- " + fRp(potonganKorpriAktual); let masukRekening = totalDiterima - potonganKorpriAktual; document.getElementById('nomMasukRekening').value = fRp(masukRekening);
+    if(!objNominatifSetahun) { hitungPajakTahunan(); return; } 
+    let res = objNominatifSetahun; 
+    document.getElementById('loaderNominatif').classList.add('hidden'); 
+    document.getElementById('hasilNominatif').classList.remove('hidden'); 
+    const fRp = (angka) => "Rp " + Math.round(angka).toLocaleString('id-ID');
+    
+    let isSpesial = (res.jenisPeriode !== "Reguler"); 
+    
+    // 👇 PERUBAHAN RASIO 👇
+    let rasio = res.tppKepgub > 0 ? (res.tppBruto / res.tppKepgub) : 0;
+    
+    document.getElementById('nomGajiKotor').innerText = fRp(res.gajiKotor); 
+    document.getElementById('nomBK').innerText = fRp(res.bk * rasio); 
+    document.getElementById('nomPK').innerText = fRp(res.pk * rasio); 
+    document.getElementById('nomKK').innerText = fRp(res.kk * rasio); 
+    document.getElementById('nomTB').innerText = fRp(res.tb * rasio); 
+    document.getElementById('nomKP').innerText = fRp(res.kp * rasio); 
+    
+    // 👇 PERUBAHAN VARIABEL 👇
+    document.getElementById('nomTppBruto').innerText = fRp(res.tppBruto); 
+    document.getElementById('nomTambahanBpjs').innerText = fRp(res.bpjs4);
+    
+    let tppPlusBpjs = res.tppBruto + res.bpjs4; 
+    document.getElementById('nomTppPlusBpjs').innerText = fRp(tppPlusBpjs);
+    
+    let infoBebas = isSpesial ? ` <span class="badge bg-danger ms-1">Bebas Pot. ${res.jenisPeriode}</span>` : ""; 
+    document.getElementById('nomPotIwp').innerHTML = "- " + fRp(res.iwp1) + infoBebas; 
+    document.getElementById('nomPotBpjs').innerHTML = "- " + fRp(res.bpjs4) + infoBebas; 
+    document.getElementById('nomPotPph').innerHTML = "- " + fRp(res.pph21TKD); 
+    
+    let jmlPotongan = res.iwp1 + res.pph21TKD + res.bpjs4; 
+    document.getElementById('nomJmlPotongan').innerText = "- " + fRp(jmlPotongan); 
+    
+    let totalDiterima = tppPlusBpjs - jmlPotongan; 
+    document.getElementById('nomTotalDiterima').innerText = fRp(totalDiterima); 
+    document.getElementById('nomTppNetto').innerText = fRp(totalDiterima);
+    
+    let potonganKorpriAktual = globalPotKorpri; 
+    document.getElementById('nomTrfBersih').innerText = fRp(totalDiterima); 
+    document.getElementById('nomTrfKorpri').innerText = "- " + fRp(potonganKorpriAktual); 
+    let masukRekening = totalDiterima - potonganKorpriAktual; 
+    document.getElementById('nomMasukRekening').value = fRp(masukRekening);
   }
 
   function navigasiTab(target, force = false) {
@@ -1620,7 +1696,7 @@ function validasiNIP(input) {
                   payload.push({
                       nip: nipBersih, 
                       nama: String(row[4] || "").trim(),          
-                      unitkerja: String(row[8] || "").trim(),     
+                      unitkerja: String(row[8] || "").trim(),      
                       unorInduk: String(row[10] || "").trim(),    
                       skp: String(row[16] || "").trim(),          
                       golongan: String(row[30] || "").trim(),      // <--- AMAN! INDEKS 30 (KOLOM AE)

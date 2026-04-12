@@ -1455,43 +1455,53 @@ function validasiNIP(input) {
   }
 
   function navigasiTab(target, force = false) {
-      if (!force && globalStatusLock !== "Kunci") { 
-          // Hapus peringatan Gaji, karena sudah otomatis disimpen
-          if ((target === 'tabTahunan' || target === 'tabNominatif') && !isAbsenTersimpan) { 
-              return alertPeringatan("Anda belum menyimpan kehadiran! Silakan klik SIMPAN PERHITUNGAN TPP terlebih dahulu."); 
-          } 
-      }
-      
-      if (target === 'tabNominatif' && !objNominatifSetahun) {
-          return alertPeringatan("Harap buka menu '3. Penghasilan Setahun / Pajak TER' terlebih dahulu agar sistem dapat mengkalkulasi nilai pajak TPP yang terbaru.");
-      }
+    if (!force && globalStatusLock !== "Kunci") { 
+        // Hapus peringatan Gaji, karena sudah otomatis disimpen
+        if ((target === 'tabTahunan' || target === 'tabNominatif') && !isAbsenTersimpan) { 
+            return alertPeringatan("Anda belum menyimpan kehadiran! Silakan klik SIMPAN PERHITUNGAN TPP terlebih dahulu."); 
+        } 
+    }
+    
+    if (target === 'tabNominatif' && !objNominatifSetahun) {
+        return alertPeringatan("Harap buka menu '3. Penghasilan Setahun / Pajak TER' terlebih dahulu agar sistem dapat mengkalkulasi nilai pajak TPP yang terbaru.");
+    }
 
-      // 1. Reset status 'active' pada tombol navigasi (Pills)
-      ['navGaji', 'navAbsen', 'navTahunan', 'navNominatif'].forEach(id => {
-          let navBtn = document.getElementById(id);
-          if (navBtn) navBtn.classList.remove('active');
-      });
-      
-      // 2. [PERBAIKAN UTAMA] Sembunyikan SEMUA isi konten Tab secara total
-      let semuaTabPane = document.querySelectorAll('#viewManajemenASN .tab-pane');
-      semuaTabPane.forEach(tab => {
-          tab.classList.remove('show', 'active');
-          // Pastikan tidak ada class bawaan Bootstrap yang menahannya
-      });
-      
-      // 3. Aktifkan hanya tombol Navigasi yang diklik
-      let navId = "nav" + target.replace("tab", ""); 
-      let targetNavBtn = document.getElementById(navId);
-      if (targetNavBtn) targetNavBtn.classList.add('active'); 
+    // 1. Reset tombol Navigasi (Warna dan Status)
+    ['navGaji', 'navAbsen', 'navTahunan', 'navNominatif'].forEach(id => {
+        let navBtn = document.getElementById(id);
+        if (navBtn) navBtn.classList.remove('active');
+    });
+    
+    // 2. Aktifkan HANYA tombol Navigasi yang diklik
+    let navId = "nav" + target.replace("tab", ""); 
+    let targetNavBtn = document.getElementById(navId);
+    if (targetNavBtn) targetNavBtn.classList.add('active'); 
 
-      // 4. Tampilkan hanya isi Tab yang menjadi target
-      let targetTabPane = document.getElementById(target);
-      if (targetTabPane) targetTabPane.classList.add('show', 'active');
-      
-      // 5. Muat fungsi pendukung (Pajak/Nominatif) jika diperlukan
-      if (target === 'tabTahunan') hitungPajakTahunan(); 
-      if (target === 'tabNominatif') muatNominatif();
-  }
+    // 3. PAKSA SEMBUNYI semua isi tab menggunakan class .hidden buatan Anda
+    ['tabGaji', 'tabAbsen', 'tabTahunan', 'tabNominatif'].forEach(id => {
+        let tab = document.getElementById(id);
+        if (tab) {
+            tab.classList.remove('show', 'active');
+            tab.classList.add('hidden'); // Eksekusi lenyap tanpa sisa ruang
+        }
+    });
+
+    // 4. Tampilkan HANYA isi tab yang dituju
+    let targetTabPane = document.getElementById(target);
+    if (targetTabPane) {
+        targetTabPane.classList.remove('hidden');
+        
+        // Jeda sangat singkat (10ms) agar DOM browser selesai mereset tinggi (height) layout
+        // sebelum animasi dari Bootstrap dipanggil ulang.
+        setTimeout(() => {
+            targetTabPane.classList.add('show', 'active');
+        }, 10);
+    }
+    
+    // 5. Muat fungsi pendukung untuk hitungan otomatis
+    if (target === 'tabTahunan') hitungPajakTahunan(); 
+    if (target === 'tabNominatif') muatNominatif();
+}
 
   function bukaModalImport(jenis) { document.getElementById('importJenis').value = jenis; document.getElementById('fileImport').value = ""; document.getElementById('importModalTitle').innerText = jenis === 'pegawai' ? "Import Data Pegawai (Excel)" : "Import Data (Excel)"; 
     let modalObj = bootstrap.Modal.getInstance(document.getElementById('modalImportExcel')) || new bootstrap.Modal(document.getElementById('modalImportExcel'));

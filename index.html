@@ -838,7 +838,7 @@
                         </h2>
                         <div id="colTahunanB" class="accordion-collapse collapse" data-bs-parent="#accordionPajakTahunan">
                           <div class="accordion-body bg-white" style="font-size: 0.9rem;">
-                            <p class="mb-2">Berdasarkan PMK 168/2023, kategori TER ditentukan dari Status Perkawinan dan Jumlah Tanggungan (PTKP):</p>
+                            <p class="mb-2">Berdasarkan PP No. 58 Tahun 2023 & PMK 168/2023, Terhitung mulai 1 Januari 2024, pemotongan PPh 21 masa bulanan wajib menggunakan <b>Tarif Efektif Rata-rata (TER)</b>. Kategori TER ditentukan dari Status Perkawinan dan Jumlah Tanggungan (PTKP):</p>
                             <ul>
                               <li><b>TER A</b> (Batas Aman: Rp 5.400.000): Untuk status TK/0, TK/1, K/0.</li>
                               <li><b>TER B</b> (Batas Aman: Rp 6.200.000): Untuk status TK/2, TK/3, K/1, K/2.</li>
@@ -852,25 +852,8 @@
                         </div>
                       </div>
 
-                      <div class="accordion-item">
-                        <h2 class="accordion-header">
-                          <button class="accordion-button collapsed fw-bold text-dark bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#colTahunanC">
-                            3. Catatan Pemeriksaan / Verifikasi Sistem
-                          </button>
-                        </h2>
-                        <div id="colTahunanC" class="accordion-collapse collapse" data-bs-parent="#accordionPajakTahunan">
-                          <div class="accordion-body bg-white" style="font-size: 0.9rem;">
-                            <p class="text-muted mb-2">Seluruh perhitungan di atas telah disesuaikan dengan regulasi Perpajakan (PMK 168/2023) dan regulasi TPP Provinsi Jambi (Pergub 2025).</p>
-                            <ol class="mb-0 text-dark ps-3">
-                              <li class="mb-1"><b>UU No. 7 Tahun 2021 (HPP):</b> Memperbarui rentang PKP untuk tarif progresif terendah (5%), menjadi <b>Rp 60 Juta</b>.</li>
-                              <li class="mb-1"><b>PP No. 58 Tahun 2023 & PMK No. 168 Tahun 2023:</b> Terhitung mulai 1 Januari 2024, pemotongan PPh 21 masa bulanan wajib menggunakan <b>Tarif Efektif Rata-rata (TER)</b>.</li>
-                              <li><b>Penerapan Biaya Jabatan:</b> Biaya jabatan sebesar 5% (Maksimal Rp 6.000.000 setahun) dan Iuran Pensiun diaktifkan kembali.</li>
-                            </ol>
-                          </div>
-                        </div>
-                      </div>
-
-                    </div> </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="tab-pane fade" id="tabNominatif">
@@ -1115,6 +1098,33 @@
             </div>
           </div>
         </div>
+
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed fw-bold text-dark bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#colDesember">
+              4. Simulasi Perhitungan Pajak Masa Terakhir (Desember / Clearing)
+            </button>
+          </h2>
+          <div id="colDesember" class="accordion-collapse collapse" data-bs-parent="#accordionSimulasi">
+            <div class="accordion-body text-dark" style="font-size: 0.9rem;">
+              <p>Khusus bulan Desember, sistem beralih dari metode <b>TER (Tarif Efektif Rata-rata)</b> menjadi metode <b>Clearing Progresif (Pasal 17)</b> sesuai amanat PMK 168/2023. Hal ini dilakukan untuk memastikan pajak yang dibayar setahun pas (tidak lebih, tidak kurang).</p>
+              
+              <h6 class="fw-bold">Tahapan Perhitungan:</h6>
+              <ol>
+                <li><b>Pengepulan Data:</b> Sistem menjumlahkan seluruh Penghasilan Bruto (Gaji + TPP + THR + Gaji 13) yang diterima dari Januari sampai Desember.</li>
+                <li><b>Penghitungan PKP Real:</b> Total Bruto Setahun tersebut dikurangi Biaya Jabatan (Max 6jt) dan Iuran Pensiun (IWP 4.75%) untuk mendapatkan Netto Setahun, lalu dikurangi PTKP.</li>
+                <li><b>Penerapan Tarif Pasal 17:</b> Nilai PKP dikalikan tarif progresif (5%, 15%, dst) untuk mendapatkan <b>Total PPh 21 Terutang Setahun</b>.</li>
+                <li><b>Pengurangan Kredit Pajak:</b> Total Pajak Setahun tersebut dikurangi dengan seluruh Pajak TER yang sudah dibayarkan dari bulan Januari sampai November.</li>
+                <li><b>Sisa Bayar Desember:</b> Selisihnya merupakan pajak yang harus dilunasi di bulan Desember.</li>
+              </ol>
+
+              <div class="alert alert-warning p-2 border-warning">
+                <b>Catatan Penting:</b> Jika di bulan Desember potongan pajak terlihat lebih besar, itu menandakan akumulasi penghasilan setahun Anda telah melewati ambang batas lapisan tarif pajak tertentu. Sebaliknya, jika lebih kecil, berarti pajak TER bulanan Anda sebelumnya sudah hampir mencukupi kewajiban setahun.
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -1522,12 +1532,41 @@
             <h5 class="modal-title fw-bold"><i class="bi bi-shield-lock-fill text-success"></i> KEBIJAKAN PRIVASI & KEAMANAN DATA</h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
           </div>
-          <div class="modal-body text-dark" style="font-size: 0.9rem; text-align: justify;">
-            <p>Sistem Informasi Manajemen Tambahan Penghasilan Pegawai (SIM TPP) Pemerintah Provinsi Jambi berkomitmen penuh untuk melindungi kerahasiaan dan keamanan data aparatur sipil negara (ASN) yang dikelola di dalam sistem ini.</p>
-            <ul>
-              <li><b>Dilarang Keras</b> menyalin, mengunduh, atau membagikan data identitas, Nomor Rekening, dan rincian gaji/TPP ASN ke pihak eksternal yang tidak memiliki wewenang.</li>
-              <li>Setiap aktivitas di dalam sistem ini dicatat oleh <i>Audit Trail / Timestamp</i>. Pelanggaran terhadap penyalahgunaan data akan ditindak tegas.</li>
+          <div class="modal-body text-dark px-4" style="font-size: 0.9rem; text-align: justify; line-height: 1.6;">
+            <div class="text-center border-bottom pb-2 mb-3">
+              <h6 class="fw-bold mb-0">PEMERINTAH PROVINSI JAMBI</h6>
+              <small class="text-muted">Sistem Informasi Manajemen Tambahan Penghasilan Pegawai (SIM TPP)</small>
+            </div>
+            
+            <h6 class="fw-bold text-primary mt-3">1. Pendahuluan</h6>
+            <p>Pemerintah Provinsi Jambi melalui aplikasi SIM TPP berkomitmen penuh untuk melindungi privasi dan keamanan data pribadi Aparatur Sipil Negara (ASN) sesuai dengan amanat <b>Undang-Undang No. 27 Tahun 2022 tentang Perlindungan Data Pribadi (UU PDP)</b>.</p>
+            
+            <h6 class="fw-bold text-primary mt-3">2. Informasi yang Dikelola</h6>
+            <p class="mb-1">Sistem ini mengumpulkan dan mengolah data terbatas untuk kepentingan administratif penggajian dan tunjangan, meliputi:</p>
+            <ul class="mb-2">
+              <li>Identitas Dasar (Nama, NIP, Tanggal Lahir, Golongan/Pangkat).</li>
+              <li>Informasi Jabatan dan Unit Kerja.</li>
+              <li>Data Keuangan (Gaji Pokok, Tunjangan, Nomor Rekening Bank Jambi).</li>
+              <li>Data Kinerja (Nilai SKP) dan Kehadiran.</li>
             </ul>
+            
+            <h6 class="fw-bold text-primary mt-3">3. Tujuan Pengolahan Data</h6>
+            <p>Data diolah semata-mata untuk penghitungan akurat Tambahan Penghasilan Pegawai (TPP), pemenuhan kewajiban perpajakan (PPh 21) sesuai regulasi PMK terbaru, serta pelaporan administratif internal Pemerintah Provinsi Jambi.</p>
+            
+            <h6 class="fw-bold text-primary mt-3">4. Keamanan dan Kerahasiaan</h6>
+            <ul class="mb-2">
+              <li><b>Akses Terbatas:</b> Akses ke data hanya diberikan kepada pejabat pengelola kepegawaian dan bendahara yang ditunjuk secara resmi melalui sistem akun berjenjang.</li>
+              <li><b>Audit Trail:</b> Setiap aktivitas akses, penginputan, dan perubahan data dicatat secara otomatis oleh sistem (log aktivitas) untuk mendeteksi dan mencegah penyalahgunaan.</li>
+              <li><b>Enkripsi:</b> Kata sandi pengguna disimpan menggunakan algoritma enkripsi (SHA-256) untuk memastikan keamanan kredensial akun.</li>
+            </ul>
+            
+            <h6 class="fw-bold text-primary mt-3">5. Kewajiban Pengguna (Operator/Admin)</h6>
+            <div class="alert alert-warning p-2 border-warning text-dark small mb-2">
+              <b>DILARANG KERAS</b> menyalin, mengunduh, mengekspor, atau membagikan sebagian maupun seluruh data identitas, nomor rekening, dan rincian penghasilan ASN ke pihak eksternal atau pihak ketiga tanpa kewenangan dan izin resmi.
+            </div>
+            
+            <h6 class="fw-bold text-primary mt-3">6. Kepatuhan Hukum & Sanksi</h6>
+            <p class="mb-0">Penyalahgunaan data dan pelanggaran kerahasiaan dalam sistem ini akan ditindak tegas dan dapat dikenakan sanksi disiplin pegawai negeri sesuai <b>PP No. 94 Tahun 2021</b>, serta ketentuan sanksi pidana/denda yang diatur dalam <b>UU ITE</b> dan <b>UU Perlindungan Data Pribadi</b>.</p>
           </div>
           <div class="modal-footer bg-light"><button type="button" class="btn btn-secondary fw-bold px-4" data-bs-dismiss="modal">SAYA MENGERTI</button></div>
         </div>

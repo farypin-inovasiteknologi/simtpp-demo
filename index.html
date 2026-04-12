@@ -248,7 +248,7 @@
               <hr class="text-secondary" style="opacity: 0.2;">
               <div class="d-flex flex-column flex-md-row gap-2">
                 <button id="btnTambahBulan" class="btn btn-outline-primary fw-bold hidden w-100" onclick="bukaModalTambahPeriode()"><i class="bi bi-plus-circle"></i> Tambah Periode</button>
-                <button id="btnKelolaBulan" class="btn btn-outline-danger fw-bold hidden w-100" onclick="bukaModalEditPeriode()"><i class="bi bi-gear"></i> Kelola Periode</button>
+                <button id="btnKelolaBulan" class="btn btn-outline-danger fw-bold hidden w-100" onclick="bukaModalEditPeriode()"><i class="bi bi-gear"></i> Kelola Periode (Edit/Import)</button>
               </div>
             </div>
           </div>
@@ -624,9 +624,9 @@
                             </div>
                             <table class="table table-sm table-borderless mb-0" style="font-size: 0.85rem;">
                               <tr><td width="60%">Gaji Kotor (Amprah)</td><td id="thTerGajiAwal" class="text-end">0</td></tr>
-                              <tr class="text-danger border-bottom"><td>(-) PPh 21 Gaji (Lunas)</td><td id="thTerPphGajiPengurang" class="text-end">0</td></tr>
-                              <tr class="fw-bold text-dark"><td>Gaji Bruto (Bersih PPh)</td><td id="thTerGajiBersih" class="text-end">0</td></tr>
-                              <tr class="border-bottom"><td>(+) TPP Kepgub (Setelah pengurangan Disiplin/Produktifitas)</td><td id="thTerTppBruto" class="text-end">0</td></tr>
+                             <!-- <tr class="text-danger border-bottom"><td>(-) PPh 21 Gaji (Lunas)</td><td id="thTerPphGajiPengurang" class="text-end">0</td></tr>
+                              <tr class="fw-bold text-dark"><td>Gaji Bruto (Bersih PPh)</td><td id="thTerGajiBersih" class="text-end">0</td></tr> -->
+                              <tr class="border-bottom"><td>(+) TPP Kepgub (Setelah pengurangan Disiplin/Kinerja)</td><td id="thTerTppBruto" class="text-end">0</td></tr>
                               <tr class="text-primary fw-bold fs-6 mt-2 border-top"><td>TOTAL DPP TER SEBULAN</td><td id="thTerDasar" class="text-end">0</td></tr>
                             </table>
                           </div>
@@ -1397,8 +1397,18 @@
               
               <div class="mb-3" id="boxIndukPajak"> 
                 <label class="fw-bold text-danger">Pilih bulan pencairan gaji (Referensi Pajak TER)</label>
-                <select id="pIndukPajak" class="form-select border-danger fw-bold" onchange="sinkronHariKerja()"></select>
-                <small class="text-muted d-block mt-1">Sistem akan mengambil data Gaji dari bulan yang dipilih di sini.</small>
+                <select id="pIndukPajak" class="form-select border-danger fw-bold" onchange="cekBulanReferensi(this.value, 'warningIndukPajak'); sinkronHariKerja();"></select>
+                <div id="warningIndukPajak" class="alert alert-warning text-dark fw-bold small hidden mt-2 py-2 mb-0">
+                  <i class="bi bi-exclamation-triangle-fill text-danger"></i> Peringatan: Periode gaji ini belum dibuat di sistem. Pastikan nanti Anda membuatnya agar perhitungan Pajak Lintas Bulan dapat bekerja!
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="fw-bold text-primary">Referensi Gaji Lintas Bulan (Pajak TER)</label>
+                <select id="editRefBulanGaji" class="form-select border-primary fw-bold" onchange="cekBulanReferensi(this.value, 'warningEditRef')"></select>
+                <div id="warningEditRef" class="alert alert-warning text-dark fw-bold small hidden mt-2 py-2 mb-0">
+                <i class="bi bi-exclamation-triangle-fill text-danger"></i> Peringatan: Periode gaji ini belum dibuat di sistem. Pastikan Anda segera menambahkannya!
+                </div>
               </div>
               
               <div class="row">
@@ -1463,8 +1473,17 @@
                 </select>
               </div>
               <button type="submit" class="btn btn-primary w-100 fw-bold mb-2">SIMPAN PENGATURAN</button>
+              
               <button type="button" class="btn btn-danger w-100 fw-bold" onclick="konfirmasiHapusPeriode()">🗑️ HAPUS PERIODE INI</button>
-            </form>
+            </form> <hr class="mt-4 mb-3">
+            
+            <div class="bg-light p-3 border rounded border-success">
+              <h6 class="fw-bold text-success mb-2"><i class="bi bi-file-earmark-excel"></i> Update Data/SKP Susulan (Excel)</h6>
+              <p class="small text-muted mb-2" style="line-height: 1.3;">Fitur ini akan menimpa/menambah data Pegawai & SKP pada periode ini berdasarkan NIP. <b>Aman: Data Gaji & Absensi yang sudah diketik tidak akan hilang.</b></p>
+              <input type="file" id="eFileImportPegawai" class="form-control border-success mb-2" accept=".xlsx, .xls">
+              <button type="button" class="btn btn-outline-success w-100 fw-bold" onclick="prosesImportUpdateExcel()"><i class="bi bi-upload"></i> IMPORT / UPDATE SEKARANG</button>
+            </div>
+
           </div>
         </div>
       </div>

@@ -129,6 +129,11 @@
         .autocomplete-items { position: absolute; border: 1px solid #ced4da; border-bottom: none; border-top: none; z-index: 9999; top: 100%; left: 0; right: 0; max-height: 220px; overflow-y: auto; background-color: #fff; box-shadow: 0px 8px 16px rgba(0,0,0,0.15); border-radius: 0 0 8px 8px; }
         .autocomplete-items div { padding: 10px 15px; cursor: pointer; background-color: #fff; border-bottom: 1px solid #ced4da; font-size: 0.85rem; line-height: 1.4; transition: 0.2s; }
         .autocomplete-items div:hover { background-color: #e9ecef; color: #0d6efd; font-weight: bold; }
+
+        /* Membunuh "Ghost Space" Jarak Kosong antar Tab */
+        .tab-content > .tab-pane:not(.active) {
+            display: none !important;
+        }
     </style>
 </head>
 <body class="app-padding">

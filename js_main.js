@@ -1094,8 +1094,12 @@ function validasiNIP(input) {
   }
 
   async function bukaPanel(nip, nama, gol, jabatan, statusTER, unitKerja) {
-    asNIPAktif = nip; statusTERAktif = statusTER || ""; 
+    asNIPAktif = nip; 
+    statusTERAktif = statusTER || ""; 
+    objNominatifSetahun = null;
+    
     let objPer = arrayPeriode.find(x => x.namaPeriode === globalBulanAktif); 
+ 
     globalJenisPeriode = objPer ? (objPer.jenisPeriode || "Reguler") : "Reguler";
     
     document.getElementById('labelNamaASN').innerText = nama; 
@@ -1499,7 +1503,8 @@ function validasiNIP(input) {
     }
     
     // 5. Muat fungsi pendukung untuk hitungan otomatis
-    if (target === 'tabTahunan') hitungPajakTahunan(); 
+    // [PERBAIKAN] Tambahkan && !objNominatifSetahun agar tidak loading 2x
+    if (target === 'tabTahunan' && !objNominatifSetahun) hitungPajakTahunan(); 
     if (target === 'tabNominatif') muatNominatif();
 }
 

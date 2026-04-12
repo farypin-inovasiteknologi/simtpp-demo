@@ -381,15 +381,16 @@ async function doLogin(e) {
       toggleIndukPajak();
       
       let selInduk = document.getElementById('pIndukPajak'); 
-      selInduk.innerHTML = ""; 
-      if(arrayPeriode) {
-          arrayPeriode.forEach(p => { 
-          if(p.jenisPeriode === "Reguler" || !p.jenisPeriode) { 
-              selInduk.innerHTML += `<option value="${p.namaPeriode}">${p.namaPeriode}</option>`; 
-          } 
-          });
+
+      selInduk.innerHTML = '<option value="">-- Pilih Bulan Gaji --</option>'; 
+      // Looping otomatis 12 bulan untuk tahun yang sedang dipilih
+      for(let i = 1; i <= 12; i++) {
+    let namaPer = namaBulan[i] + " " + nextTahun;
+    selInduk.innerHTML += `<option value="${namaPer}">${namaPer}</option>`;
       }
-      
+
+      document.getElementById('warningIndukPajak').classList.add('hidden');
+
       let modalObj = bootstrap.Modal.getInstance(document.getElementById('modalTambahPeriode')) || new bootstrap.Modal(document.getElementById('modalTambahPeriode'));
       modalObj.show();
   }
@@ -600,7 +601,20 @@ async function doLogin(e) {
   function bukaModalEditPeriode() {
     let b = document.getElementById('pilihPeriodeUtama').value; if(!b) return alertPeringatan("Pilih periode terlebih dahulu!");
     let obj = arrayPeriode.find(x => x.namaPeriode === b); document.getElementById('eBulanNama').value = obj.namaPeriode; document.getElementById('eHariKerja').value = obj.hariKerja; document.getElementById('eHariKerja6').value = obj.hariKerja6; document.getElementById('eHk5Lama').value = obj.hariKerja; document.getElementById('eHk6Lama').value = obj.hariKerja6; document.getElementById('eStatusLock').value = obj.statusLock || "Buka";
-    let selRef = document.getElementById('editRefBulanGaji'); if(selRef) { selRef.innerHTML = ""; arrayPeriode.forEach(p => { selRef.innerHTML += `<option value="${p.namaPeriode}">${p.namaPeriode}</option>`; }); selRef.value = obj.refBulanGaji || obj.namaPeriode; }
+
+    // CARI FUNGSI bukaModalEditPeriode() dan ubah bagian "let selRef" ke bawah menjadi seperti ini:
+let selRef = document.getElementById('editRefBulanGaji'); 
+if(selRef) { 
+    selRef.innerHTML = ""; 
+    let tahun = obj.tahun || b.split(" ")[1] || new Date().getFullYear();
+    const namaBulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    for(let i=1; i<=12; i++) {
+        let namaPer = namaBulan[i] + " " + tahun;
+        selRef.innerHTML += `<option value="${namaPer}">${namaPer}</option>`;
+    }
+    selRef.value = obj.refBulanGaji || obj.namaPeriode; 
+    cekBulanReferensi(selRef.value, 'warningEditRef'); // Panggil pengecekan saat modal dibuka
+}
     
     let modalObj = bootstrap.Modal.getInstance(document.getElementById('modalEditPeriode')) || new bootstrap.Modal(document.getElementById('modalEditPeriode'));
     modalObj.show();
@@ -1480,8 +1494,8 @@ function validasiNIP(input) {
     document.getElementById('thPajakTahun').innerText = fRp(res.pph21Setahun); 
     document.getElementById('thPajakSebulanProg').innerText = fRp(res.pph21Setahun / 12); 
     document.getElementById('thTerGajiAwal').innerText = fRp(res.gajiKotorTER); 
-    document.getElementById('thTerPphGajiPengurang').innerText = "- " + fRp(res.pphGajiTER); 
-    document.getElementById('thTerGajiBersih').innerText = fRp(res.gajiKotorTER - res.pphGajiTER); 
+    // document.getElementById('thTerPphGajiPengurang').innerText = "- " + fRp(res.pphGajiTER); 
+    // document.getElementById('thTerGajiBersih').innerText = fRp(res.gajiKotorTER - res.pphGajiTER); 
     document.getElementById('thTerTppBruto').innerText = "+ " + fRp(res.tppBruto); 
     document.getElementById('thTerDasar').innerText = fRp(res.dasarPajakTER); 
     document.getElementById('thKatTER').innerText = res.katTER; 
@@ -1746,15 +1760,15 @@ function validasiNIP(input) {
                   if (jenisPegawaiRaw.includes("PPPK") || jenisPegawaiRaw.includes("P3K")) { statusPegawaiVal = "PPPK"; }
 
                   payload.push({
-                      nip: nipBersih, 
-                      nama: String(row[4] || "").trim(),          
-                      unitkerja: String(row[8] || "").trim(),      
-                      unorInduk: String(row[10] || "").trim(),    
-                      skp: String(row[16] || "").trim(),          
-                      golongan: String(row[30] || "").trim(),      // <--- AMAN! INDEKS 30 (KOLOM AE)
-                      statusPegawai: statusPegawaiVal,             
-                      tglLahir: "", namaJabatan: "", jenisJab: "Struktural", statusKawin: "TK/0 = 1", gapok: 0, tjJab: 0, rekening: ""
-                  });
+                  nip: nipBersih, 
+                  nama: String(row[4] || "").trim(),              
+                  unitkerja: String(row[8] || "").trim(),       
+                  unorInduk: String(row[10] || "").trim(),    
+                  skp: String(row[16] || "").trim(),          
+                  golongan: String(row[30] || "").trim(),       
+                  statusPegawai: statusPegawaiVal
+                  // Atribut lain sengaja DIHAPUS agar backend tahu bahwa kita TIDAK ingin menimpanya!
+                });
               }
 
               if(payload.length === 0) {
@@ -2506,3 +2520,71 @@ function stopLoading() {
   }
   
   document.addEventListener("click", function (e) { closeAllLists(e.target); });
+
+  // TAMBAHKAN FUNGSI BARU INI DI MANA SAJA DI DALAM js_main.js
+function cekBulanReferensi(namaBulanPilihan, idWarningBox) {
+    let warningBox = document.getElementById(idWarningBox);
+    if(!warningBox) return;
+    
+    // Cek apakah bulan yang dipilih sudah ada di database (arrayPeriode)
+    let sudahAda = arrayPeriode.some(p => p.namaPeriode === namaBulanPilihan);
+    
+    // Jika belum ada, munculkan warning. Jika sudah ada, sembunyikan.
+    if (!sudahAda && namaBulanPilihan !== "") {
+        warningBox.classList.remove('hidden');
+    } else {
+        warningBox.classList.add('hidden');
+    }
+}
+
+// FUNGSI BARU UNTUK IMPORT SUSULAN DENGAN PERINGATAN (SWEETALERT)
+async function prosesImportUpdateExcel() {
+    let fileInput = document.getElementById('eFileImportPegawai');
+    if(!fileInput.files[0]) return alertPeringatan("Pilih file Excel SKP terlebih dahulu!");
+    
+    let bulanTarget = document.getElementById('eBulanNama').value;
+    
+    // Tampilkan Peringatan Konfirmasi sebelum memproses
+    Swal.fire({
+        title: 'Peringatan Import Susulan!',
+        html: `Harap berhati-hati! Proses ini akan <b>MENIMPA</b> data:<br>
+               <ul class="text-start mt-2 mb-2 text-danger fw-bold">
+                 <li>Nilai SKP</li>
+                 <li>Pangkat / Golongan</li>
+                 <li>Unit Kerja & Unor Induk</li>
+               </ul>
+               untuk pegawai yang NIP-nya cocok di periode <b>${bulanTarget}</b>.<br><br>
+               <span class="text-success"><i>(Data Gaji, Tunjangan, Status Kawin, dan Jabatan tetap AMAN).</i></span><br><br>
+               Apakah Anda yakin ingin menimpa data tersebut?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545', // Warna merah (Bahaya/Warning)
+        cancelButtonColor: '#6c757d', // Warna abu-abu (Batal)
+        confirmButtonText: '<i class="bi bi-exclamation-triangle"></i> Ya, Timpa Data!',
+        cancelButtonText: 'Batal'
+    }).then(async (result) => {
+        // Jika user mengklik tombol "Ya, Timpa Data!"
+        if (result.isConfirmed) {
+            
+            // Kita "tipu" sistem sebentar agar mengira ini import pegawai biasa
+            let oldJenis = document.getElementById('importJenis').value;
+            document.getElementById('importJenis').value = 'pegawai';
+
+            // Panggil fungsi inti yang sudah ada (prosesImportExcel)
+            await prosesImportExcel(fileInput, bulanTarget);
+
+            // Kembalikan statusnya ke semula
+            document.getElementById('importJenis').value = oldJenis;
+            
+            // Kosongkan file input agar bisa dipakai lagi nanti
+            fileInput.value = "";
+
+            // Tutup modal edit periode
+            let modalObj = bootstrap.Modal.getInstance(document.getElementById('modalEditPeriode'));
+            if(modalObj) modalObj.hide();
+            
+            // Refresh otomatis data pegawai di layar untuk melihat perubahannya
+            muatDataPegawai(true); 
+        }
+    });
+}

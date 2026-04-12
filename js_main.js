@@ -1466,13 +1466,29 @@ function validasiNIP(input) {
           return alertPeringatan("Harap buka menu '3. Penghasilan Setahun / Pajak TER' terlebih dahulu agar sistem dapat mengkalkulasi nilai pajak TPP yang terbaru.");
       }
 
-      ['navGaji', 'navAbsen', 'navTahunan', 'navNominatif'].forEach(id => document.getElementById(id).classList.remove('active')); 
-      ['tabGaji', 'tabAbsen', 'tabTahunan', 'tabNominatif'].forEach(id => document.getElementById(id).classList.remove('show', 'active'));
+      // 1. Reset status 'active' pada tombol navigasi (Pills)
+      ['navGaji', 'navAbsen', 'navTahunan', 'navNominatif'].forEach(id => {
+          let navBtn = document.getElementById(id);
+          if (navBtn) navBtn.classList.remove('active');
+      });
       
+      // 2. [PERBAIKAN UTAMA] Sembunyikan SEMUA isi konten Tab secara total
+      let semuaTabPane = document.querySelectorAll('#viewManajemenASN .tab-pane');
+      semuaTabPane.forEach(tab => {
+          tab.classList.remove('show', 'active');
+          // Pastikan tidak ada class bawaan Bootstrap yang menahannya
+      });
+      
+      // 3. Aktifkan hanya tombol Navigasi yang diklik
       let navId = "nav" + target.replace("tab", ""); 
-      document.getElementById(navId).classList.add('active'); 
-      document.getElementById(target).classList.add('show', 'active');
+      let targetNavBtn = document.getElementById(navId);
+      if (targetNavBtn) targetNavBtn.classList.add('active'); 
+
+      // 4. Tampilkan hanya isi Tab yang menjadi target
+      let targetTabPane = document.getElementById(target);
+      if (targetTabPane) targetTabPane.classList.add('show', 'active');
       
+      // 5. Muat fungsi pendukung (Pajak/Nominatif) jika diperlukan
       if (target === 'tabTahunan') hitungPajakTahunan(); 
       if (target === 'tabNominatif') muatNominatif();
   }

@@ -2,7 +2,7 @@
 // 1. KONFIGURASI SUPER MASTER (CUKUP 1 URL UNTUK SELURUH PROVINSI)
 // =========================================================================
 // Masukkan URL hasil Deploy Super Master Anda di sini:
-const API_URL = "https://script.google.com/macros/s/AKfycbykJk8QkemkSPHORyDwZn5dm0UJkx3KZ_W4IoOXZnXxU5ezygRf0mDIianrTg17Q1Y/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbzL7JydtFmMdLZE6mT2tOGCEtuOqsdgszSDn1J2K79YXWPMTSogBzX_D-vaLpPURNQZ/exec"; 
 
 let listOPD = []; // Dikosongkan, karena akan ditarik otomatis dari Super Master
 
@@ -1440,14 +1440,16 @@ function validasiNIP(input) {
   }
   }
 
-  async function hitungPajakTahunan() {
+ async function hitungPajakTahunan() {
     document.getElementById('loaderTahunan').classList.remove('hidden'); document.getElementById('hasilTahunan').classList.add('hidden'); const getV = (id) => document.getElementById(id).value; let statusMenilai = document.getElementById('chkTidakMenilai').checked ? "Tidak Menilai" : "Menilai"; let gabunganSKP = getV('inpSKP') + "|" + statusMenilai; let customAbsen = { skp: gabunganSKP, s: getV('vS'), c: getV('vC'), tk: getV('vTK'), tl1: getV('vTL1'), tl2: getV('vTL2'), tl3: getV('vTL3'), tl4: getV('vTL4'), cp1: getV('vCP1'), cp2: getV('vCP2'), cp3: getV('vCP3'), cp4: getV('vCP4'), asub: getV('vASUB') };
     let res = await fetchAPI("hitungNominatif", {nip: asNIPAktif, bulanAktif: globalBulanAktif, customAbsen: customAbsen, refBulanGaji: globalRefBulanGaji});
     document.getElementById('loaderTahunan').classList.add('hidden'); if(res.error) return alertPeringatan("Peringatan: " + res.error);
     objNominatifSetahun = res; document.getElementById('hasilTahunan').classList.remove('hidden'); const fRp = (angka) => "Rp " + Math.round(angka).toLocaleString('id-ID');
-    if(document.getElementById('labelBulanPencairan')) document.getElementById('labelBulanPencairan').innerText = globalRefBulanGaji || globalBulanAktif;
     
-    // 👇 PERUBAHAN VARIABEL 👇
+    if(document.getElementById('labelBulanPencairan')) document.getElementById('labelBulanPencairan').innerText = globalRefBulanGaji || globalBulanAktif;
+    if(document.getElementById('labelBulanPencairan2')) document.getElementById('labelBulanPencairan2').innerText = globalRefBulanGaji || globalBulanAktif;
+    
+    // --- Data Simulasi & TER Biasa ---
     document.getElementById('thGajiBulanOnly').innerText = fRp(res.gajiKotor); 
     document.getElementById('thGajiTahunOnly').innerText = fRp(res.brutoGajiSetahun); 
     document.getElementById('thBiayaJabGaji').innerText = "- " + fRp(res.biayaJabatanGaji); 
@@ -1488,6 +1490,56 @@ function validasiNIP(input) {
     document.getElementById('thPphTER').innerText = fRp(res.pph21TotalSebulanTER); 
     document.getElementById('thPphGajiLunas').innerText = "- " + fRp(res.pphGajiTER); 
     document.getElementById('thPphTKD').innerText = fRp(res.pph21TKD);
+
+    // 👇 LOGIKA TAMPILAN KHUSUS DESEMBER 👇
+    let isDesember = (res.pctTER === "CLEAR"); 
+
+    if (isDesember && res.akumulasi) {
+        document.getElementById('layoutTER').classList.add('hidden');
+        document.getElementById('layoutDesember').classList.remove('hidden');
+        
+        // --- LOOPING DATA RIWAYAT KE TABEL BARU ---
+        let tbodyRiwayat = document.getElementById('tabelRiwayatDesember');
+        tbodyRiwayat.innerHTML = "";
+        if(res.akumulasi.history && res.akumulasi.history.length > 0) {
+            res.akumulasi.history.forEach(h => {
+                tbodyRiwayat.innerHTML += `<tr>
+                    <td class="text-center fw-bold">${h.bulan}</td>
+                    <td class="text-end">${fRp(h.gaji)}</td>
+                    <td class="text-end">${fRp(h.tpp)}</td>
+                    <td class="text-end text-danger">${fRp(h.iwp)}</td>
+                    <td class="text-end text-danger">${fRp(h.pphGaji)}</td>
+                    <td class="text-end text-danger">${fRp(h.pphTpp)}</td>
+                </tr>`;
+            });
+        } else {
+            tbodyRiwayat.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-3">Belum ada riwayat penghasilan bulan sebelumnya yang tersimpan di Database.</td></tr>`;
+        }
+
+        // --- MENGISI TOTAL AKUMULASI ---
+        let pajakSudahDibayarJanNov = res.pph21Setahun - res.pph21TotalSebulanTER;
+        if(pajakSudahDibayarJanNov < 0) pajakSudahDibayarJanNov = 0;
+        
+        document.getElementById('desBrutoGaji').innerText = fRp(res.akumulasi.sumBrutoGaji);
+        document.getElementById('desBrutoTPP').innerText = fRp(res.akumulasi.sumBrutoTPP);
+        document.getElementById('desTotalBruto').innerText = fRp(res.akumulasi.totalBrutoSetahunReal);
+        document.getElementById('desBiayaJab').innerText = "- " + fRp(res.akumulasi.biayaJabatanReal);
+        document.getElementById('desIWP').innerText = "- " + fRp(res.akumulasi.sumIWP);
+        document.getElementById('desNetto').innerText = fRp(res.akumulasi.nettoSetahunReal);
+        document.getElementById('desStatusKwn').innerText = res.statusTER;
+        document.getElementById('desPTKP').innerText = "- " + fRp(res.ptkp);
+        document.getElementById('desPKP').innerText = fRp(res.akumulasi.pkpReal);
+        
+        document.getElementById('desPajakSetahun').innerText = fRp(res.pph21Setahun); 
+        document.getElementById('desPajakDibayar').innerText = "- " + fRp(res.akumulasi.pajakSudahDibayarJanNov);
+        document.getElementById('desPphGajiDes').innerText = "- " + fRp(res.pphGajiTER);
+        
+        document.getElementById('desSisaTerutang').innerText = fRp(res.pph21TotalSebulanTER);
+        document.getElementById('desPphTKD').innerText = fRp(res.pph21TKD);
+    } else {
+        document.getElementById('layoutDesember').classList.add('hidden');
+        document.getElementById('layoutTER').classList.remove('hidden');
+    }
   }
 
   function muatNominatif() {

@@ -1565,9 +1565,10 @@ async function hitungPajakTahunan() {
                 <td class="text-end fw-bold text-danger">${fRp(res.pph21TKD)}</td>
             </tr>`;
         
+        // 👇 PERUBAHAN TEKS TOTAL DI TABEL RIWAYAT 👇
         tbodyRiwayat.innerHTML += `
             <tr class="bg-dark text-white border-dark">
-                <td class="text-center fw-bold text-white">TOTAL SETAHUN (Real)</td>
+                <td class="text-center fw-bold text-white">TOTAL PENGHASILAN SETAHUN (Jan-Des)</td>
                 <td class="text-end fw-bold text-white">${fRp(subGaji + res.gajiKotorTER)}</td>
                 <td class="text-end fw-bold text-white">${fRp(subTpp + res.tppBruto)}</td>
                 <td class="text-end fw-bold text-white">${fRp(subIwp + iwpBulanIni)}</td>
@@ -1585,10 +1586,10 @@ async function hitungPajakTahunan() {
         document.getElementById('desPTKP').innerText = "- " + fRp(res.ptkp);
         document.getElementById('desPKP').innerText = fRp(res.akumulasi.pkpReal);
 
-        // 👇 FIX TAMPILAN & TAMBAHAN RINCIAN PERKALIAN PROGRESIF 👇
+        // 👇 PERUBAHAN LAYOUT: Rincian Perkalian Progresif ditaruh DI ATAS Total 👇
         let sPkpReal = res.akumulasi.pkpReal; 
-        let pt5=0, pt15=0, pt25=0, pt30=0, pt35=0; // Untuk simpan hasil pajak
-        let p5=0, p15=0, p25=0, p30=0, p35=0;      // Untuk simpan dasar pengali (PKP yg dipotong)
+        let pt5=0, pt15=0, pt25=0, pt30=0, pt35=0; 
+        let p5=0, p15=0, p25=0, p30=0, p35=0;      
         
         if(sPkpReal > 0) { p5 = Math.min(sPkpReal, 60000000); pt5 = p5 * 0.05; sPkpReal -= p5; }
         if(sPkpReal > 0) { p15 = Math.min(sPkpReal, 190000000); pt15 = p15 * 0.15; sPkpReal -= p15; }
@@ -1598,25 +1599,29 @@ async function hitungPajakTahunan() {
 
         let pajakSetahunTampilan = pt5 + pt15 + pt25 + pt30 + pt35;
 
-        // Cetak angka Total Setahun ke layar
-        document.getElementById('desPajakSetahun').innerText = fRp(pajakSetahunTampilan);
+        // Bikin Struktur HTML Baru untuk Rincian Progresif
+        let rincianHTML = `
+            <tr><td colspan="2" class="text-dark fw-bold pb-1 pt-0"><i class="text-muted small">Rincian Lapis Progresif (Dari PKP ${fRp(res.akumulasi.pkpReal)}):</i></td></tr>
+        `;
+        if(p5 > 0)  rincianHTML += `<tr><td class="ps-3 py-0">5% x ${fRp(p5)}</td><td class="text-end fw-bold text-secondary py-0">= ${fRp(pt5)}</td></tr>`;
+        if(p15 > 0) rincianHTML += `<tr><td class="ps-3 py-0">15% x ${fRp(p15)}</td><td class="text-end fw-bold text-secondary py-0">= ${fRp(pt15)}</td></tr>`;
+        if(p25 > 0) rincianHTML += `<tr><td class="ps-3 py-0">25% x ${fRp(p25)}</td><td class="text-end fw-bold text-secondary py-0">= ${fRp(pt25)}</td></tr>`;
+        if(p30 > 0) rincianHTML += `<tr><td class="ps-3 py-0">30% x ${fRp(p30)}</td><td class="text-end fw-bold text-secondary py-0">= ${fRp(pt30)}</td></tr>`;
+        if(p35 > 0) rincianHTML += `<tr><td class="ps-3 py-0">35% x ${fRp(p35)}</td><td class="text-end fw-bold text-secondary py-0">= ${fRp(pt35)}</td></tr>`;
 
-        // 👇 INJEKSI RINCIAN MULTIPLY PAJAK PROGRESIF KE LAYAR 👇
-        let barisRincian = `<table class="table table-sm table-borderless mt-1 mb-0 ms-2" style="font-size:0.75rem; background-color:#fdfdfe; border-left: 3px solid #dc3545;">`;
-        if(p5 > 0)  barisRincian += `<tr><td width="15%">5%</td><td width="45%">x ${fRp(p5)}</td><td class="text-end fw-bold text-secondary">= ${fRp(pt5)}</td></tr>`;
-        if(p15 > 0) barisRincian += `<tr><td>15%</td><td>x ${fRp(p15)}</td><td class="text-end fw-bold text-secondary">= ${fRp(pt15)}</td></tr>`;
-        if(p25 > 0) barisRincian += `<tr><td>25%</td><td>x ${fRp(p25)}</td><td class="text-end fw-bold text-secondary">= ${fRp(pt25)}</td></tr>`;
-        if(p30 > 0) barisRincian += `<tr><td>30%</td><td>x ${fRp(p30)}</td><td class="text-end fw-bold text-secondary">= ${fRp(pt30)}</td></tr>`;
-        if(p35 > 0) barisRincian += `<tr><td>35%</td><td>x ${fRp(p35)}</td><td class="text-end fw-bold text-secondary">= ${fRp(pt35)}</td></tr>`;
-        barisRincian += `</table>`;
+        // Gabungkan dengan Total dan Pengurang
+        rincianHTML += `
+            <tr class="fw-bold border-top"><td width="65%" class="pt-2">Total PPh 21 Terutang Setahun</td><td id="desPajakSetahun" class="text-end text-primary fs-6 pt-2">${fRp(pajakSetahunTampilan)}</td></tr>
+            <tr class="text-success mt-1"><td>(-) PPh 21 Sdh Disetor (Jan-Nov)</td><td id="desPajakDibayar" class="text-end fw-bold">- ${fRp(res.akumulasi.pajakSudahDibayarJanNov)}</td></tr>
+            <tr class="text-danger border-bottom"><td>(-) PPh 21 Gaji Bulan Desember</td><td id="desPphGajiDes" class="text-end fw-bold">- ${fRp(res.pphGajiTER)}</td></tr>
+        `;
 
-        // Timpa teks kecil penjelasan HTML bawaan dengan tabel rincian yang rapi
-        let trPenjelasan = document.getElementById('desPajakSetahun').parentNode.nextElementSibling;
-        trPenjelasan.querySelector('td').innerHTML = `<i class="text-muted">Rincian Lapis Progresif (Dari PKP ${fRp(res.akumulasi.pkpReal)}):</i><br>` + barisRincian;
-        // -------------------------------------------------------------
+        // Gantikan isi tabel B. Clearing PPh 21 dengan susunan yang baru
+        let tabelPajakB = document.getElementById('desPajakSetahun');
+        if(tabelPajakB) {
+            tabelPajakB.closest('tbody').innerHTML = rincianHTML;
+        }
 
-        document.getElementById('desPajakDibayar').innerText = "- " + fRp(res.akumulasi.pajakSudahDibayarJanNov);
-        document.getElementById('desPphGajiDes').innerText = "- " + fRp(res.pphGajiTER);
         if (document.getElementById('desSisaTerutang')) document.getElementById('desSisaTerutang').innerText = fRp(res.pph21TotalSebulanTER);
         document.getElementById('desPphTKD').innerText = fRp(res.pph21TKD);
 
@@ -2704,4 +2709,9 @@ async function prosesImportUpdateExcel() {
         }
     });
 }
+
+
+
+
+
 

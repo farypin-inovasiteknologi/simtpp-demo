@@ -99,6 +99,39 @@ window.onload = async () => {
   }
 };
 
+// ==========================================
+// FUNGSI MUAT ULANG DAFTAR OPD (TOMBOL REFRESH)
+// ==========================================
+async function refreshListOPD() {
+    startLoading("Menyegarkan Daftar OPD...");
+    
+    // Tembak API ke Super Master lagi
+    let res = await fetchAPI("getDaftarOPD", {});
+    stopLoading();
+
+    let opdSelect = document.getElementById('selectTenantOPD');
+    opdSelect.innerHTML = '<option value="">-- PILIH OPD --</option>';
+
+    if (res && res.status === "sukses") {
+        listOPD = res.data;
+        listOPD.forEach(opd => { 
+            opdSelect.innerHTML += `<option value="${opd.sheetId}">${opd.nama}</option>`; 
+        });
+        
+        // Kasih notifikasi kecil biar user tahu prosesnya berhasil
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil',
+            text: 'Daftar OPD berhasil diperbarui!',
+            timer: 1500,
+            showConfirmButton: false
+        });
+    } else {
+        opdSelect.innerHTML = '<option value="">Gagal memuat OPD</option>';
+        alertError("Gagal mengambil daftar OPD: " + (res.pesan || "Cek koneksi internet"));
+    }
+}
+
 // =========================================================================
 // 5. NAVIGASI LANDING & LOGIN
 // =========================================================================
@@ -868,7 +901,7 @@ if(selRef) {
     
     renderTabelPegawai(filtered);
   }
-  
+
   function renderTabelPegawai(data) {
     let tbody = document.getElementById('tabelBodyPegawai');
     if(!data.length) { 

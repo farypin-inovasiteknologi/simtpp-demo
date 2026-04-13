@@ -1499,10 +1499,17 @@ function validasiNIP(input) {
         let tbodyRiwayat = document.getElementById('tabelRiwayatDesember');
         tbodyRiwayat.innerHTML = "";
 
+        // Variabel penampung subtotal Jan-Nov
+        let subGaji = 0, subTpp = 0, subIwp = 0, subPphGaji = 0, subPphTpp = 0;
+
         if (res.akumulasi.history && res.akumulasi.history.length > 0) {
             res.akumulasi.history.forEach(h => {
+                // Menjumlahkan akumulasi Jan-Nov
+                subGaji += h.gaji; subTpp += h.tpp; subIwp += h.iwp; 
+                subPphGaji += h.pphGaji; subPphTpp += h.pphTpp;
+
                 tbodyRiwayat.innerHTML += `<tr>
-                    <td class="text-center fw-bold">${h.bulan}</td>
+                    <td class="text-center">${h.bulan}</td>
                     <td class="text-end">${fRp(h.gaji)}</td>
                     <td class="text-end">${fRp(h.tpp)}</td>
                     <td class="text-end text-danger">${fRp(h.iwp)}</td>
@@ -1510,20 +1517,47 @@ function validasiNIP(input) {
                     <td class="text-end text-danger">${fRp(h.pphTpp)}</td>
                 </tr>`;
             });
+
+            // 👇 BARIS SUBTOTAL JANUARI - NOVEMBER 👇
+            tbodyRiwayat.innerHTML += `
+                <tr class="table-warning border-warning">
+                    <td class="text-center fw-bold">SUBTOTAL (JAN-NOV) <br><small class="text-dark"><i>*Dipungut dgn Metode TER</i></small></td>
+                    <td class="text-end fw-bold">${fRp(subGaji)}</td>
+                    <td class="text-end fw-bold">${fRp(subTpp)}</td>
+                    <td class="text-end fw-bold text-danger">${fRp(subIwp)}</td>
+                    <td class="text-end fw-bold text-danger">${fRp(subPphGaji)}</td>
+                    <td class="text-end fw-bold text-danger">${fRp(subPphTpp)}</td>
+                </tr>`;
+
         } else {
-            tbodyRiwayat.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-3">Belum ada riwayat pajak.</td></tr>`;
+            tbodyRiwayat.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-3">Belum ada riwayat pajak Jan-Nov.</td></tr>`;
         }
 
+        // 👇 BARIS KHUSUS DESEMBER (CLEARING) 👇
         let iwpBulanIni = ((res.gapok || 0) + (res.tjKeluarga || 0)) * 0.0475;
         tbodyRiwayat.innerHTML += `
-            <tr class="table-primary border-primary">
-                <td class="text-center fw-bold text-primary">${globalBulanAktif.toUpperCase()} <br><small>(Bulan Ini)</small></td>
-                <td class="text-end fw-bold text-primary">${fRp(res.gajiKotorTER)}</td>
-                <td class="text-end fw-bold text-primary">${fRp(res.tppBruto)}</td>
+            <tr class="table-danger border-danger" style="border-width: 2px;">
+                <td class="text-center fw-bold text-danger">${globalBulanAktif.toUpperCase()} <br><small class="text-dark"><i>*Dipungut dgn Metode Progresif (Clearing)</i></small></td>
+                <td class="text-end fw-bold text-danger">${fRp(res.gajiKotorTER)}</td>
+                <td class="text-end fw-bold text-danger">${fRp(res.tppBruto)}</td>
                 <td class="text-end fw-bold text-danger">${fRp(iwpBulanIni)}</td>
                 <td class="text-end fw-bold text-danger">${fRp(res.pphGajiTER)}</td>
                 <td class="text-end fw-bold text-danger">${fRp(res.pph21TKD)}</td>
             </tr>`;
+        
+        // 👇 BARIS TOTAL KESELURUHAN (SETELAH DESEMBER) 👇
+        tbodyRiwayat.innerHTML += `
+            <tr class="bg-dark text-white border-dark">
+                <td class="text-center fw-bold text-white">TOTAL SETAHUN (Real)</td>
+                <td class="text-end fw-bold text-white">${fRp(subGaji + res.gajiKotorTER)}</td>
+                <td class="text-end fw-bold text-white">${fRp(subTpp + res.tppBruto)}</td>
+                <td class="text-end fw-bold text-white">${fRp(subIwp + iwpBulanIni)}</td>
+                <td class="text-end fw-bold text-white">${fRp(subPphGaji + res.pphGajiTER)}</td>
+                <td class="text-end fw-bold text-white">${fRp(subPphTpp + res.pph21TKD)}</td>
+            </tr>`;
+        } else {
+            tbodyRiwayat.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-3">Belum ada riwayat pajak.</td></tr>`;
+        }
 
         document.getElementById('desBrutoGaji').innerText = fRp(res.akumulasi.sumBrutoGaji);
         document.getElementById('desBrutoTPP').innerText = fRp(res.akumulasi.sumBrutoTPP);

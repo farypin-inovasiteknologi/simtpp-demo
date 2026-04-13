@@ -1,3 +1,5 @@
+
+
 // =========================================================================
 // 1. KONFIGURASI SUPER MASTER (CUKUP 1 URL UNTUK SELURUH PROVINSI)
 // =========================================================================
@@ -1555,9 +1557,6 @@ function validasiNIP(input) {
                 <td class="text-end fw-bold text-white">${fRp(subPphGaji + res.pphGajiTER)}</td>
                 <td class="text-end fw-bold text-white">${fRp(subPphTpp + res.pph21TKD)}</td>
             </tr>`;
-        } else {
-            tbodyRiwayat.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-3">Belum ada riwayat pajak.</td></tr>`;
-        }
 
         document.getElementById('desBrutoGaji').innerText = fRp(res.akumulasi.sumBrutoGaji);
         document.getElementById('desBrutoTPP').innerText = fRp(res.akumulasi.sumBrutoTPP);
@@ -2653,3 +2652,9 @@ async function prosesImportUpdateExcel() {
         }
     });
 }
+
+
+
+
+
+

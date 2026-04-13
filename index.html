@@ -604,7 +604,7 @@
                           <td id="mKotor_bk">0</td><td id="mKotor_pk">0</td><td id="mKotor_kk">0</td><td id="mKotor_tb">0</td><td id="mKotor_kp">0</td><td id="mKotor_total" class="text-primary">0</td>
                         </tr>
                         <tr class="bg-soft-blue fw-bold">
-                          <td class="text-start">II. Bobot Produktivitas Kerja Dasar (60%)</td>
+                          <td class="text-start">II. Bobot Produktivitas Kerja (60%)</td>
                           <td id="mBpk_bk">0</td><td id="mBpk_pk">0</td><td id="mBpk_kk">0</td><td id="mBpk_tb">0</td><td id="mBpk_kp">0</td><td id="mBpk_total">0</td>
                         </tr>
                         <tr class="text-primary fw-bold">
@@ -1014,44 +1014,41 @@
                   <div class="card border-info h-100 shadow-sm">
                     <div class="card-header bg-info text-white fw-bold py-1 text-center">Umum & Cuti</div>
                     <div class="card-body p-2 bg-white d-flex justify-content-between">
-                     <div><label class="small fw-bold">DL (0%)</label><input type="number" id="vDL" min="0" class="form-control input-absen mx-auto border-info" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div>
-                              <div><label class="small fw-bold">K/P(0%)</label><input type="number" id="vKP" min="0" class="form-control input-absen mx-auto border-info" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div>
-                              <div><label class="small fw-bold">Sakit (3%)</label><input type="number" id="vS" min="0" class="form-control input-absen mx-auto border-info" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div>
-                              <div><label class="small fw-bold">Cuti (3%)</label><input type="number" id="vC" min="0" class="form-control input-absen mx-auto border-info" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div>
+                      <div><label class="small fw-bold">DL (0%)</label><input type="number" id="iDL" min="0" class="form-control input-absen mx-auto border-info" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPPInput();"></div>
+                      <div><label class="small fw-bold">K/P (0%)</label><input type="number" id="iKP" min="0" class="form-control input-absen mx-auto border-info" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPPInput();"></div>
+                      <div><label class="small fw-bold">Sakit (3%)</label><input type="number" id="iS" min="0" class="form-control input-absen mx-auto border-info" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPPInput();"></div>
+                      <div><label class="small fw-bold">Cuti (3%)</label><input type="number" id="iC" min="0" class="form-control input-absen mx-auto border-info" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPPInput();"></div>
                     </div>
                   </div>
                 </div>
                 <div class="col-md-6">
                   <div class="card border-danger h-100 shadow-sm">
-                     <div class="card-header bg-danger text-white fw-bold py-1"><i class="bi bi-exclamation-triangle"></i> Alpa / Tidak Hadir</div>
-                          <div class="card-body p-2 bg-light">
-                            <div class="d-flex justify-content-around text-center">
-                              <div><label class="small fw-bold">TK (3%)</label><input type="number" id="vTK" min="0" class="form-control input-absen mx-auto border-danger" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div>
-                              <div><label class="small fw-bold text-danger">AS/UB (Memotong DK)</label><input type="number" id="vASUB" min="0" class="form-control input-absen mx-auto border-danger" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div>
+                    <div class="card-header bg-danger text-white fw-bold py-1 text-center">Alpa /Tidak Hadir</div>
+                    <div class="card-body p-2 bg-white d-flex justify-content-around">
+                      <div><label class="small fw-bold">TK (3%)</label><input type="number" id="iTK" min="0" class="form-control input-absen mx-auto border-danger" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPPInput();"></div>
+                      <div><label class="small fw-bold text-danger">AS/UB (Memotong DK)</label><input type="number" id="iASUB" min="0" class="form-control input-absen mx-auto border-danger" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPPInput();"></div>
                     </div>
                   </div>
                 </div>
                 <div class="col-md-6">
                   <div class="card border-warning h-100 shadow-sm">
-                    <<div class="card-header bg-warning text-dark fw-bold py-1"><i class="bi bi-clock"></i> Terlambat Datang (TD)</div>
-                          <div class="card-body p-2 bg-light">
-                            <div class="d-flex justify-content-between text-center">
-                              <div><label class="small fw-bold">TD1 (0.5%)</label><input type="number" id="vTL1" min="0" class="form-control input-absen mx-auto border-warning" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div>
-                              <div><label class="small fw-bold">TD2 (1%)</label><input type="number" id="vTL2" min="0" class="form-control input-absen mx-auto border-warning" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div>
-                              <div><label class="small fw-bold">TD3 (1.25%)</label><input type="number" id="vTL3" min="0" class="form-control input-absen mx-auto border-warning" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div>
-                              <div><label class="small fw-bold">TD4 (1.5%)</label><input type="number" id="vTL4" min="0" class="form-control input-absen mx-auto border-warning" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div>
+                    <div class="card-header bg-warning text-dark fw-bold py-1 text-center">Terlambat Datang (TD)</div>
+                    <div class="card-body p-2 bg-white d-flex justify-content-between">
+                      <div><label class="small fw-bold">TD1 (0.5%)</label><input type="number" id="iTL1" min="0" class="form-control input-absen mx-auto border-warning" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPPInput();"></div>
+                      <div><label class="small fw-bold">TD2 (1%)</label><input type="number" id="iTL2" min="0" class="form-control input-absen mx-auto border-warning" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPPInput();"></div>
+                      <div><label class="small fw-bold">TD3 (1.25%)</label><input type="number" id="iTL3" min="0" class="form-control input-absen mx-auto border-warning" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPPInput();"></div>
+                      <div><label class="small fw-bold">TD4 (1.5%)</label><input type="number" id="iTL4" min="0" class="form-control input-absen mx-auto border-warning" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPPInput();"></div>
                     </div>
                   </div>
                 </div>
                 <div class="col-md-6">
                   <div class="card border-success h-100 shadow-sm">
-                     <div class="card-header bg-success text-white fw-bold py-1"><i class="bi bi-box-arrow-right"></i> Cepat Pulang (CP)</div>
-                          <div class="card-body p-2 bg-light">
-                            <div class="d-flex justify-content-between text-center">
-                              <div><label class="small fw-bold">CP1 (0.5%)</label><input type="number" id="vCP1" min="0" class="form-control input-absen mx-auto border-success" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div>
-                              <div><label class="small fw-bold">CP2 (1%)</label><input type="number" id="vCP2" min="0" class="form-control input-absen mx-auto border-success" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div>
-                              <div><label class="small fw-bold">CP3 (1.25%)</label><input type="number" id="vCP3" min="0" class="form-control input-absen mx-auto border-success" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div>
-                              <div><label class="small fw-bold">CP4 (1.55%)</label><input type="number" id="vCP4" min="0" class="form-control input-absen mx-auto border-success" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPP()"></div>
+                    <div class="card-header bg-success text-white fw-bold py-1 text-center">Cepat Pulang (CP)</div>
+                    <div class="card-body p-2 bg-white d-flex justify-content-between">
+                      <div><label class="small fw-bold">CP1 (0.5%)</label><input type="number" id="iCP1" min="0" class="form-control input-absen mx-auto border-success" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPPInput();"></div>
+                      <div><label class="small fw-bold">CP2 (1%)</label><input type="number" id="iCP2" min="0" class="form-control input-absen mx-auto border-success" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPPInput();"></div>
+                      <div><label class="small fw-bold">CP3 (1.25%)</label><input type="number" id="iCP3" min="0" class="form-control input-absen mx-auto border-success" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPPInput();"></div>
+                      <div><label class="small fw-bold">CP4 (1.55%)</label><input type="number" id="iCP4" min="0" class="form-control input-absen mx-auto border-success" value="0" oninput="if(this.value<0)this.value=0; hitungMatriksTPPInput();"></div>
                     </div>
                   </div>
                 </div>

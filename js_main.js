@@ -954,7 +954,7 @@ if(selRef) {
                   <td onclick="${openPanel}"><div class="clamp-unit">${unit}</div></td>
                   <td onclick="${openPanel}">${jab}</td>
                   <td onclick="${openPanel}">${rek}</td>
-                  <td class="text-center no-click d-flex justify-content-center">${btnDetail}${btnGaji}${btnAbsen}${btnDel}</td>
+                  <td class="text-center no-click text-nowrap">${btnDetail}${btnGaji}${btnAbsen}${btnDel}</td>
                </tr>`;
     });
     
@@ -1872,13 +1872,24 @@ function muatNominatif() {
   // ========================================================
 // FUNGSI BARU: POPUP INPUT ABSEN & SUBMIT (MENU PENSIL)
 // ========================================================
+
+function ubahPolaHKInput() { 
+    let pola = document.getElementById('iPolaHK').value; 
+    document.getElementById('iHariKerja').value = (pola === "5") ? globalHariKerja : globalHariKerja6; 
+    hitungMatriksTPPInput(); 
+}
+
+
 async function bukaModalInputAbsen(nip, nama, skpMaster) {
     asNIPAktif = nip;
     document.getElementById('lblInputAbsenNama').innerText = nama;
     document.getElementById('lblInputAbsenNip').innerText = nip;
     document.getElementById('lblInputAbsenBulan').innerText = globalBulanAktif;
     
-    // Clear form
+    // Set default HK
+    document.getElementById('iPolaHK').value = "5";
+    document.getElementById('iHariKerja').value = globalHariKerja;
+
     ['iDL','iS','iC','iKP','iTL1','iTL2','iTL3','iTL4','iCP1','iCP2','iCP3','iCP4','iTK','iASUB'].forEach(id => {
         let el = document.getElementById(id);
         if(el) el.value = "0";
@@ -1889,7 +1900,6 @@ async function bukaModalInputAbsen(nip, nama, skpMaster) {
     let modalObj = new bootstrap.Modal(document.getElementById('modalInputAbsen'));
     modalObj.show();
 
-    // Tarik data Absen yang sudah ada (jika pernah input)
     let cacheKey = nip + "_" + globalBulanAktif;
     let res;
     if (window.cacheDetailPegawai && window.cacheDetailPegawai[cacheKey]) {
@@ -1904,11 +1914,14 @@ async function bukaModalInputAbsen(nip, nama, skpMaster) {
         }
     }
 
-    if(res && res.pergub) {
-        baseTPP = res.pergub; // Set pagu TPP agar bisa dihitung
-    }
+    if(res && res.pergub) baseTPP = res.pergub;
 
     if(res && res.absen) {
+        // Tarik data Hari Kerja dari Database
+        let hkDb = parseInt(res.absen[3]); 
+        document.getElementById('iPolaHK').value = (hkDb === globalHariKerja6) ? "6" : "5";
+        document.getElementById('iHariKerja').value = hkDb;
+
         let skpRaw = String(res.absen[4] || "Baik|Menilai"); 
         let skpParts = skpRaw.split("|"); 
         document.getElementById('iSKP').value = skpParts[0] || "Baik"; 
@@ -1921,19 +1934,27 @@ async function bukaModalInputAbsen(nip, nama, skpMaster) {
         setI('iTK', res.absen[17]); setI('iASUB', res.absen[18]); 
     }
 
-    // Panggil perhitungan awal saat modal dibuka
     hitungMatriksTPPInput();
 }
 
-// 👇 FUNGSI BARU: Mesin Hitung Khusus untuk Popup Input Absen 👇
 function hitungMatriksTPPInput() {
     if(!baseTPP || typeof baseTPP.bk === 'undefined') return; 
     const fR = (val) => Math.round(val).toLocaleString('id-ID'); 
     const getV = (id) => parseFloat(document.getElementById(id).value) || 0;
     
+    // 👇 LOGIKA BARU: Kalkulasi Hadir & KTH 👇
+    let hk = parseInt(document.getElementById('iHariKerja').value) || 0; 
+    let totalTidakMasuk = getV('iDL') + getV('iS') + getV('iC') + getV('iKP') + getV('iTK'); 
+    let totalMasuk = hk - totalTidakMasuk; 
+    if(totalMasuk < 0) totalMasuk = 0; 
+    
+    if(document.getElementById('iTxtHariTidakMasuk')) document.getElementById('iTxtHariTidakMasuk').innerText = totalTidakMasuk + " Hari"; 
+    if(document.getElementById('iTxtHariMasuk')) document.getElementById('iTxtHariMasuk').innerText = totalMasuk + " Hari";
+
     let pctAbsPK = (getV('iS')*0.03) + (getV('iC')*0.03) + (getV('iTK')*0.03) + (getV('iTL1')*0.005) + (getV('iTL2')*0.01) + (getV('iTL3')*0.0125) + (getV('iTL4')*0.015) + (getV('iCP1')*0.005) + (getV('iCP2')*0.01) + (getV('iCP3')*0.0125) + (getV('iCP4')*0.0155);
     if(pctAbsPK > 1) pctAbsPK = 1; 
     
+    // ... (Sisa kode ke bawahnya sama percis seperti sebelumnya) ...
     let asubV = getV('iASUB'); 
     let pctASUB = (asubV < 28) ? (asubV * 0.02) : 1.0; 
     if (asubV === 0) pctASUB = 0; 
@@ -1992,9 +2013,8 @@ async function submitFormInputAbsen(e) {
     let statusMenilai = document.getElementById('iTidakMenilai').checked ? "Tidak Menilai" : "Menilai";
     let gabunganSKP = document.getElementById('iSKP').value + "|" + statusMenilai;
     
-    // Ambil Hari Kerja dari Master Periode
-    let objPer = arrayPeriode.find(x => x.namaPeriode === globalBulanAktif); 
-    let hkDB = objPer ? objPer.hariKerja : 22; 
+    // 👇 LOGIKA BARU: Ambil HK dari layar, bukan dari master periode 👇
+    let hkDB = document.getElementById('iHariKerja').value;
 
     const d = { 
         nip: asNIPAktif, 
@@ -2013,12 +2033,11 @@ async function submitFormInputAbsen(e) {
         alertError(res.pesan); 
     } else { 
         alertSukses(res.pesan);
-        // Hapus cache agar saat klik tombol Detail, data yang muncul adalah yang terbaru
         if(window.cacheDetailPegawai) delete window.cacheDetailPegawai[asNIPAktif + "_" + globalBulanAktif];
-        
         bootstrap.Modal.getInstance(document.getElementById('modalInputAbsen')).hide();
     }
 }
+
 
   async function unduhTemplateExcel() {
       try {

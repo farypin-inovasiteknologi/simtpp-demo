@@ -1590,8 +1590,8 @@ async function hitungPajakTahunan() {
         
         // Gunakan InnerHTML untuk menyisipkan dua baris ke desPKP
         document.getElementById('desPKP').innerHTML = `
-            <div class="text-muted small" style="font-weight:normal;">Asli: ${fRp(pkpMurni)}</div>
-            <div class="fw-bold">Bulat: ${fRp(res.akumulasi.pkpReal)}</div>
+            <div class="text-muted small" style="font-weight:normal;">: ${fRp(pkpMurni)}</div>
+            <div class="fw-bold">Pembulatan: ${fRp(res.akumulasi.pkpReal)}</div>
         `;
 
         let sPkpReal = res.akumulasi.pkpReal; 
@@ -1617,7 +1617,7 @@ async function hitungPajakTahunan() {
 
         rincianHTML += `
             <tr class="fw-bold border-top"><td width="65%" class="pt-2">Total PPh 21 Terutang Setahun</td><td id="desPajakSetahun" class="text-end text-primary fs-6 pt-2">${fRp(pajakSetahunTampilan)}</td></tr>
-            <tr class="text-success mt-1"><td>(-) PPh 21 Sdh Disetor (Jan-Nov)</td><td id="desPajakDibayar" class="text-end fw-bold">- ${fRp(res.akumulasi.pajakSudahDibayarJanNov)}</td></tr>
+            <tr class="text-success mt-1"><td>(-) PPh 21 TPP&Gaji Sdh Disetor (Jan-Nov)</td><td id="desPajakDibayar" class="text-end fw-bold">- ${fRp(res.akumulasi.pajakSudahDibayarJanNov)}</td></tr>
             <tr class="text-danger border-bottom"><td>(-) PPh 21 Gaji Bulan Desember</td><td id="desPphGajiDes" class="text-end fw-bold">- ${fRp(res.pphGajiTER)}</td></tr>
         `;
 

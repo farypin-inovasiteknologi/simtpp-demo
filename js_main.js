@@ -4,7 +4,7 @@
 // 1. KONFIGURASI SUPER MASTER (CUKUP 1 URL UNTUK SELURUH PROVINSI)
 // =========================================================================
 // Masukkan URL hasil Deploy Super Master Anda di sini:
-const API_URL = "https://script.google.com/macros/s/AKfycbxB9FsN4pQyYenPleD-iu7Tp0G5x_vfBuip9lXJGxAXBMPcYJ4inJMypfOnkAdDB3mS/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbzka_OP9MYmYvjHn4cVBdlf-FQd1IstIQ_hEDYs_UD7G8Dqv0S2clo43AprWRZoMAyKlQ/exec"; 
 
 let listOPD = []; // Dikosongkan, karena akan ditarik otomatis dari Super Master
 
@@ -917,7 +917,6 @@ if(selRef) {
     let paginatedData = data.slice(start, end); 
     let html = "";
 
-    // 👇 Cek apakah user adalah Operator atau Admin Sub Unit
     let isRestrictedRole = (currentUser.role === "Operator" || currentUser.role === "Admin Sub Unit/UPTD");
 
     paginatedData.forEach(row => {
@@ -928,16 +927,24 @@ if(selRef) {
       let args = `'${nip}', '${nama}', '${tglLahir}', '${gol}', '${unorInduk}', '${unit}', '${jab}', '${jenis}', '${stat}', ${gapok}, ${tjJab}, '${rek}', '${skp}', '${uuid}'`; 
       let openPanel = `bukaPanel('${nip}', '${nama}', '${gol}', '${jab}', '${stat}', '${unit}')`; 
       
-      let btnEdit = globalStatusLock === "Kunci" ? `<button class="btn btn-sm btn-secondary me-1" onclick="alertPeringatan('Periode ini sudah dikunci Admin!')"><i class="bi bi-lock"></i></button>` : `<button class="btn btn-sm btn-primary me-1" onclick="bukaModalPegawai('edit', ${args})">Edit</button>`; 
-      
-      // 👇 LOGIKA BARU: Tombol Hapus Diubah Jadi Gembok Abu-Abu untuk Role Terbatas 👇
+      let btnDetail = `<button class="btn btn-sm btn-info text-white me-1 fw-bold" onclick="${openPanel}"><i class="bi bi-eye"></i> Detail</button>`;
+      let btnGaji = "";
+      let btnAbsen = "";
       let btnDel = "";
+
       if (globalStatusLock === "Kunci") {
-          btnDel = `<button class="btn btn-sm btn-secondary" onclick="alertPeringatan('Periode ini sudah dikunci Admin!')"><i class="bi bi-lock"></i></button>`;
-      } else if (isRestrictedRole) {
-          btnDel = `<button class="btn btn-sm btn-secondary" onclick="alertPeringatan('Akses Ditolak: Hanya Admin OPD (Dinas) yang berhak menghapus pegawai.')" title="Dilarang Menghapus"><i class="bi bi-trash"></i></button>`;
+          btnGaji = `<button class="btn btn-sm btn-secondary me-1" onclick="alertPeringatan('Terkunci Admin!')"><i class="bi bi-lock"></i></button>`;
+          btnAbsen = `<button class="btn btn-sm btn-secondary me-1" onclick="alertPeringatan('Terkunci Admin!')"><i class="bi bi-lock"></i></button>`;
+          btnDel = `<button class="btn btn-sm btn-secondary" onclick="alertPeringatan('Terkunci Admin!')"><i class="bi bi-lock"></i></button>`;
       } else {
-          btnDel = `<button class="btn btn-sm btn-danger" onclick="hapusPegawai('${nip}', '${nama}', '${uuid}')">Del</button>`;
+          btnGaji = `<button class="btn btn-sm btn-primary me-1 fw-bold" onclick="bukaModalPegawai('edit', ${args})"><i class="bi bi-pencil-square"></i> Gaji</button>`;
+          btnAbsen = `<button class="btn btn-sm btn-warning me-1 text-dark fw-bold" onclick="bukaModalInputAbsen('${nip}', '${nama}', '${skp}')"><i class="bi bi-pencil-fill"></i> Absen</button>`;
+          
+          if (isRestrictedRole) {
+              btnDel = `<button class="btn btn-sm btn-secondary" onclick="alertPeringatan('Akses Ditolak: Hanya Admin OPD yang dapat menghapus.')" title="Dilarang"><i class="bi bi-trash"></i></button>`;
+          } else {
+              btnDel = `<button class="btn btn-sm btn-danger" onclick="hapusPegawai('${nip}', '${nama}', '${uuid}')" title="Hapus"><i class="bi bi-trash"></i></button>`;
+          }
       }
       
       html += `<tr class="clickable">
@@ -947,7 +954,7 @@ if(selRef) {
                   <td onclick="${openPanel}"><div class="clamp-unit">${unit}</div></td>
                   <td onclick="${openPanel}">${jab}</td>
                   <td onclick="${openPanel}">${rek}</td>
-                  <td class="text-center no-click"><button class="btn btn-sm btn-info text-white me-1" onclick="${openPanel}">Buka</button>${btnEdit}${btnDel}</td>
+                  <td class="text-center no-click d-flex justify-content-center">${btnDetail}${btnGaji}${btnAbsen}${btnDel}</td>
                </tr>`;
     });
     
@@ -1254,7 +1261,6 @@ function validasiNIP(input) {
     objNominatifSetahun = null;
     
     let objPer = arrayPeriode.find(x => x.namaPeriode === globalBulanAktif); 
- 
     globalJenisPeriode = objPer ? (objPer.jenisPeriode || "Reguler") : "Reguler";
     
     document.getElementById('labelNamaASN').innerText = nama; 
@@ -1271,41 +1277,37 @@ function validasiNIP(input) {
     let elUnit = document.getElementById('labelUnitKerjaASN'); 
     if(elUnit) elUnit.innerText = "Unit: " + (unitKerja || "");
     
-    //  TIDAK DI PAKAI ---document.getElementById('formGaji').reset(); 
-    document.getElementById('formAbsen').reset(); 
+    // 👇 PEMBERSIHAN KILAT (ANTI-LAG & ANTI DATA NYANGKUT)
+    ['vDL','vS','vC','vKP','vTL1','vTL2','vTL3','vTL4','vCP1','vCP2','vCP3','vCP4','vTK','vASUB'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = "0"; }); 
+    if(document.getElementById('inpSKP')) document.getElementById('inpSKP').value = "Loading...";
+    if(document.getElementById('chkTidakMenilai')) document.getElementById('chkTidakMenilai').checked = false;
+    ['mKotor_total', 'mHasil_total'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).innerText = "Loading..."; });
+    
     document.getElementById('inpBulan').value = globalBulanAktif;  
     document.getElementById('inpHariKerja').value = globalHariKerja; 
     
-    // HAPUS CLASS HIDDEN AGAR ISINYA TERLIHAT
     document.getElementById('viewManajemenASN').classList.remove('hidden');
 
-    // MUNCULKAN PANEL SEBAGAI POPUP MODAL RAKSASA
     let myModal = bootstrap.Modal.getInstance(document.getElementById('modalPopupASN')) || new bootstrap.Modal(document.getElementById('modalPopupASN'));
     myModal.show();
     
-    // 👇 IMPLEMENTASI CACHE PINTAR 👇
     window.cacheDetailPegawai = window.cacheDetailPegawai || {};
-
     let cacheKey = nip + "_" + globalBulanAktif;
     let res;
 
     if (window.cacheDetailPegawai[cacheKey]) {
-        // Data sudah ada di memori! Tarik instan tanpa loading ke server
         res = window.cacheDetailPegawai[cacheKey];
     } else {
-        // Data belum ada, tarik dari server (Loading 5 detik)
-        startLoading("Menarik Riwayat Gaji & Absen...");
+        startLoading("Menarik Laporan TPP...");
         await new Promise(resolve => setTimeout(resolve, 50));
-        
         res = await fetchAPI("getDetailASN", {nip: nip, bulan: globalBulanAktif});
         stopLoading();
         
         if (res && !res.error) {
-            window.cacheDetailPegawai[cacheKey] = res; // Simpan ke memori agar besok gak loading lagi
+            window.cacheDetailPegawai[cacheKey] = res; 
         }
     }
 
-    // --- Sisa kodenya sama persis ---
     if(res && !res.error) { 
       isGajiTersimpan = (res.gaji) ? true : false; 
       isAbsenTersimpan = (res.absen) ? true : false; 
@@ -1316,12 +1318,6 @@ function validasiNIP(input) {
       if(res.pegawaiInfo) { 
         document.getElementById('aGapok').value = formatRupiah(res.pegawaiInfo.gapok || 0); 
         document.getElementById('aTjJab').value = formatRupiah(res.pegawaiInfo.tjJab || 0); 
-        
-        if(res.pegawaiInfo.skpBulanan && res.pegawaiInfo.skpBulanan !== "") {
-          document.getElementById('inpSKP').value = res.pegawaiInfo.skpBulanan;
-        } else {
-          document.getElementById('inpSKP').value = "Baik"; 
-        }
       } 
         
       const setV = (id, val) => { 
@@ -1339,7 +1335,6 @@ function validasiNIP(input) {
       
       hitungAmprah(); 
       
-      // 👇 PERUBAHAN 4: Simpan Gaji Diam-Diam di Belakang Layar 👇
       if (globalStatusLock !== "Kunci") {
           simpanGajiSiluman(); 
       } else {
@@ -1348,37 +1343,23 @@ function validasiNIP(input) {
       
       if(res.absen) { 
         let hkDb = parseInt(res.absen[3]); 
-        if(hkDb === globalHariKerja6) { document.getElementById('inpPolaHK').value = "6"; } 
-        else { document.getElementById('inpPolaHK').value = "5"; } 
-      } else { 
-        document.getElementById('inpPolaHK').value = "5"; 
-      } 
-      ubahPolaHK(); 
-      
-      let btnGaji = document.getElementById('btnSimpanGaji'); 
-      let btnTPP = document.getElementById('btnSimpanTPP'); 
-      
-      if (globalStatusLock === "Kunci") { 
-        if(btnGaji) { btnGaji.disabled = true; btnGaji.innerHTML = "<i class='bi bi-lock'></i> TERKUNCI"; btnGaji.classList.replace('btn-primary', 'btn-secondary'); }
-        if(btnTPP) { btnTPP.disabled = true; btnTPP.innerHTML = "<i class='bi bi-lock'></i> TERKUNCI"; btnTPP.classList.replace('btn-primary', 'btn-secondary'); }
-      } else { 
-        if(btnGaji) { btnGaji.disabled = false; btnGaji.innerHTML = "<i class='bi bi-save'></i> SIMPAN AMPRAH GAJI"; btnGaji.classList.replace('btn-secondary', 'btn-primary'); }
-        if(btnTPP) { btnTPP.disabled = false; btnTPP.innerHTML = "<i class='bi bi-save'></i> SIMPAN PERHITUNGAN TPP"; btnTPP.classList.replace('btn-secondary', 'btn-primary'); }
-      }
-      
-      if(res.absen) { 
+        document.getElementById('inpPolaHK').value = hkDb === globalHariKerja6 ? "6 Hari Kerja / Minggu" : "5 Hari Kerja / Minggu"; 
+        
         let skpRaw = String(res.absen[4] || "Baik|Menilai"); 
         let skpParts = skpRaw.split("|"); 
         
-        if (!res.pegawaiInfo || !res.pegawaiInfo.skpBulanan || res.pegawaiInfo.skpBulanan === "") {
-             document.getElementById('inpSKP').value = skpParts[0] || "Baik"; 
-        }
-        
+        document.getElementById('inpSKP').value = skpParts[0] || "Baik"; 
         document.getElementById('chkTidakMenilai').checked = (skpParts[1] === "Tidak Menilai"); 
-        setV('vDL', res.absen[5]); setV('vS', res.absen[6]); setV('vC', res.absen[7]); setV('vKP', res.absen[8]); setV('vTL1', res.absen[9]); setV('vTL2', res.absen[10]); setV('vTL3', res.absen[11]); setV('vTL4', res.absen[12]); setV('vCP1', res.absen[13]); setV('vCP2', res.absen[14]); setV('vCP3', res.absen[15]); setV('vCP4', res.absen[16]); setV('vTK', res.absen[17]); setV('vASUB', res.absen[18]); 
+        
+        setV('vDL', res.absen[5]); setV('vS', res.absen[6]); setV('vC', res.absen[7]); setV('vKP', res.absen[8]); 
+        setV('vTL1', res.absen[9]); setV('vTL2', res.absen[10]); setV('vTL3', res.absen[11]); setV('vTL4', res.absen[12]); 
+        setV('vCP1', res.absen[13]); setV('vCP2', res.absen[14]); setV('vCP3', res.absen[15]); setV('vCP4', res.absen[16]); 
+        setV('vTK', res.absen[17]); setV('vASUB', res.absen[18]); 
       } else { 
+        document.getElementById('inpPolaHK').value = "5 Hari Kerja / Minggu"; 
+        document.getElementById('inpSKP').value = "BELUM DINILAI / KOSONG"; 
         document.getElementById('chkTidakMenilai').checked = false; 
-        ['vDL','vS','vC','vKP','vTL1','vTL2','vTL3','vTL4','vCP1','vCP2','vCP3','vCP4','vTK','vASUB'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = 0; }); 
+        ['vDL','vS','vC','vKP','vTL1','vTL2','vTL3','vTL4','vCP1','vCP2','vCP3','vCP4','vTK','vASUB'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = "0"; }); 
       } 
       
       hitungMatriksTPP();
@@ -1886,6 +1867,158 @@ function muatNominatif() {
     let modalObj = bootstrap.Modal.getInstance(document.getElementById('modalImportExcel')) || new bootstrap.Modal(document.getElementById('modalImportExcel'));
     modalObj.show(); 
   }
+
+
+  // ========================================================
+// FUNGSI BARU: POPUP INPUT ABSEN & SUBMIT (MENU PENSIL)
+// ========================================================
+async function bukaModalInputAbsen(nip, nama, skpMaster) {
+    asNIPAktif = nip;
+    document.getElementById('lblInputAbsenNama').innerText = nama;
+    document.getElementById('lblInputAbsenNip').innerText = nip;
+    document.getElementById('lblInputAbsenBulan').innerText = globalBulanAktif;
+    
+    // Clear form
+    ['iDL','iS','iC','iKP','iTL1','iTL2','iTL3','iTL4','iCP1','iCP2','iCP3','iCP4','iTK','iASUB'].forEach(id => {
+        let el = document.getElementById(id);
+        if(el) el.value = "0";
+    });
+    document.getElementById('iSKP').value = skpMaster || "Baik";
+    document.getElementById('iTidakMenilai').checked = false;
+
+    let modalObj = new bootstrap.Modal(document.getElementById('modalInputAbsen'));
+    modalObj.show();
+
+    // Tarik data Absen yang sudah ada (jika pernah input)
+    let cacheKey = nip + "_" + globalBulanAktif;
+    let res;
+    if (window.cacheDetailPegawai && window.cacheDetailPegawai[cacheKey]) {
+        res = window.cacheDetailPegawai[cacheKey];
+    } else {
+        startLoading("Memeriksa data...");
+        res = await fetchAPI("getDetailASN", {nip: nip, bulan: globalBulanAktif});
+        stopLoading();
+        if (res && !res.error) {
+            window.cacheDetailPegawai = window.cacheDetailPegawai || {};
+            window.cacheDetailPegawai[cacheKey] = res;
+        }
+    }
+
+    if(res && res.pergub) {
+        baseTPP = res.pergub; // Set pagu TPP agar bisa dihitung
+    }
+
+    if(res && res.absen) {
+        let skpRaw = String(res.absen[4] || "Baik|Menilai"); 
+        let skpParts = skpRaw.split("|"); 
+        document.getElementById('iSKP').value = skpParts[0] || "Baik"; 
+        document.getElementById('iTidakMenilai').checked = (skpParts[1] === "Tidak Menilai"); 
+
+        const setI = (id, val) => { let el = document.getElementById(id); if(el) el.value = val || 0; };
+        setI('iDL', res.absen[5]); setI('iS', res.absen[6]); setI('iC', res.absen[7]); setI('iKP', res.absen[8]); 
+        setI('iTL1', res.absen[9]); setI('iTL2', res.absen[10]); setI('iTL3', res.absen[11]); setI('iTL4', res.absen[12]); 
+        setI('iCP1', res.absen[13]); setI('iCP2', res.absen[14]); setI('iCP3', res.absen[15]); setI('iCP4', res.absen[16]); 
+        setI('iTK', res.absen[17]); setI('iASUB', res.absen[18]); 
+    }
+
+    // Panggil perhitungan awal saat modal dibuka
+    hitungMatriksTPPInput();
+}
+
+// 👇 FUNGSI BARU: Mesin Hitung Khusus untuk Popup Input Absen 👇
+function hitungMatriksTPPInput() {
+    if(!baseTPP || typeof baseTPP.bk === 'undefined') return; 
+    const fR = (val) => Math.round(val).toLocaleString('id-ID'); 
+    const getV = (id) => parseFloat(document.getElementById(id).value) || 0;
+    
+    let pctAbsPK = (getV('iS')*0.03) + (getV('iC')*0.03) + (getV('iTK')*0.03) + (getV('iTL1')*0.005) + (getV('iTL2')*0.01) + (getV('iTL3')*0.0125) + (getV('iTL4')*0.015) + (getV('iCP1')*0.005) + (getV('iCP2')*0.01) + (getV('iCP3')*0.0125) + (getV('iCP4')*0.0155);
+    if(pctAbsPK > 1) pctAbsPK = 1; 
+    
+    let asubV = getV('iASUB'); 
+    let pctASUB = (asubV < 28) ? (asubV * 0.02) : 1.0; 
+    if (asubV === 0) pctASUB = 0; 
+    let pctAbsDK = pctAbsPK + pctASUB; 
+    if(pctAbsDK > 1) pctAbsDK = 1;
+    
+    let skp = document.getElementById('iSKP').value; 
+    let isChecked = document.getElementById('iTidakMenilai').checked; 
+    let bobotSKP = 100; 
+    if(skp === "Sangat Baik" || skp === "Baik") bobotSKP = 100; 
+    else if(skp === "Cukup") bobotSKP = 90; 
+    else if(skp === "Kurang") bobotSKP = 75; 
+    else if(skp === "Sangat Kurang") bobotSKP = 50; 
+    else if(skp === "Tidak Buat") bobotSKP = 40; 
+    
+    if (isChecked) bobotSKP -= 5; 
+    let rasioSKP = bobotSKP / 100; 
+    
+    document.getElementById('iTxtSkp').innerText = bobotSKP + "%"; 
+    document.getElementById('iTxtAbsPk').innerText = (pctAbsPK*100).toFixed(2) + "%"; 
+    document.getElementById('iTxtAbsDk').innerText = (pctAbsDK*100).toFixed(2) + "%";
+    
+    const keys = ['bk', 'pk', 'kk', 'tb', 'kp', 'total'];
+    keys.forEach(k => { 
+      let kotor = baseTPP[k] || 0; 
+      let bPK = kotor * 0.60; 
+      let nSKP = bPK * rasioSKP; 
+      let pAbsPK = nSKP * pctAbsPK; 
+      let akhPK = nSKP - pAbsPK; 
+      let bDK = kotor * 0.40; 
+      let pAbsDK = bDK * pctAbsDK; 
+      let akhDK = bDK - pAbsDK; 
+      let totKotor = kotor; 
+      let totPot = pAbsPK + pAbsDK; 
+      let hasilAkhir = akhPK + akhDK; 
+      
+      if(document.getElementById('iKotor_'+k)) document.getElementById('iKotor_'+k).innerText = fR(kotor); 
+      if(document.getElementById('iBpk_'+k)) document.getElementById('iBpk_'+k).innerText = fR(bPK); 
+      if(document.getElementById('iNskp_'+k)) document.getElementById('iNskp_'+k).innerText = fR(nSKP); 
+      if(document.getElementById('iPabspk_'+k)) document.getElementById('iPabspk_'+k).innerText = fR(pAbsPK); 
+      if(document.getElementById('iAkhpk_'+k)) document.getElementById('iAkhpk_'+k).innerText = fR(akhPK); 
+      if(document.getElementById('iBdk_'+k)) document.getElementById('iBdk_'+k).innerText = fR(bDK); 
+      if(document.getElementById('iPabsdk_'+k)) document.getElementById('iPabsdk_'+k).innerText = fR(pAbsDK); 
+      if(document.getElementById('iAkhdk_'+k)) document.getElementById('iAkhdk_'+k).innerText = fR(akhDK); 
+      if(document.getElementById('iTotPot_'+k)) document.getElementById('iTotPot_'+k).innerText = fR(totPot); 
+      if(document.getElementById('iHasil_'+k)) document.getElementById('iHasil_'+k).innerText = fR(hasilAkhir); 
+    });
+}
+
+async function submitFormInputAbsen(e) {
+    e.preventDefault();
+    const getV = (id) => parseInt(document.getElementById(id).value) || 0;
+    
+    startLoading("Menyimpan Kehadiran...");
+    
+    let statusMenilai = document.getElementById('iTidakMenilai').checked ? "Tidak Menilai" : "Menilai";
+    let gabunganSKP = document.getElementById('iSKP').value + "|" + statusMenilai;
+    
+    // Ambil Hari Kerja dari Master Periode
+    let objPer = arrayPeriode.find(x => x.namaPeriode === globalBulanAktif); 
+    let hkDB = objPer ? objPer.hariKerja : 22; 
+
+    const d = { 
+        nip: asNIPAktif, 
+        bulan: globalBulanAktif, 
+        hariKerja: hkDB, 
+        skp: gabunganSKP, 
+        dl: getV('iDL'), s: getV('iS'), c: getV('iC'), kp: getV('iKP'), tk: getV('iTK'), asub: getV('iASUB'), 
+        tl1: getV('iTL1'), tl2: getV('iTL2'), tl3: getV('iTL3'), tl4: getV('iTL4'), 
+        cp1: getV('iCP1'), cp2: getV('iCP2'), cp3: getV('iCP3'), cp4: getV('iCP4') 
+    };
+    
+    let res = await fetchAPI("simpanPerhitunganTPP", d); 
+    stopLoading(); 
+    
+    if(res && res.status === "error") { 
+        alertError(res.pesan); 
+    } else { 
+        alertSukses(res.pesan);
+        // Hapus cache agar saat klik tombol Detail, data yang muncul adalah yang terbaru
+        if(window.cacheDetailPegawai) delete window.cacheDetailPegawai[asNIPAktif + "_" + globalBulanAktif];
+        
+        bootstrap.Modal.getInstance(document.getElementById('modalInputAbsen')).hide();
+    }
+}
 
   async function unduhTemplateExcel() {
       try {

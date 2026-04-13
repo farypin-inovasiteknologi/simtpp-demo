@@ -1293,7 +1293,6 @@ function validasiNIP(input) {
   if(document.getElementById('chkTidakMenilai')) document.getElementById('chkTidakMenilai').checked = false;
   ['mKotor_total', 'mHasil_total'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).innerText = "Loading..."; });
   
-  // 👇 BUG FIX: Pengecekan elemen agar tidak crash (TypeError: Cannot read properties of null)
   if (document.getElementById('inpBulan')) document.getElementById('inpBulan').value = globalBulanAktif;  
   if (document.getElementById('inpHariKerja')) document.getElementById('inpHariKerja').value = globalHariKerja; 
   
@@ -1327,8 +1326,8 @@ function validasiNIP(input) {
     if(res.pergub) { baseTPP = res.pergub; } 
     
     if(res.pegawaiInfo) { 
-      document.getElementById('aGapok').value = formatRupiah(res.pegawaiInfo.gapok || 0); 
-      document.getElementById('aTjJab').value = formatRupiah(res.pegawaiInfo.tjJab || 0); 
+      if(document.getElementById('aGapok')) document.getElementById('aGapok').value = formatRupiah(res.pegawaiInfo.gapok || 0); 
+      if(document.getElementById('aTjJab')) document.getElementById('aTjJab').value = formatRupiah(res.pegawaiInfo.tjJab || 0); 
     } 
       
     const setV = (id, val) => { 
@@ -1352,24 +1351,27 @@ function validasiNIP(input) {
         isGajiTersimpan = true; 
     }
     
+    // 👇 BUG FIX: Penanganan elemen yang dihapus agar skrip tidak crash 👇
     if(res.absen) { 
       let hkDb = parseInt(res.absen[3]); 
-      document.getElementById('inpPolaHK').value = hkDb === globalHariKerja6 ? "6 Hari Kerja / Minggu" : "5 Hari Kerja / Minggu"; 
+      
+      if(document.getElementById('inpHariKerja')) document.getElementById('inpHariKerja').value = hkDb;
+      if(document.getElementById('inpPolaHK')) document.getElementById('inpPolaHK').value = hkDb === globalHariKerja6 ? "6 Hari Kerja / Minggu" : "5 Hari Kerja / Minggu"; 
       
       let skpRaw = String(res.absen[4] || "Baik|Menilai"); 
       let skpParts = skpRaw.split("|"); 
       
-      document.getElementById('inpSKP').value = skpParts[0] || "Baik"; 
-      document.getElementById('chkTidakMenilai').checked = (skpParts[1] === "Tidak Menilai"); 
+      if(document.getElementById('inpSKP')) document.getElementById('inpSKP').value = skpParts[0] || "Baik"; 
+      if(document.getElementById('chkTidakMenilai')) document.getElementById('chkTidakMenilai').checked = (skpParts[1] === "Tidak Menilai"); 
       
       setV('vDL', res.absen[5]); setV('vS', res.absen[6]); setV('vC', res.absen[7]); setV('vKP', res.absen[8]); 
       setV('vTL1', res.absen[9]); setV('vTL2', res.absen[10]); setV('vTL3', res.absen[11]); setV('vTL4', res.absen[12]); 
       setV('vCP1', res.absen[13]); setV('vCP2', res.absen[14]); setV('vCP3', res.absen[15]); setV('vCP4', res.absen[16]); 
       setV('vTK', res.absen[17]); setV('vASUB', res.absen[18]); 
     } else { 
-      document.getElementById('inpPolaHK').value = "5 Hari Kerja / Minggu"; 
-      document.getElementById('inpSKP').value = "BELUM DINILAI / KOSONG"; 
-      document.getElementById('chkTidakMenilai').checked = false; 
+      if(document.getElementById('inpPolaHK')) document.getElementById('inpPolaHK').value = "5 Hari Kerja / Minggu"; 
+      if(document.getElementById('inpSKP')) document.getElementById('inpSKP').value = "BELUM DINILAI / KOSONG"; 
+      if(document.getElementById('chkTidakMenilai')) document.getElementById('chkTidakMenilai').checked = false; 
       ['vDL','vS','vC','vKP','vTL1','vTL2','vTL3','vTL4','vCP1','vCP2','vCP3','vCP4','vTK','vASUB'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = "0"; }); 
     } 
     

@@ -746,21 +746,30 @@ if(selRef) {
   let globalDataPegawai = []; let currentPage = 1; let rowsPerPage = 15; 
 
   async function muatDataPegawai(forceRefresh = false) {
+    // 👇 LOGIKA FLEKSIBEL: Atur jumlah kolom berdasarkan Role
+    let boxCari = document.getElementById('boxCari');
+    let boxGol = document.getElementById('boxGol');
+    let boxSubUnit = document.getElementById('boxSubUnit');
+    let boxUnit = document.getElementById('boxUnit');
+    
+    if (currentUser.role === "Super Admin" || currentUser.role === "Admin OPD") {
+        boxSubUnit.classList.remove('hidden');
+        boxCari.className = "col-md-3 mb-1";
+        boxGol.className = "col-md-3 mb-1";
+        boxUnit.className = "col-md-3 mb-1";
+    } else {
+        boxSubUnit.classList.add('hidden');
+        boxCari.className = "col-md-4 mb-1";
+        boxGol.className = "col-md-4 mb-1";
+        boxUnit.className = "col-md-4 mb-1";
+    }
+
     if (!forceRefresh && window.cacheDataPegawaiAll && window.cacheDataPegawaiBulan === globalBulanAktif) {
         globalDataPegawai = window.cacheDataPegawaiAll.filter(p => String(p[14] || "PNS").toUpperCase() === globalJenisASN);
-        
-        let unitList = [...new Set(globalDataPegawai.map(item => item[5]).filter(Boolean))]; 
-        let unitDropdown = document.getElementById('filterUnitKerja'); 
-        let currentVal = unitDropdown.value;
-        unitDropdown.innerHTML = '<option value="">Semua Unit Kerja</option>'; 
-        unitList.forEach(s => unitDropdown.innerHTML += `<option value="${s}">${s}</option>`); 
-        unitDropdown.value = currentVal;
-        
-        terapkanFilter();
+        terapkanFilterSubUnit(true); 
         return; 
     }
 
-    // Pesan loading yang spesifik agar user tahu sistem tidak error dan sedang bekerja mencari data yang tepat
     startLoading("Memuat Data " + globalJenisASN + " Bulan " + globalBulanAktif + "...");
     
     let data = await fetchAPI("getDaftarPegawai", { bulanAktif: globalBulanAktif, roleUser: currentUser.role, unitkerjaUser: currentUser.unitkerja, jenisASN: "" }); 
@@ -772,22 +781,56 @@ if(selRef) {
         
         globalDataPegawai = window.cacheDataPegawaiAll.filter(p => String(p[14] || "PNS").toUpperCase() === globalJenisASN);
         
-        let unitList = [...new Set(globalDataPegawai.map(item => item[5]).filter(Boolean))]; 
-        let unitDropdown = document.getElementById('filterUnitKerja'); 
-        unitDropdown.innerHTML = '<option value="">Semua Unit Kerja</option>'; 
-        unitList.forEach(s => unitDropdown.innerHTML += `<option value="${s}">${s}</option>`); 
+        // Isi dropdown Sub Unit
+        let subUnitDropdown = document.getElementById('filterSubUnit');
+        let currentSubVal = subUnitDropdown.value;
+        subUnitDropdown.innerHTML = '<option value="">Semua Sub Unit</option>'; 
+        if (arraySubUnitValid && arraySubUnitValid.length > 0) {
+            // Urutkan abjad biar rapi
+            arraySubUnitValid.sort().forEach(s => subUnitDropdown.innerHTML += `<option value="${s}">${s}</option>`);
+        }
+        subUnitDropdown.value = currentSubVal || "";
         
-        terapkanFilter(); 
+        terapkanFilterSubUnit(true); 
     } 
     else { 
         document.getElementById('tabelBodyPegawai').innerHTML = '<tr><td colspan="7" class="text-center text-danger fw-bold">Gagal memuat data dari server.</td></tr>'; 
     }
   }
 
+  // 👇 FUNGSI BARU: Mengontrol Dropdown Bertingkat
+  function terapkanFilterSubUnit(isInit = false) {
+      let valSub = document.getElementById('filterSubUnit').value;
+      let unitDropdown = document.getElementById('filterUnitKerja');
+      let currentUnitVal = unitDropdown.value;
+      
+      unitDropdown.innerHTML = '<option value="">Semua Unit Kerja</option>';
+      
+      // Ambil unit yang ada datanya saja
+      let unitInDb = [...new Set(globalDataPegawai.map(item => item[5]).filter(Boolean))].sort(); 
+      
+      unitInDb.forEach(u => {
+          let objMap = arrayUnitKerjaFull.find(x => String(x.nama).trim().toLowerCase() === String(u).trim().toLowerCase());
+          let subOfUnit = objMap ? objMap.subUnit : "";
+          
+          // Tampilkan Unit Kerja jika Sub Unit cocok (atau jika "Semua Sub Unit" dipilih)
+          if(valSub === "" || String(subOfUnit).trim().toLowerCase() === String(valSub).trim().toLowerCase()) {
+              unitDropdown.innerHTML += `<option value="${u}">${u}</option>`;
+          }
+      });
+      
+      unitDropdown.value = currentUnitVal;
+      if (unitDropdown.selectedIndex === -1) unitDropdown.value = ""; 
+      
+      terapkanFilter();
+  }
+
+  // 👇 FUNGSI LAMA YG DIUPDATE: Menyaring Data Tabel
   function terapkanFilter() {
     let cari = document.getElementById('filterCari').value.toLowerCase(); 
     let fGol = document.getElementById('filterGol').value; 
     let fUnit = document.getElementById('filterUnitKerja').value;
+    let fSubUnit = document.getElementById('filterSubUnit').value.toLowerCase(); 
     
     let filtered = globalDataPegawai.filter(row => {
       let nip = String(row[0]).toLowerCase(); 
@@ -812,12 +855,20 @@ if(selRef) {
       let matchGol = (fGol === "" || groupName === fGol); 
       let matchUnit = (fUnit === "" || unit === fUnit); 
       
-      return matchCari && matchGol && matchUnit;
+      // Filter cerdas untuk Sub Unit
+      let matchSubUnit = true;
+      if (fSubUnit !== "") {
+          let objMap = arrayUnitKerjaFull.find(x => String(x.nama).trim().toLowerCase() === unit.trim().toLowerCase());
+          let subOfUnit = objMap ? String(objMap.subUnit).trim().toLowerCase() : "";
+          matchSubUnit = (subOfUnit === fSubUnit);
+      }
+      
+      return matchCari && matchGol && matchUnit && matchSubUnit;
     }); 
     
     renderTabelPegawai(filtered);
   }
-
+  
   function renderTabelPegawai(data) {
     let tbody = document.getElementById('tabelBodyPegawai');
     if(!data.length) { 

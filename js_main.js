@@ -1045,23 +1045,48 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// 2. Peringatan saat user pindah kolom (onblur)
+// 2. Peringatan saat user pindah kolom (onblur) & AUTO TANGGAL LAHIR
 function validasiNIP(input) { 
     let nilaiBersih = input.value.replace(/[^0-9]/g, ''); 
     input.value = nilaiBersih; 
+    let elTglLahir = document.getElementById('mTglLahir');
     
     if (nilaiBersih !== "") { 
         if (nilaiBersih.length !== 18) { 
-            // Jika kurang dari 18 digit
             alertPeringatan("Perhatian! NIP wajib terdiri dari TEPAT 18 digit angka murni. Saat ini baru " + nilaiBersih.length + " digit."); 
             input.classList.add('border-danger', 'is-invalid'); 
             input.classList.remove('border-primary');
+            
+            // Kosongkan dan buka kunci tgl lahir jika NIP salah
+            if(elTglLahir) {
+                elTglLahir.value = "";
+                elTglLahir.readOnly = false;
+                elTglLahir.classList.remove('bg-light', 'readonly-field');
+            }
         } else { 
-            // Jika pas 18 digit
             input.classList.remove('border-danger', 'is-invalid'); 
             input.classList.add('border-success', 'is-valid');
+            
+            // 👇 LOGIKA BARU: EKSTRAK TGL LAHIR DARI 8 DIGIT NIP PERTAMA
+            let thn = nilaiBersih.substring(0, 4);
+            let bln = nilaiBersih.substring(4, 6);
+            let tgl = nilaiBersih.substring(6, 8);
+            let formatTglLahir = `${thn}-${bln}-${tgl}`;
+            
+            // Isi otomatis kolom tanggal lahir dan kunci agar tidak diubah manual
+            if(elTglLahir) {
+                elTglLahir.value = formatTglLahir;
+                elTglLahir.readOnly = true; 
+                elTglLahir.classList.add('bg-light', 'readonly-field');
+            }
         } 
-    } 
+    } else {
+        if(elTglLahir) {
+            elTglLahir.value = "";
+            elTglLahir.readOnly = false;
+            elTglLahir.classList.remove('bg-light', 'readonly-field');
+        }
+    }
 }
 
   async function inisialisasiAplikasi() {
@@ -1825,15 +1850,22 @@ function muatNominatif() {
                   let statusPegawaiVal = "PNS"; 
                   if (jenisPegawaiRaw.includes("PPPK") || jenisPegawaiRaw.includes("P3K")) { statusPegawaiVal = "PPPK"; }
 
+                  // 👇 LOGIKA BARU: EKSTRAK TGL LAHIR DARI NIP EXCEL
+                  let thn = nipBersih.substring(0, 4);
+                  let bln = nipBersih.substring(4, 6);
+                  let tgl = nipBersih.substring(6, 8);
+                  let tglLahirOtomatis = `${thn}-${bln}-${tgl}`;
+
                   payload.push({
                   nip: nipBersih, 
-                  nama: String(row[4] || "").trim(),              
-                  unitkerja: String(row[8] || "").trim(),       
+                  nama: String(row[4] || "").trim(),  
+                  tglLahir: tglLahirOtomatis,  // <--- TAMBAHAN BARU: Kirim Tgl Lahir ke Backend!            
+                  unitkerja: String(row[8] || "").trim(),        
                   unorInduk: String(row[10] || "").trim(),    
                   skp: String(row[16] || "").trim(),          
-                  golongan: String(row[30] || "").trim(),       
+                  golongan: String(row[30] || "").trim(),        
                   statusPegawai: statusPegawaiVal
-                  // Atribut lain sengaja DIHAPUS agar backend tahu bahwa kita TIDAK ingin menimpanya!
+                  // Atribut lain sengaja DIHAPUS agar backend tahu bahwa kita TIDAK ingin menimpanya saat update
                 });
               }
 

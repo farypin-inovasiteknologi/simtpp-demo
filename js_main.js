@@ -2100,6 +2100,7 @@ async function submitFormInputAbsen(e) {
   // =========================================================
   // FUNGSI: IMPORT EXCEL (BKD / MASTER / AKUN) - AUTO REFRESH
   // =========================================================
+  // =========================================================
   async function prosesImportExcel(fileInputElemen = null, periodeTarget = null, periodeDataTerbaru = null, btnSubmitModal = null) {
       let fileInput = fileInputElemen || document.getElementById('fileImport'); 
       if(!fileInput.files[0]) return alertPeringatan("Pilih file Excel terlebih dahulu!");
@@ -2122,7 +2123,7 @@ async function submitFormInputAbsen(e) {
           let data2D = [];
           worksheet.eachRow({ includeEmpty: true }, function(row, rowNumber) {
               let r = [];
-              for(let i = 1; i <= Math.max(row.cellCount, 40); i++) {
+              for(let i = 1; i <= Math.max(row.cellCount, 60); i++) { // Max dilebarkan ke 60 jaga-jaga format BKD lebar
                   let cell = row.getCell(i);
                   let val = cell.value;
                   if(val && typeof val === 'object') {
@@ -2252,6 +2253,108 @@ async function submitFormInputAbsen(e) {
               }
               let res = await fetchAPI("importAkunMassal", payload); stopLoading(); 
               if(String(res).includes("Error") || String(res).includes("Gagal")) alertError(res.pesan || res); else alertSukses(res); bootstrap.Modal.getInstance(document.getElementById('modalImportExcel')).hide(); muatDaftarAkun(); 
+          }
+          // ========================================================
+          // 👇 INI DIA TAMBAHAN BLOK UNTUK IMPORT ABSEN 👇
+          // ========================================================
+          else if(jenis === 'absen') {
+              if(!bulanTarget) { stopLoading(); return alertError("Pilih Periode Bulan terlebih dahulu!"); }
+
+              // Filter Kunci: Buat daftar NIP yang HANYA tampil di tabel layar saat ini
+              let validNips = new Set(globalDataPegawai.map(p => String(p[0]).trim().toLowerCase().replace(/'/g, "")));
+              
+              let headerRowIndex = -1;
+              let colMap = {};
+              
+              // Smart Detector: Cek 15 baris pertama untuk cari letak Header Siabon
+              for(let i = 0; i < Math.min(15, data2D.length); i++) {
+                  let rowData = data2D[i].map(c => String(c).trim().toUpperCase());
+                  
+                  if (rowData.includes("CP") && rowData.includes("AS") && rowData.includes("S")) {
+                      headerRowIndex = i;
+                      rowData.forEach((colName, idx) => { if(colName) colMap[colName] = idx; });
+                      break;
+                  } 
+                  else if (rowData.includes("NIP (ANGKA SAJA)") && rowData.includes("NILAI SKP")) {
+                      headerRowIndex = i;
+                      break;
+                  }
+              }
+
+              let isSiabonFormat = Object.keys(colMap).includes("CP") && Object.keys(colMap).includes("AS");
+              let startRow = headerRowIndex !== -1 ? headerRowIndex + 1 : 1;
+
+              for(let i = startRow; i < data2D.length; i++) {
+                  let row = data2D[i];
+                  
+                  // Kalau Siabon NIP ada di kolom ke-2 (index 1), kalau Template kita kolom 1 (index 0)
+                  let nipVal = isSiabonFormat ? row[1] : row[0]; 
+                  if(!nipVal) continue;
+                  let nipBersih = String(nipVal).replace(/[\s-']/g, '').toLowerCase();
+
+                  // JIKA NIP TIDAK ADA DI LAYAR SAAT INI, ABAIKAN SAJA (Mencegah salah kamar)
+                  if(!/^\d{18}$/.test(nipBersih) || !validNips.has(nipBersih)) continue;
+
+                  let skpGabungan = "Baik|Menilai"; 
+                  let dl=0, s=0, c=0, kp=0, tk=0, asub=0;
+                  let tl1=0, tl2=0, tl3=0, tl4=0;
+                  let cp1=0, cp2=0, cp3=0, cp4=0;
+
+                  if (isSiabonFormat) {
+                      // Mapping Otomatis Rumus Bapak untuk format BKD/SIABON
+                      let val = (colName) => parseInt(row[colMap[colName]]) || 0;
+                      
+                      cp4 = val('CP');               // CP -> CP4
+                      tl4 = val('AS');               // AS -> TL4
+                      dl  = val('D') + val('DK');    // D dan DK -> DL
+                      s   = val('S');                // S -> S
+                      kp  = val('I');                // I -> KP
+                      c   = val('C') + val('TB');    // C dan TB -> C
+                      tk  = val('TK') || val('A') || 0; // Jaga-jaga namanya A atau TK
+                  } else {
+                      // Mapping Template Bawaan Sistem
+                      let skpVal = String(row[1] || "Baik").trim();
+                      let statusMenilaiVal = String(row[2] || "Menilai").trim();
+                      skpGabungan = skpVal + "|" + statusMenilaiVal;
+                      
+                      dl = parseInt(row[3])||0; kp = parseInt(row[4])||0; s = parseInt(row[5])||0; c = parseInt(row[6])||0;
+                      tk = parseInt(row[7])||0; asub = parseInt(row[8])||0;
+                      tl1 = parseInt(row[9])||0; tl2 = parseInt(row[10])||0; tl3 = parseInt(row[11])||0; tl4 = parseInt(row[12])||0;
+                      cp1 = parseInt(row[13])||0; cp2 = parseInt(row[14])||0; cp3 = parseInt(row[15])||0; cp4 = parseInt(row[16])||0;
+                  }
+
+                  payload.push({
+                      nip: nipBersih,
+                      skp: skpGabungan,
+                      dl: dl, kp: kp, s: s, c: c,
+                      tk: tk, asub: asub,
+                      tl1: tl1, tl2: tl2, tl3: tl3, tl4: tl4,
+                      cp1: cp1, cp2: cp2, cp3: cp3, cp4: cp4
+                  });
+              }
+
+              if(payload.length === 0) {
+                  stopLoading();
+                  if(btnSubmitModal) btnSubmitModal.disabled = false;
+                  return alertPeringatan("Dibatalkan: Tidak ada NIP di Excel yang cocok dengan data pegawai di layar Anda saat ini.");
+              }
+
+              Swal.getHtmlContainer().innerHTML = `Menyimpan ${payload.length} Data Absen ke Server...`;
+              let resImport = await fetchAPI("importAbsenMassal", {payload: payload, bulanAktif: bulanTarget});
+
+              stopLoading();
+              if(btnSubmitModal) btnSubmitModal.disabled = false;
+
+              if(resImport && resImport.status === "error") {
+                  alertError(resImport.pesan);
+              } else {
+                  alertSukses(resImport.pesan);
+                  let modalObj = bootstrap.Modal.getInstance(document.getElementById('modalImportExcel'));
+                  if(modalObj) modalObj.hide();
+                  
+                  // Hapus cache agar saat klik tombol Mata, data langsung terupdate!
+                  window.cacheDetailPegawai = {}; 
+              }
           }
       } catch(e) {
           stopLoading();

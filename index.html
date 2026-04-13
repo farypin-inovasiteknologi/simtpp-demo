@@ -175,6 +175,22 @@
         transform: translateY(-3px); /* Tombol sedikit terangkat */
     }
 
+    /* ========================================= */
+    /* WARNA KHUSUS MENU 2 (ABSENSI) AGAR MENCILOK */
+    /* ========================================= */
+    #navAbsen:not(.active) {
+        background-color: #fff3cd !important; /* Warna dasar kuning pastel lembut */
+        border: 2px solid #ffc107 !important; /* Bingkai kuning tegas */
+        color: #856404 !important; /* Warna teks agak kecoklatan biar terbaca jelas */
+        box-shadow: 0 4px 10px rgba(255, 193, 7, 0.25) !important; /* Efek cahaya (glow) kuning */
+    }
+
+    /* Efek saat mouse mengarah (hover) ke Menu 2 yang belum aktif */
+    #navAbsen:not(.active):hover {
+        background-color: #ffeeba !important; /* Kuning sedikit lebih terang saat di-hover */
+        transform: translateY(-2px);
+    }
+
   </style>
 </head>
 <body class="app-padding">

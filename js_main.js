@@ -1565,15 +1565,14 @@ async function hitungPajakTahunan() {
                 <td class="text-end fw-bold text-danger">${fRp(res.pph21TKD)}</td>
             </tr>`;
         
-        // 👇 PERUBAHAN TEKS TOTAL DI TABEL RIWAYAT 👇
         tbodyRiwayat.innerHTML += `
-            <tr class="bg-dark text-white border-dark">
-                <td class="text-center fw-bold text-white">TOTAL PENGHASILAN SETAHUN (Jan-Des)</td>
-                <td class="text-end fw-bold text-white">${fRp(subGaji + res.gajiKotorTER)}</td>
-                <td class="text-end fw-bold text-white">${fRp(subTpp + res.tppBruto)}</td>
-                <td class="text-end fw-bold text-white">${fRp(subIwp + iwpBulanIni)}</td>
-                <td class="text-end fw-bold text-white">${fRp(subPphGaji + res.pphGajiTER)}</td>
-                <td class="text-end fw-bold text-white">${fRp(subPphTpp + res.pph21TKD)}</td>
+            <tr class="table-dark fw-bold">
+                <td class="text-center">TOTAL PENGHASILAN SETAHUN (Jan-Des)</td>
+                <td class="text-end">${fRp(subGaji + res.gajiKotorTER)}</td>
+                <td class="text-end">${fRp(subTpp + res.tppBruto)}</td>
+                <td class="text-end">${fRp(subIwp + iwpBulanIni)}</td>
+                <td class="text-end">${fRp(subPphGaji + res.pphGajiTER)}</td>
+                <td class="text-end">${fRp(subPphTpp + res.pph21TKD)}</td>
             </tr>`;
 
         document.getElementById('desBrutoGaji').innerText = fRp(res.akumulasi.sumBrutoGaji);
@@ -1584,9 +1583,17 @@ async function hitungPajakTahunan() {
         document.getElementById('desNetto').innerText = fRp(res.akumulasi.nettoSetahunReal);
         document.getElementById('desStatusKwn').innerText = res.statusTER;
         document.getElementById('desPTKP').innerText = "- " + fRp(res.ptkp);
-        document.getElementById('desPKP').innerText = fRp(res.akumulasi.pkpReal);
 
-        // 👇 PERUBAHAN LAYOUT: Rincian Perkalian Progresif ditaruh DI ATAS Total 👇
+        // 👇 PERBAIKAN KOLOM A: Menampilkan PKP Asli vs Pembulatan 👇
+        let pkpMurni = res.akumulasi.nettoSetahunReal - res.ptkp;
+        if(pkpMurni < 0) pkpMurni = 0;
+        
+        // Gunakan InnerHTML untuk menyisipkan dua baris ke desPKP
+        document.getElementById('desPKP').innerHTML = `
+            <div class="text-muted small" style="font-weight:normal;">Asli: ${fRp(pkpMurni)}</div>
+            <div class="fw-bold">Bulat: ${fRp(res.akumulasi.pkpReal)}</div>
+        `;
+
         let sPkpReal = res.akumulasi.pkpReal; 
         let pt5=0, pt15=0, pt25=0, pt30=0, pt35=0; 
         let p5=0, p15=0, p25=0, p30=0, p35=0;      
@@ -1599,9 +1606,8 @@ async function hitungPajakTahunan() {
 
         let pajakSetahunTampilan = pt5 + pt15 + pt25 + pt30 + pt35;
 
-        // Bikin Struktur HTML Baru untuk Rincian Progresif
         let rincianHTML = `
-            <tr><td colspan="2" class="text-dark fw-bold pb-1 pt-0"><i class="text-muted small">Rincian Lapis Progresif (Dari PKP ${fRp(res.akumulasi.pkpReal)}):</i></td></tr>
+            <tr><td colspan="2" class="text-dark fw-bold pb-1 pt-0"><i class="text-muted small">Rincian Lapis Progresif (Dari PKP Bulat ${fRp(res.akumulasi.pkpReal)}):</i></td></tr>
         `;
         if(p5 > 0)  rincianHTML += `<tr><td class="ps-3 py-0">5% x ${fRp(p5)}</td><td class="text-end fw-bold text-secondary py-0">= ${fRp(pt5)}</td></tr>`;
         if(p15 > 0) rincianHTML += `<tr><td class="ps-3 py-0">15% x ${fRp(p15)}</td><td class="text-end fw-bold text-secondary py-0">= ${fRp(pt15)}</td></tr>`;
@@ -1609,14 +1615,12 @@ async function hitungPajakTahunan() {
         if(p30 > 0) rincianHTML += `<tr><td class="ps-3 py-0">30% x ${fRp(p30)}</td><td class="text-end fw-bold text-secondary py-0">= ${fRp(pt30)}</td></tr>`;
         if(p35 > 0) rincianHTML += `<tr><td class="ps-3 py-0">35% x ${fRp(p35)}</td><td class="text-end fw-bold text-secondary py-0">= ${fRp(pt35)}</td></tr>`;
 
-        // Gabungkan dengan Total dan Pengurang
         rincianHTML += `
             <tr class="fw-bold border-top"><td width="65%" class="pt-2">Total PPh 21 Terutang Setahun</td><td id="desPajakSetahun" class="text-end text-primary fs-6 pt-2">${fRp(pajakSetahunTampilan)}</td></tr>
             <tr class="text-success mt-1"><td>(-) PPh 21 Sdh Disetor (Jan-Nov)</td><td id="desPajakDibayar" class="text-end fw-bold">- ${fRp(res.akumulasi.pajakSudahDibayarJanNov)}</td></tr>
             <tr class="text-danger border-bottom"><td>(-) PPh 21 Gaji Bulan Desember</td><td id="desPphGajiDes" class="text-end fw-bold">- ${fRp(res.pphGajiTER)}</td></tr>
         `;
 
-        // Gantikan isi tabel B. Clearing PPh 21 dengan susunan yang baru
         let tabelPajakB = document.getElementById('desPajakSetahun');
         if(tabelPajakB) {
             tabelPajakB.closest('tbody').innerHTML = rincianHTML;
@@ -1626,7 +1630,7 @@ async function hitungPajakTahunan() {
         document.getElementById('desPphTKD').innerText = fRp(res.pph21TKD);
 
     } else {
-        
+        // Logika untuk Mode TER (Bukan Desember) tetap sama
         if(document.getElementById('layoutDesember')) document.getElementById('layoutDesember').classList.add('hidden');
         if(document.getElementById('layoutTER')) document.getElementById('layoutTER').classList.remove('hidden');
 

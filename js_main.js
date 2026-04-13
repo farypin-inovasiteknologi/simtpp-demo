@@ -1457,7 +1457,7 @@ function validasiNIP(input) {
   }
 
     
- async function hitungPajakTahunan() {
+async function hitungPajakTahunan() {
     document.getElementById('loaderTahunan').classList.remove('hidden');
     document.getElementById('hasilTahunan').classList.add('hidden');
 
@@ -1479,7 +1479,6 @@ function validasiNIP(input) {
 
     document.getElementById('loaderTahunan').classList.add('hidden');
     
-    // 👇 CEGAT ERROR DARI SERVER AGAR LAYAR TIDAK ZONK / NaN 👇
     if (res.status === "error") return alertError(res.pesan);
     if (res.error) return alertPeringatan("Peringatan: " + res.error);
 
@@ -1491,22 +1490,18 @@ function validasiNIP(input) {
     if(document.getElementById('labelBulanPencairan')) document.getElementById('labelBulanPencairan').innerText = globalRefBulanGaji || globalBulanAktif;
     if(document.getElementById('labelBulanPencairan2')) document.getElementById('labelBulanPencairan2').innerText = globalRefBulanGaji || globalBulanAktif;
 
-    // 👇 LOGIKA LAYOUT DESEMBER vs TER 👇
     if (res.isModeDesember === true && res.akumulasi) {
         
-        // BUKA DESEMBER, TUTUP TER
         if(document.getElementById('layoutTER')) document.getElementById('layoutTER').classList.add('hidden');
         if(document.getElementById('layoutDesember')) document.getElementById('layoutDesember').classList.remove('hidden');
 
         let tbodyRiwayat = document.getElementById('tabelRiwayatDesember');
         tbodyRiwayat.innerHTML = "";
 
-        // Variabel penampung subtotal Jan-Nov
         let subGaji = 0, subTpp = 0, subIwp = 0, subPphGaji = 0, subPphTpp = 0;
 
         if (res.akumulasi.history && res.akumulasi.history.length > 0) {
             res.akumulasi.history.forEach(h => {
-                // Menjumlahkan akumulasi Jan-Nov
                 subGaji += h.gaji; subTpp += h.tpp; subIwp += h.iwp; 
                 subPphGaji += h.pphGaji; subPphTpp += h.pphTpp;
 
@@ -1520,7 +1515,6 @@ function validasiNIP(input) {
                 </tr>`;
             });
 
-            // 👇 BARIS SUBTOTAL JANUARI - NOVEMBER 👇
             tbodyRiwayat.innerHTML += `
                 <tr class="table-warning border-warning">
                     <td class="text-center fw-bold">SUBTOTAL (JAN-NOV) <br><small class="text-dark"><i>*Dipungut dgn Metode TER</i></small></td>
@@ -1535,7 +1529,6 @@ function validasiNIP(input) {
             tbodyRiwayat.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-3">Belum ada riwayat pajak Jan-Nov.</td></tr>`;
         }
 
-        // 👇 BARIS KHUSUS DESEMBER (CLEARING) 👇
         let iwpBulanIni = ((res.gapok || 0) + (res.tjKeluarga || 0)) * 0.0475;
         tbodyRiwayat.innerHTML += `
             <tr class="table-danger border-danger" style="border-width: 2px;">
@@ -1547,7 +1540,6 @@ function validasiNIP(input) {
                 <td class="text-end fw-bold text-danger">${fRp(res.pph21TKD)}</td>
             </tr>`;
         
-        // 👇 BARIS TOTAL KESELURUHAN (SETELAH DESEMBER) 👇
         tbodyRiwayat.innerHTML += `
             <tr class="bg-dark text-white border-dark">
                 <td class="text-center fw-bold text-white">TOTAL SETAHUN (Real)</td>
@@ -1567,6 +1559,18 @@ function validasiNIP(input) {
         document.getElementById('desStatusKwn').innerText = res.statusTER;
         document.getElementById('desPTKP').innerText = "- " + fRp(res.ptkp);
         document.getElementById('desPKP').innerText = fRp(res.akumulasi.pkpReal);
+
+        // 👇 FIX TAMPILAN: Hitung ulang pajak progresif dari PKP Real untuk ditampilkan di UI
+        let sPkpReal = res.akumulasi.pkpReal; 
+        let pt5=0, pt15=0, pt25=0, pt30=0, pt35=0;
+        if(sPkpReal > 0) { let k = Math.min(sPkpReal, 60000000); pt5 = k * 0.05; sPkpReal -= k; }
+        if(sPkpReal > 0) { let k = Math.min(sPkpReal, 190000000); pt15 = k * 0.15; sPkpReal -= k; }
+        if(sPkpReal > 0) { let k = Math.min(sPkpReal, 250000000); pt25 = k * 0.25; sPkpReal -= k; }
+        if(sPkpReal > 0) { let k = Math.min(sPkpReal, 4500000000); pt30 = k * 0.30; sPkpReal -= k; }
+        if(sPkpReal > 0) { pt35 = sPkpReal * 0.35; }
+        let pajakSetahunTampilan = pt5 + pt15 + pt25 + pt30 + pt35;
+
+        // Cetak angka ke layar (BARIS INI YANG MUNGKIN KEHAPUS TADI)
         document.getElementById('desPajakSetahun').innerText = fRp(pajakSetahunTampilan);
         document.getElementById('desPajakDibayar').innerText = "- " + fRp(res.akumulasi.pajakSudahDibayarJanNov);
         document.getElementById('desPphGajiDes').innerText = "- " + fRp(res.pphGajiTER);
@@ -1575,7 +1579,6 @@ function validasiNIP(input) {
 
     } else {
         
-        // BUKA TER, TUTUP DESEMBER
         if(document.getElementById('layoutDesember')) document.getElementById('layoutDesember').classList.add('hidden');
         if(document.getElementById('layoutTER')) document.getElementById('layoutTER').classList.remove('hidden');
 
@@ -1589,7 +1592,6 @@ function validasiNIP(input) {
         document.getElementById('thPphGajiLunas').innerText = "- " + fRp(res.pphGajiTER);
         document.getElementById('thPphTKD').innerText = fRp(res.pph21TKD);
                 
-        // Data Simulasi Progresif
         document.getElementById('thGajiBulanOnly').innerText = fRp(res.gajiKotor); 
         document.getElementById('thGajiTahunOnly').innerText = fRp(res.brutoGajiSetahun); 
         document.getElementById('thBiayaJabGaji').innerText = "- " + fRp(res.biayaJabatanGaji); 
@@ -2652,6 +2654,7 @@ async function prosesImportUpdateExcel() {
         }
     });
 }
+
 
 
 

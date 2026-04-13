@@ -917,6 +917,9 @@ if(selRef) {
     let paginatedData = data.slice(start, end); 
     let html = "";
 
+    // 👇 Cek apakah user adalah Operator atau Admin Sub Unit
+    let isRestrictedRole = (currentUser.role === "Operator" || currentUser.role === "Admin Sub Unit/UPTD");
+
     paginatedData.forEach(row => {
       let nip = escapeStr(row[0]); let nama = escapeStr(row[1]); let tglLahir = escapeStr(row[2]||""); let gol = escapeStr(row[3]); 
       let unorInduk = escapeStr(row[4]||""); let unit = escapeStr(row[5]); let jab = escapeStr(row[6]); let jenis = escapeStr(row[7]); let stat = escapeStr(row[8]); 
@@ -926,7 +929,16 @@ if(selRef) {
       let openPanel = `bukaPanel('${nip}', '${nama}', '${gol}', '${jab}', '${stat}', '${unit}')`; 
       
       let btnEdit = globalStatusLock === "Kunci" ? `<button class="btn btn-sm btn-secondary me-1" onclick="alertPeringatan('Periode ini sudah dikunci Admin!')"><i class="bi bi-lock"></i></button>` : `<button class="btn btn-sm btn-primary me-1" onclick="bukaModalPegawai('edit', ${args})">Edit</button>`; 
-      let btnDel = globalStatusLock === "Kunci" ? `<button class="btn btn-sm btn-secondary" onclick="alertPeringatan('Periode ini sudah dikunci Admin!')"><i class="bi bi-lock"></i></button>` : `<button class="btn btn-sm btn-danger" onclick="hapusPegawai('${nip}', '${nama}', '${uuid}')">Del</button>`;
+      
+      // 👇 LOGIKA BARU: Tombol Hapus Diubah Jadi Gembok Abu-Abu untuk Role Terbatas 👇
+      let btnDel = "";
+      if (globalStatusLock === "Kunci") {
+          btnDel = `<button class="btn btn-sm btn-secondary" onclick="alertPeringatan('Periode ini sudah dikunci Admin!')"><i class="bi bi-lock"></i></button>`;
+      } else if (isRestrictedRole) {
+          btnDel = `<button class="btn btn-sm btn-secondary" onclick="alertPeringatan('Akses Ditolak: Hanya Admin OPD (Dinas) yang berhak menghapus pegawai.')" title="Dilarang Menghapus"><i class="bi bi-trash"></i></button>`;
+      } else {
+          btnDel = `<button class="btn btn-sm btn-danger" onclick="hapusPegawai('${nip}', '${nama}', '${uuid}')">Del</button>`;
+      }
       
       html += `<tr class="clickable">
                   <td onclick="${openPanel}">${nip}</td>
@@ -962,22 +974,39 @@ if(selRef) {
     
     document.getElementById('mStatus').value = status; 
 
-  document.getElementById('mGapok').value = formatRupiah(gapok); 
-  document.getElementById('mTjJab').value = formatRupiah(tjJab); 
+    document.getElementById('mGapok').value = formatRupiah(gapok); 
+    document.getElementById('mTjJab').value = formatRupiah(tjJab); 
     
     document.getElementById('mRekening').value = rekening;
     document.getElementById('mSkp').value = skp || "";
     
-    let elNip = document.getElementById('mNip'); let elNama = document.getElementById('mNama'); let elUnitKerja = document.getElementById('mUnitKerja'); let elUnorInduk = document.getElementById('mUnorInduk');
+    let elNip = document.getElementById('mNip'); 
+    let elNama = document.getElementById('mNama'); 
+    let elTglLahir = document.getElementById('mTglLahir');
+    let elUnitKerja = document.getElementById('mUnitKerja'); 
+    let elUnorInduk = document.getElementById('mUnorInduk');
+    
     elNip.value = nip; elNama.value = nama; elUnitKerja.value = unitkerja;
     
     let opdAktif = document.getElementById('loginNamaDinas').innerText;
     elUnorInduk.value = unorInduk || opdAktif;
     elUnitKerja.value = unitkerja || opdAktif;
 
-    let isOperatorEdit = (aksi === 'edit' && currentUser.role === "Operator");
-    if (isOperatorEdit) { elNip.readOnly = true; elNip.classList.add("readonly-field"); elNama.readOnly = true; elNama.classList.add("readonly-field"); } 
-    else { elNip.readOnly = false; elNip.classList.remove("readonly-field"); elNama.readOnly = false; elNama.classList.remove("readonly-field"); }
+    // 👇 LOGIKA BARU: Kunci NIP, Nama, dan Tgl Lahir untuk Operator & Admin Sub Unit
+    let isRestrictedEdit = (aksi === 'edit' && (currentUser.role === "Operator" || currentUser.role === "Admin Sub Unit/UPTD"));
+    
+    if (isRestrictedEdit) { 
+        elNip.readOnly = true; elNip.classList.add("readonly-field"); 
+        elNama.readOnly = true; elNama.classList.add("readonly-field"); 
+        elTglLahir.readOnly = true; elTglLahir.classList.add("readonly-field"); 
+    } else { 
+        elNip.readOnly = false; elNip.classList.remove("readonly-field"); 
+        elNama.readOnly = false; elNama.classList.remove("readonly-field"); 
+        elTglLahir.readOnly = false; elTglLahir.classList.remove("readonly-field"); 
+        
+        // Picu validasi ulang agar Tgl Lahir terkunci jika NIP sudah 18 digit
+        if (nip.length === 18) validasiNIP(elNip);
+    }
     
     if (currentUser.role === "Operator") { 
         elUnitKerja.value = currentUser.unitkerja;  

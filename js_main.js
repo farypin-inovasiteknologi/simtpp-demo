@@ -1567,7 +1567,7 @@ function validasiNIP(input) {
         document.getElementById('desStatusKwn').innerText = res.statusTER;
         document.getElementById('desPTKP').innerText = "- " + fRp(res.ptkp);
         document.getElementById('desPKP').innerText = fRp(res.akumulasi.pkpReal);
-        document.getElementById('desPajakSetahun').innerText = fRp(res.pph21Setahun);
+        document.getElementById('desPajakSetahun').innerText = fRp(pajakSetahunTampilan);
         document.getElementById('desPajakDibayar').innerText = "- " + fRp(res.akumulasi.pajakSudahDibayarJanNov);
         document.getElementById('desPphGajiDes').innerText = "- " + fRp(res.pphGajiTER);
         if (document.getElementById('desSisaTerutang')) document.getElementById('desSisaTerutang').innerText = fRp(res.pph21TotalSebulanTER);
@@ -2652,7 +2652,6 @@ async function prosesImportUpdateExcel() {
         }
     });
 }
-
 
 
 

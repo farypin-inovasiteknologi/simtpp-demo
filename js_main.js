@@ -1210,161 +1210,172 @@ function validasiNIP(input) {
 }
 
   async function inisialisasiAplikasi() {
-    let bAktif = sessionStorage.getItem('globalBulanAktif') || "";
-    let jASN = sessionStorage.getItem('globalJenisASN') || "";
-    let cUser = sessionStorage.getItem('isLoggedIn') === 'true' ? JSON.parse(sessionStorage.getItem('currentUser')) : null;
+  let bAktif = sessionStorage.getItem('globalBulanAktif') || "";
+  let jASN = sessionStorage.getItem('globalJenisASN') || "";
+  let cUser = sessionStorage.getItem('isLoggedIn') === 'true' ? JSON.parse(sessionStorage.getItem('currentUser')) : null;
 
-    let payloadData = {};
-    if (cUser && bAktif) {
-        payloadData = { bulanAktif: bAktif, roleUser: cUser.role, unitkerjaUser: cUser.unitkerja, jenisASN: "" };
-    }
-
-    let cachedDataStr = localStorage.getItem('simTppCacheData');
-    let isCached = false;
-    
-    if (cachedDataStr) {
-        try {
-            let cachedData = JSON.parse(cachedDataStr);
-            terapkanDataInit(cachedData, cUser, bAktif, jASN, false);
-            isCached = true;
-        } catch(e) { 
-            console.error("Cache Error:", e);
-            isCached = false; 
-        }
-    }
-
-    if (!isCached) {
-        startLoading("Memuat Data Sistem...");
-    }
-
-    fetchAPI("getInitialLoad", payloadData).then(dataInit => {
-        if (!isCached) stopLoading(); 
-        
-        if (dataInit && !dataInit.error) {
-            localStorage.setItem('simTppCacheData', JSON.stringify(dataInit));
-            terapkanDataInit(dataInit, cUser, bAktif, jASN, isCached); 
-        } else if (dataInit.error || dataInit.status === "error") {
-            if (!isCached) alertError(dataInit.pesan || "Gagal memuat data dari server.");
-        }
-    }).catch(err => {
-        console.error("Fetch Error:", err);
-        if (!isCached) {
-            stopLoading();
-            alertError("Terjadi kesalahan sistem: " + err.message);
-        }
-    });
+  let payloadData = {};
+  if (cUser && bAktif) {
+      payloadData = { bulanAktif: bAktif, roleUser: cUser.role, unitkerjaUser: cUser.unitkerja, jenisASN: "" };
   }
+
+  let cachedDataStr = localStorage.getItem('simTppCacheData');
+  let isCached = false;
+  
+  if (cachedDataStr) {
+      try {
+          let cachedData = JSON.parse(cachedDataStr);
+          terapkanDataInit(cachedData, cUser, bAktif, jASN, false);
+          isCached = true;
+      } catch(e) { 
+          console.error("Cache Error:", e);
+          isCached = false; 
+      }
+  }
+
+  if (!isCached) {
+      startLoading("Memuat Data Sistem...");
+  }
+
+  fetchAPI("getInitialLoad", payloadData).then(dataInit => {
+      if (!isCached) stopLoading(); 
+      
+      if (dataInit && !dataInit.error) {
+          // 👇 BUG FIX: Mencegah UI nge-lag. Array 'pegawai' tidak dimasukkan ke localStorage agar browser tidak freeze!
+          let safeCache = {
+              setting: dataInit.setting,
+              periode: dataInit.periode,
+              unitKerjaFull: dataInit.unitKerjaFull,
+              pergub: dataInit.pergub,
+              akun: dataInit.akun
+              // dataInit.pegawai TIDAK DISIMPAN ke disk, hanya ditahan di RAM lewat terapkanDataInit()
+          };
+          localStorage.setItem('simTppCacheData', JSON.stringify(safeCache));
+          
+          terapkanDataInit(dataInit, cUser, bAktif, jASN, isCached); 
+      } else if (dataInit.error || dataInit.status === "error") {
+          if (!isCached) alertError(dataInit.pesan || "Gagal memuat data dari server.");
+      }
+  }).catch(err => {
+      console.error("Fetch Error:", err);
+      if (!isCached) {
+          stopLoading();
+          alertError("Terjadi kesalahan sistem: " + err.message);
+      }
+  });
+}
 
   async function bukaPanel(nip, nama, gol, jabatan, statusTER, unitKerja) {
-    asNIPAktif = nip; 
-    statusTERAktif = statusTER || ""; 
-    objNominatifSetahun = null;
-    
-    let objPer = arrayPeriode.find(x => x.namaPeriode === globalBulanAktif); 
-    globalJenisPeriode = objPer ? (objPer.jenisPeriode || "Reguler") : "Reguler";
-    
-    document.getElementById('labelNamaASN').innerText = nama; 
-    document.getElementById('labelStatusASN').innerText = "Status ASN: " + globalJenisASN; 
-    document.getElementById('labelNIPASN').innerText = "NIP: " + nip; 
-    document.getElementById('labelGolonganASN').innerText = "Gol: " + gol; 
-    document.getElementById('labelJabatanASN').innerText = "Jabatan: " + jabatan;
-    
-    if(document.getElementById('labelBulanASNPanel')) document.getElementById('labelBulanASNPanel').innerText = globalBulanAktif; 
-    if(document.getElementById('labelBulanGajiBersih')) document.getElementById('labelBulanGajiBersih').innerText = "(" + globalBulanAktif + ")"; 
-    if(document.getElementById('labelBulanTerBawah')) document.getElementById('labelBulanTerBawah').innerText = globalBulanAktif; 
-    if(document.getElementById('labelBulanNominatif')) document.getElementById('labelBulanNominatif').innerText = globalBulanAktif;
-    
-    let elUnit = document.getElementById('labelUnitKerjaASN'); 
-    if(elUnit) elUnit.innerText = "Unit: " + (unitKerja || "");
-    
-    // 👇 PEMBERSIHAN KILAT (ANTI-LAG & ANTI DATA NYANGKUT)
-    ['vDL','vS','vC','vKP','vTL1','vTL2','vTL3','vTL4','vCP1','vCP2','vCP3','vCP4','vTK','vASUB'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = "0"; }); 
-    if(document.getElementById('inpSKP')) document.getElementById('inpSKP').value = "Loading...";
-    if(document.getElementById('chkTidakMenilai')) document.getElementById('chkTidakMenilai').checked = false;
-    ['mKotor_total', 'mHasil_total'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).innerText = "Loading..."; });
-    
-    document.getElementById('inpBulan').value = globalBulanAktif;  
-    document.getElementById('inpHariKerja').value = globalHariKerja; 
-    
-    document.getElementById('viewManajemenASN').classList.remove('hidden');
+  asNIPAktif = nip; 
+  statusTERAktif = statusTER || ""; 
+  objNominatifSetahun = null;
+  
+  let objPer = arrayPeriode.find(x => x.namaPeriode === globalBulanAktif); 
+  globalJenisPeriode = objPer ? (objPer.jenisPeriode || "Reguler") : "Reguler";
+  
+  document.getElementById('labelNamaASN').innerText = nama; 
+  document.getElementById('labelStatusASN').innerText = "Status ASN: " + globalJenisASN; 
+  document.getElementById('labelNIPASN').innerText = "NIP: " + nip; 
+  document.getElementById('labelGolonganASN').innerText = "Gol: " + gol; 
+  document.getElementById('labelJabatanASN').innerText = "Jabatan: " + jabatan;
+  
+  if(document.getElementById('labelBulanASNPanel')) document.getElementById('labelBulanASNPanel').innerText = globalBulanAktif; 
+  if(document.getElementById('labelBulanGajiBersih')) document.getElementById('labelBulanGajiBersih').innerText = "(" + globalBulanAktif + ")"; 
+  if(document.getElementById('labelBulanTerBawah')) document.getElementById('labelBulanTerBawah').innerText = globalBulanAktif; 
+  if(document.getElementById('labelBulanNominatif')) document.getElementById('labelBulanNominatif').innerText = globalBulanAktif;
+  
+  let elUnit = document.getElementById('labelUnitKerjaASN'); 
+  if(elUnit) elUnit.innerText = "Unit: " + (unitKerja || "");
+  
+  // 👇 PEMBERSIHAN KILAT (ANTI-LAG & ANTI DATA NYANGKUT)
+  ['vDL','vS','vC','vKP','vTL1','vTL2','vTL3','vTL4','vCP1','vCP2','vCP3','vCP4','vTK','vASUB'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = "0"; }); 
+  if(document.getElementById('inpSKP')) document.getElementById('inpSKP').value = "Loading...";
+  if(document.getElementById('chkTidakMenilai')) document.getElementById('chkTidakMenilai').checked = false;
+  ['mKotor_total', 'mHasil_total'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).innerText = "Loading..."; });
+  
+  // 👇 BUG FIX: Pengecekan elemen agar tidak crash (TypeError: Cannot read properties of null)
+  if (document.getElementById('inpBulan')) document.getElementById('inpBulan').value = globalBulanAktif;  
+  if (document.getElementById('inpHariKerja')) document.getElementById('inpHariKerja').value = globalHariKerja; 
+  
+  document.getElementById('viewManajemenASN').classList.remove('hidden');
 
-    let myModal = bootstrap.Modal.getInstance(document.getElementById('modalPopupASN')) || new bootstrap.Modal(document.getElementById('modalPopupASN'));
-    myModal.show();
-    
-    window.cacheDetailPegawai = window.cacheDetailPegawai || {};
-    let cacheKey = nip + "_" + globalBulanAktif;
-    let res;
+  let myModal = bootstrap.Modal.getInstance(document.getElementById('modalPopupASN')) || new bootstrap.Modal(document.getElementById('modalPopupASN'));
+  myModal.show();
+  
+  window.cacheDetailPegawai = window.cacheDetailPegawai || {};
+  let cacheKey = nip + "_" + globalBulanAktif;
+  let res;
 
-    if (window.cacheDetailPegawai[cacheKey]) {
-        res = window.cacheDetailPegawai[cacheKey];
-    } else {
-        startLoading("Menarik Laporan TPP...");
-        await new Promise(resolve => setTimeout(resolve, 50));
-        res = await fetchAPI("getDetailASN", {nip: nip, bulan: globalBulanAktif});
-        stopLoading();
-        
-        if (res && !res.error) {
-            window.cacheDetailPegawai[cacheKey] = res; 
-        }
-    }
-
-    if(res && !res.error) { 
-      isGajiTersimpan = (res.gaji) ? true : false; 
-      isAbsenTersimpan = (res.absen) ? true : false; 
-      navigasiTab('tabGaji', true); 
+  if (window.cacheDetailPegawai[cacheKey]) {
+      res = window.cacheDetailPegawai[cacheKey];
+  } else {
+      startLoading("Menarik Laporan TPP...");
+      await new Promise(resolve => setTimeout(resolve, 50));
+      res = await fetchAPI("getDetailASN", {nip: nip, bulan: globalBulanAktif});
+      stopLoading();
       
-      if(res.pergub) { baseTPP = res.pergub; } 
-      
-      if(res.pegawaiInfo) { 
-        document.getElementById('aGapok').value = formatRupiah(res.pegawaiInfo.gapok || 0); 
-        document.getElementById('aTjJab').value = formatRupiah(res.pegawaiInfo.tjJab || 0); 
-      } 
-        
-      const setV = (id, val) => { 
-        let el = document.getElementById(id); 
-        if(el) el.value = (val !== undefined && val !== null && !isNaN(val)) ? parseInt(val) : 0; 
-      }; 
-      
-      if(res.gaji) { 
-        if(document.getElementById('aTjPajak')) document.getElementById('aTjPajak').value = formatRupiah(res.gaji[10]); 
-        if(document.getElementById('aPotPajak')) document.getElementById('aPotPajak').value = formatRupiah(res.gaji[17]); 
-      } else { 
-        if(document.getElementById('aTjPajak')) document.getElementById('aTjPajak').value = 0; 
-        if(document.getElementById('aPotPajak')) document.getElementById('aPotPajak').value = 0; 
-      } 
-      
-      hitungAmprah(); 
-      
-      if (globalStatusLock !== "Kunci") {
-          simpanGajiSiluman(); 
-      } else {
-          isGajiTersimpan = true; 
+      if (res && !res.error) {
+          window.cacheDetailPegawai[cacheKey] = res; 
       }
-      
-      if(res.absen) { 
-        let hkDb = parseInt(res.absen[3]); 
-        document.getElementById('inpPolaHK').value = hkDb === globalHariKerja6 ? "6 Hari Kerja / Minggu" : "5 Hari Kerja / Minggu"; 
-        
-        let skpRaw = String(res.absen[4] || "Baik|Menilai"); 
-        let skpParts = skpRaw.split("|"); 
-        
-        document.getElementById('inpSKP').value = skpParts[0] || "Baik"; 
-        document.getElementById('chkTidakMenilai').checked = (skpParts[1] === "Tidak Menilai"); 
-        
-        setV('vDL', res.absen[5]); setV('vS', res.absen[6]); setV('vC', res.absen[7]); setV('vKP', res.absen[8]); 
-        setV('vTL1', res.absen[9]); setV('vTL2', res.absen[10]); setV('vTL3', res.absen[11]); setV('vTL4', res.absen[12]); 
-        setV('vCP1', res.absen[13]); setV('vCP2', res.absen[14]); setV('vCP3', res.absen[15]); setV('vCP4', res.absen[16]); 
-        setV('vTK', res.absen[17]); setV('vASUB', res.absen[18]); 
-      } else { 
-        document.getElementById('inpPolaHK').value = "5 Hari Kerja / Minggu"; 
-        document.getElementById('inpSKP').value = "BELUM DINILAI / KOSONG"; 
-        document.getElementById('chkTidakMenilai').checked = false; 
-        ['vDL','vS','vC','vKP','vTL1','vTL2','vTL3','vTL4','vCP1','vCP2','vCP3','vCP4','vTK','vASUB'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = "0"; }); 
-      } 
-      
-      hitungMatriksTPP();
-    }
   }
+
+  if(res && !res.error) { 
+    isGajiTersimpan = (res.gaji) ? true : false; 
+    isAbsenTersimpan = (res.absen) ? true : false; 
+    navigasiTab('tabGaji', true); 
+    
+    if(res.pergub) { baseTPP = res.pergub; } 
+    
+    if(res.pegawaiInfo) { 
+      document.getElementById('aGapok').value = formatRupiah(res.pegawaiInfo.gapok || 0); 
+      document.getElementById('aTjJab').value = formatRupiah(res.pegawaiInfo.tjJab || 0); 
+    } 
+      
+    const setV = (id, val) => { 
+      let el = document.getElementById(id); 
+      if(el) el.value = (val !== undefined && val !== null && !isNaN(val)) ? parseInt(val) : 0; 
+    }; 
+    
+    if(res.gaji) { 
+      if(document.getElementById('aTjPajak')) document.getElementById('aTjPajak').value = formatRupiah(res.gaji[10]); 
+      if(document.getElementById('aPotPajak')) document.getElementById('aPotPajak').value = formatRupiah(res.gaji[17]); 
+    } else { 
+      if(document.getElementById('aTjPajak')) document.getElementById('aTjPajak').value = 0; 
+      if(document.getElementById('aPotPajak')) document.getElementById('aPotPajak').value = 0; 
+    } 
+    
+    hitungAmprah(); 
+    
+    if (globalStatusLock !== "Kunci") {
+        simpanGajiSiluman(); 
+    } else {
+        isGajiTersimpan = true; 
+    }
+    
+    if(res.absen) { 
+      let hkDb = parseInt(res.absen[3]); 
+      document.getElementById('inpPolaHK').value = hkDb === globalHariKerja6 ? "6 Hari Kerja / Minggu" : "5 Hari Kerja / Minggu"; 
+      
+      let skpRaw = String(res.absen[4] || "Baik|Menilai"); 
+      let skpParts = skpRaw.split("|"); 
+      
+      document.getElementById('inpSKP').value = skpParts[0] || "Baik"; 
+      document.getElementById('chkTidakMenilai').checked = (skpParts[1] === "Tidak Menilai"); 
+      
+      setV('vDL', res.absen[5]); setV('vS', res.absen[6]); setV('vC', res.absen[7]); setV('vKP', res.absen[8]); 
+      setV('vTL1', res.absen[9]); setV('vTL2', res.absen[10]); setV('vTL3', res.absen[11]); setV('vTL4', res.absen[12]); 
+      setV('vCP1', res.absen[13]); setV('vCP2', res.absen[14]); setV('vCP3', res.absen[15]); setV('vCP4', res.absen[16]); 
+      setV('vTK', res.absen[17]); setV('vASUB', res.absen[18]); 
+    } else { 
+      document.getElementById('inpPolaHK').value = "5 Hari Kerja / Minggu"; 
+      document.getElementById('inpSKP').value = "BELUM DINILAI / KOSONG"; 
+      document.getElementById('chkTidakMenilai').checked = false; 
+      ['vDL','vS','vC','vKP','vTL1','vTL2','vTL3','vTL4','vCP1','vCP2','vCP3','vCP4','vTK','vASUB'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = "0"; }); 
+    } 
+    
+    hitungMatriksTPP();
+  }
+}
 
   function hitungAmprah(isManualPajak = false) {
     // 1. Baca nilai dan hapus titiknya dulu

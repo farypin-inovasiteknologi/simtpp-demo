@@ -1466,12 +1466,13 @@ function validasiNIP(input) {
     const fR = (val) => Math.round(val).toLocaleString('id-ID'); 
     const getV = (id) => parseFloat(document.getElementById(id).value) || 0;
     
-    let hk = parseInt(document.getElementById('inpHariKerja').value) || 0; 
+    let hk = parseInt(document.getElementById('inpHariKerja')?.value) || 0; 
     let totalTidakMasuk = getV('vDL') + getV('vS') + getV('vC') + getV('vKP') + getV('vTK'); 
     let totalMasuk = hk - totalTidakMasuk; 
     if(totalMasuk < 0) totalMasuk = 0; 
-    document.getElementById('txtHariTidakMasuk').innerText = totalTidakMasuk + " Hari"; 
-    document.getElementById('txtHariMasuk').innerText = totalMasuk + " Hari";
+    
+    if(document.getElementById('txtHariTidakMasuk')) document.getElementById('txtHariTidakMasuk').innerText = totalTidakMasuk + " Hari"; 
+    if(document.getElementById('txtHariMasuk')) document.getElementById('txtHariMasuk').innerText = totalMasuk + " Hari";
     
     let pctAbsPK = (getV('vS')*0.03) + (getV('vC')*0.03) + (getV('vTK')*0.03) + (getV('vTL1')*0.005) + (getV('vTL2')*0.01) + (getV('vTL3')*0.0125) + (getV('vTL4')*0.015) + (getV('vCP1')*0.005) + (getV('vCP2')*0.01) + (getV('vCP3')*0.0125) + (getV('vCP4')*0.0155);
     if(pctAbsPK > 1) pctAbsPK = 1; 
@@ -1482,9 +1483,10 @@ function validasiNIP(input) {
     let pctAbsDK = pctAbsPK + pctASUB; 
     if(pctAbsDK > 1) pctAbsDK = 1;
     
-    let skp = document.getElementById('inpSKP').value; 
-    let isChecked = document.getElementById('chkTidakMenilai').checked; 
+    let skp = document.getElementById('inpSKP')?.value || "Baik"; 
+    let isChecked = document.getElementById('chkTidakMenilai')?.checked || false; 
     let bobotSKP = 100; 
+    
     if(skp === "Sangat Baik" || skp === "Baik") bobotSKP = 100; 
     else if(skp === "Cukup") bobotSKP = 90; 
     else if(skp === "Kurang") bobotSKP = 75; 
@@ -1494,9 +1496,9 @@ function validasiNIP(input) {
     if (isChecked) bobotSKP -= 5; 
     let rasioSKP = bobotSKP / 100; 
     
-    document.getElementById('txtSkp').innerText = bobotSKP + "%"; 
-    document.getElementById('txtAbsPk').innerText = (pctAbsPK*100).toFixed(2) + "%"; 
-    document.getElementById('txtAbsDk').innerText = (pctAbsDK*100).toFixed(2) + "%";
+    if(document.getElementById('txtSkp')) document.getElementById('txtSkp').innerText = bobotSKP + "%"; 
+    if(document.getElementById('txtAbsPk')) document.getElementById('txtAbsPk').innerText = (pctAbsPK*100).toFixed(2) + "%"; 
+    if(document.getElementById('txtAbsDk')) document.getElementById('txtAbsDk').innerText = (pctAbsDK*100).toFixed(2) + "%";
     
     const keys = ['bk', 'pk', 'kk', 'tb', 'kp', 'total'];
     keys.forEach(k => { 

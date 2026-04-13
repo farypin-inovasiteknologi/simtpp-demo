@@ -203,9 +203,14 @@
     <p class="text-dark mb-4 fw-bold" style="font-size: 0.95rem;">Sistem Manajemen Tambahan Penghasilan Pegawai</p>
     <div class="mb-4 text-start">
       <label class="fw-bold text-success mb-2"><i class="bi bi-building"></i> Pilih Instansi / OPD Anda:</label>
-      <select id="selectTenantOPD" class="form-select form-select-lg border-success fw-bold text-center shadow-sm" onchange="ubahNamaOPD(this)">
-        <option value="">-- PILIH OPD --</option>
-      </select>
+      <div class="input-group input-group-lg shadow-sm">
+        <button class="btn btn-success px-3" type="button" onclick="refreshListOPD()" title="Muat Ulang Daftar OPD" style="border-right: 1px solid #146c43;">
+          <i class="bi bi-arrow-clockwise fw-bold"></i>
+        </button>
+        <select id="selectTenantOPD" class="form-select border-success fw-bold text-center" onchange="ubahNamaOPD(this)">
+          <option value="">-- PILIH OPD --</option>
+        </select>
+      </div>
     </div>
     <button class="btn btn-success btn-lg w-100 fw-bold rounded-pill shadow-lg floating-btn" onclick="masukKeLogin()">
       MASUK APLIKASI <i class="bi bi-arrow-right-circle ms-1"></i>

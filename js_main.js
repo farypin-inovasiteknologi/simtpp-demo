@@ -1585,18 +1585,36 @@ async function hitungPajakTahunan() {
         document.getElementById('desPTKP').innerText = "- " + fRp(res.ptkp);
         document.getElementById('desPKP').innerText = fRp(res.akumulasi.pkpReal);
 
-        // 👇 FIX TAMPILAN: Hitung ulang pajak progresif dari PKP Real untuk ditampilkan di UI
+        // 👇 FIX TAMPILAN & TAMBAHAN RINCIAN PERKALIAN PROGRESIF 👇
         let sPkpReal = res.akumulasi.pkpReal; 
-        let pt5=0, pt15=0, pt25=0, pt30=0, pt35=0;
-        if(sPkpReal > 0) { let k = Math.min(sPkpReal, 60000000); pt5 = k * 0.05; sPkpReal -= k; }
-        if(sPkpReal > 0) { let k = Math.min(sPkpReal, 190000000); pt15 = k * 0.15; sPkpReal -= k; }
-        if(sPkpReal > 0) { let k = Math.min(sPkpReal, 250000000); pt25 = k * 0.25; sPkpReal -= k; }
-        if(sPkpReal > 0) { let k = Math.min(sPkpReal, 4500000000); pt30 = k * 0.30; sPkpReal -= k; }
-        if(sPkpReal > 0) { pt35 = sPkpReal * 0.35; }
+        let pt5=0, pt15=0, pt25=0, pt30=0, pt35=0; // Untuk simpan hasil pajak
+        let p5=0, p15=0, p25=0, p30=0, p35=0;      // Untuk simpan dasar pengali (PKP yg dipotong)
+        
+        if(sPkpReal > 0) { p5 = Math.min(sPkpReal, 60000000); pt5 = p5 * 0.05; sPkpReal -= p5; }
+        if(sPkpReal > 0) { p15 = Math.min(sPkpReal, 190000000); pt15 = p15 * 0.15; sPkpReal -= p15; }
+        if(sPkpReal > 0) { p25 = Math.min(sPkpReal, 250000000); pt25 = p25 * 0.25; sPkpReal -= p25; }
+        if(sPkpReal > 0) { p30 = Math.min(sPkpReal, 4500000000); pt30 = p30 * 0.30; sPkpReal -= p30; }
+        if(sPkpReal > 0) { p35 = sPkpReal; pt35 = p35 * 0.35; }
+
         let pajakSetahunTampilan = pt5 + pt15 + pt25 + pt30 + pt35;
 
-        // Cetak angka ke layar (BARIS INI YANG MUNGKIN KEHAPUS TADI)
+        // Cetak angka Total Setahun ke layar
         document.getElementById('desPajakSetahun').innerText = fRp(pajakSetahunTampilan);
+
+        // 👇 INJEKSI RINCIAN MULTIPLY PAJAK PROGRESIF KE LAYAR 👇
+        let barisRincian = `<table class="table table-sm table-borderless mt-1 mb-0 ms-2" style="font-size:0.75rem; background-color:#fdfdfe; border-left: 3px solid #dc3545;">`;
+        if(p5 > 0)  barisRincian += `<tr><td width="15%">5%</td><td width="45%">x ${fRp(p5)}</td><td class="text-end fw-bold text-secondary">= ${fRp(pt5)}</td></tr>`;
+        if(p15 > 0) barisRincian += `<tr><td>15%</td><td>x ${fRp(p15)}</td><td class="text-end fw-bold text-secondary">= ${fRp(pt15)}</td></tr>`;
+        if(p25 > 0) barisRincian += `<tr><td>25%</td><td>x ${fRp(p25)}</td><td class="text-end fw-bold text-secondary">= ${fRp(pt25)}</td></tr>`;
+        if(p30 > 0) barisRincian += `<tr><td>30%</td><td>x ${fRp(p30)}</td><td class="text-end fw-bold text-secondary">= ${fRp(pt30)}</td></tr>`;
+        if(p35 > 0) barisRincian += `<tr><td>35%</td><td>x ${fRp(p35)}</td><td class="text-end fw-bold text-secondary">= ${fRp(pt35)}</td></tr>`;
+        barisRincian += `</table>`;
+
+        // Timpa teks kecil penjelasan HTML bawaan dengan tabel rincian yang rapi
+        let trPenjelasan = document.getElementById('desPajakSetahun').parentNode.nextElementSibling;
+        trPenjelasan.querySelector('td').innerHTML = `<i class="text-muted">Rincian Lapis Progresif (Dari PKP ${fRp(res.akumulasi.pkpReal)}):</i><br>` + barisRincian;
+        // -------------------------------------------------------------
+
         document.getElementById('desPajakDibayar').innerText = "- " + fRp(res.akumulasi.pajakSudahDibayarJanNov);
         document.getElementById('desPphGajiDes').innerText = "- " + fRp(res.pphGajiTER);
         if (document.getElementById('desSisaTerutang')) document.getElementById('desSisaTerutang').innerText = fRp(res.pph21TotalSebulanTER);
@@ -2686,9 +2704,4 @@ async function prosesImportUpdateExcel() {
         }
     });
 }
-
-
-
-
-
 

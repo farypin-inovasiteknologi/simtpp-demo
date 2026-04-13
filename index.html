@@ -962,17 +962,27 @@
           </div>
           <div class="modal-body bg-light">
             <form id="formInputAbsen" onsubmit="submitFormInputAbsen(event)">
-              <div class="alert alert-info py-2 d-flex justify-content-between align-items-center shadow-sm">
-                 <div>
-                   <h6 class="fw-bold mb-0 text-dark" id="lblInputAbsenNama">NAMA PEGAWAI</h6>
-                   <small class="text-primary fw-bold" id="lblInputAbsenNip">NIP: </small>
-                 </div>
-                 <div class="text-end">
-                   <small class="text-muted d-block">Periode</small>
-                   <span class="badge bg-danger" id="lblInputAbsenBulan">BULAN</span>
-                 </div>
-              </div>
-
+  <div class="alert alert-info py-2 shadow-sm mb-3">
+    <div class="row align-items-center">
+      
+      <div class="col-md-3 col-12 text-md-start text-center mb-2 mb-md-0">
+        <small class="text-muted fw-bold d-block">Periode TPP</small>
+        <span class="badge bg-danger fs-6" id="lblInputAbsenBulan">BULAN</span>
+      </div>
+      
+      <div class="col-md-6 col-12 text-center border-start border-end border-info mb-2 mb-md-0">
+        <h5 class="fw-bold mb-1 text-dark" id="lblInputAbsenNama">NAMA PEGAWAI</h5>
+        <span class="badge bg-primary fs-6" id="lblInputAbsenNip">NIP: </span>
+      </div>
+      
+      <div class="col-md-3 col-12 text-md-end text-center">
+        <button type="submit" class="btn btn-primary fw-bold w-100 shadow-sm" style="height: 100%;">
+          <i class="bi bi-save"></i> SIMPAN<br>DATA
+        </button>
+      </div>
+      
+    </div>
+  </div>
               <div class="row bg-white p-3 border rounded mb-3 shadow-sm mx-0">
                 <div class="col-md-3 mb-2">
                   <label class="fw-bold text-primary">Pola Hari Kerja</label>
@@ -1109,7 +1119,6 @@
                 </table>
               </div>
 
-              <button type="submit" class="btn btn-primary w-100 fw-bold py-3 fs-5 shadow-sm rounded-pill"><i class="bi bi-save"></i> SIMPAN DATA KEHADIRAN</button>
             </form>
           </div>
         </div>

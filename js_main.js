@@ -1,5 +1,3 @@
-
-
 // =========================================================================
 // 1. KONFIGURASI SUPER MASTER (CUKUP 1 URL UNTUK SELURUH PROVINSI)
 // =========================================================================
@@ -2098,12 +2096,11 @@ async function submitFormInputAbsen(e) {
   }
 
   // =========================================================
-  // FUNGSI: IMPORT EXCEL (BKD / MASTER / AKUN) - AUTO REFRESH
-  // =========================================================
+  // FUNGSI: IMPORT EXCEL (BKD / MASTER / AKUN / ABSEN) 
   // =========================================================
   async function prosesImportExcel(fileInputElemen = null, periodeTarget = null, periodeDataTerbaru = null, btnSubmitModal = null) {
       let fileInput = fileInputElemen || document.getElementById('fileImport'); 
-      if(!fileInput.files[0]) return alertPeringatan("Pilih file Excel terlebih dahulu!");
+      if(!fileInput.files[0]) return alertPeringatan("Pilih file Excel/CSV terlebih dahulu!");
       
       let jenis = document.getElementById('importJenis').value; 
       let file = fileInput.files[0]; 
@@ -2112,8 +2109,7 @@ async function submitFormInputAbsen(e) {
       if (periodeTarget) jenis = 'pegawai';
       let bulanTarget = periodeTarget || globalBulanAktif;
 
-      startLoading("Membaca File Excel & Mengirim ke Database...");
-      
+      startLoading("Membaca File & Mengurai Kolom...");
       
       try {
           let data2D = [];
@@ -2143,7 +2139,7 @@ async function submitFormInputAbsen(e) {
               });
 
           } catch (excelError) {
-              // 2. JIKA GAGAL BACA EXCELJS (Error ZIP/Bukan Excel Asli), BACA SEBAGAI TEKS / CSV / HTML
+              // 2. JIKA GAGAL (Error ZIP/Bukan Excel Asli), BACA SEBAGAI TEKS / CSV / HTML
               console.log("Bukan file .xlsx murni, banting setir membaca format alternatif...");
               
               let textData = await file.text();
@@ -2159,7 +2155,6 @@ async function submitFormInputAbsen(e) {
                       let rows = tables[0].getElementsByTagName('tr');
                       for (let i = 0; i < rows.length; i++) {
                           let r = [];
-                          // Ambil semua th atau td di baris ini
                           let cells = rows[i].querySelectorAll('td, th');
                           for (let j = 0; j < cells.length; j++) {
                               r.push(cells[j].innerText.trim());
@@ -2170,7 +2165,7 @@ async function submitFormInputAbsen(e) {
                       throw new Error("Format HTML terdeteksi, tapi tabel tidak ditemukan.");
                   }
               } 
-              // CEK 2: JIKA MURNI TEKS CSV BIASA
+              // CEK 2: JIKA MURNI TEKS CSV BIASA (SEPERTI FILE SIABON)
               else {
                   let rows = textData.split('\n'); 
                   for(let i = 0; i < rows.length; i++) {
@@ -2178,14 +2173,30 @@ async function submitFormInputAbsen(e) {
                       if (!rowStr) continue; 
                       
                       let separator = rowStr.includes(';') ? ';' : ',';
-                      let cols = rowStr.split(separator);
                       
-                      let r = cols.map(c => c.replace(/^"|"$/g, '').trim());
+                      // PARSER CSV ANTI-BADAI (Mengabaikan koma di dalam tanda kutip nama pegawai)
+                      let r = [];
+                      let current = '';
+                      let inQuotes = false;
+                      for (let c = 0; c < rowStr.length; c++) {
+                          let char = rowStr[c];
+                          if (char === '"') {
+                              inQuotes = !inQuotes;
+                          } else if (char === separator && !inQuotes) {
+                              r.push(current.trim());
+                              current = '';
+                          } else {
+                              current += char;
+                          }
+                      }
+                      r.push(current.trim());
+                      
+                      // Bersihkan sisa tanda kutip
+                      r = r.map(val => val.replace(/^"|"$/g, '').trim());
                       data2D.push(r);
                   }
               }
           }
-              
 
           if(data2D.length === 0) {
               stopLoading(); 
@@ -2195,7 +2206,6 @@ async function submitFormInputAbsen(e) {
 
           let payload = [];
 
-        
           if(jenis === 'pegawai') {
               if(!bulanTarget) { stopLoading(); return alertError("Pilih Periode Bulan terlebih dahulu!"); }
 
@@ -2211,23 +2221,21 @@ async function submitFormInputAbsen(e) {
                   let statusPegawaiVal = "PNS"; 
                   if (jenisPegawaiRaw.includes("PPPK") || jenisPegawaiRaw.includes("P3K")) { statusPegawaiVal = "PPPK"; }
 
-                  // 👇 LOGIKA BARU: EKSTRAK TGL LAHIR DARI NIP EXCEL
                   let thn = nipBersih.substring(0, 4);
                   let bln = nipBersih.substring(4, 6);
                   let tgl = nipBersih.substring(6, 8);
                   let tglLahirOtomatis = `${thn}-${bln}-${tgl}`;
 
                   payload.push({
-                  nip: nipBersih, 
-                  nama: String(row[4] || "").trim(),  
-                  tglLahir: tglLahirOtomatis,  // <--- TAMBAHAN BARU: Kirim Tgl Lahir ke Backend!            
-                  unitkerja: String(row[8] || "").trim(),        
-                  unorInduk: String(row[10] || "").trim(),    
-                  skp: String(row[16] || "").trim(),          
-                  golongan: String(row[30] || "").trim(),        
-                  statusPegawai: statusPegawaiVal
-                  // Atribut lain sengaja DIHAPUS agar backend tahu bahwa kita TIDAK ingin menimpanya saat update
-                });
+                      nip: nipBersih, 
+                      nama: String(row[4] || "").trim(),  
+                      tglLahir: tglLahirOtomatis,             
+                      unitkerja: String(row[8] || "").trim(),        
+                      unorInduk: String(row[10] || "").trim(),    
+                      skp: String(row[16] || "").trim(),          
+                      golongan: String(row[30] || "").trim(),        
+                      statusPegawai: statusPegawaiVal
+                  });
               }
 
               if(payload.length === 0) {
@@ -2248,7 +2256,6 @@ async function submitFormInputAbsen(e) {
                   alertSukses(`Data SKP berhasil diimpor ke bulan ${bulanTarget}!`); 
               }
 
-              // JIKA BERASAL DARI MODAL TAMBAH PERIODE (AUTO REFRESH!)
               if (periodeTarget && periodeDataTerbaru) {
                   let modalObj = bootstrap.Modal.getInstance(document.getElementById('modalTambahPeriode'));
                   if(modalObj) modalObj.hide();
@@ -2261,13 +2268,12 @@ async function submitFormInputAbsen(e) {
                   window.cacheDataPegawaiAll = null; 
                   globalBulanAktif = bulanTarget;
                   sessionStorage.setItem('globalBulanAktif', globalBulanAktif);
-                  masukAplikasi(); // Langsung pindah ke tabel pegawai
+                  masukAplikasi(); 
               } 
-              // JIKA BERASAL DARI MENU IMPORT BIASA
               else {
                   let modalObj = bootstrap.Modal.getInstance(document.getElementById('modalImportExcel'));
                   if(modalObj) modalObj.hide();
-                  muatDataPegawai(true); // Paksa narik data baru dari server
+                  muatDataPegawai(true); 
               }
           } 
           else if(jenis === 'pergub') {
@@ -2283,13 +2289,12 @@ async function submitFormInputAbsen(e) {
                       kk: parseFloat(row[4])||0, 
                       tb: parseFloat(row[5])||0, 
                       kp: parseFloat(row[6])||0,
-                      statusPegawai: String(row[7] || "PNS").trim() // 👇 TANGKAP KOLOM KE 8 (Indeks 7)
+                      statusPegawai: String(row[7] || "PNS").trim() 
                   }); 
               }
               let res = await fetchAPI("importPergubMassal", payload); 
               stopLoading(); 
               
-              // 👇 Perbaiki bacaan respon errornya
               if(res && res.status === "error") { 
                   alertError(res.pesan); 
               } else { 
@@ -2308,18 +2313,17 @@ async function submitFormInputAbsen(e) {
               if(String(res).includes("Error") || String(res).includes("Gagal")) alertError(res.pesan || res); else alertSukses(res); bootstrap.Modal.getInstance(document.getElementById('modalImportExcel')).hide(); muatDaftarAkun(); 
           }
           // ========================================================
-          // 👇 INI DIA TAMBAHAN BLOK UNTUK IMPORT ABSEN 👇
+          // BLOK IMPORT ABSENSI SIABON
           // ========================================================
           else if(jenis === 'absen') {
               if(!bulanTarget) { stopLoading(); return alertError("Pilih Periode Bulan terlebih dahulu!"); }
 
-              // Filter Kunci: Buat daftar NIP yang HANYA tampil di tabel layar saat ini
               let validNips = new Set(globalDataPegawai.map(p => String(p[0]).trim().toLowerCase().replace(/'/g, "")));
               
               let headerRowIndex = -1;
               let colMap = {};
               
-              // Smart Detector: Cek 15 baris pertama untuk cari letak Header Siabon
+              // Cari Header Dinamis dari Excel
               for(let i = 0; i < Math.min(15, data2D.length); i++) {
                   let rowData = data2D[i].map(c => String(c).trim().toUpperCase());
                   
@@ -2340,12 +2344,11 @@ async function submitFormInputAbsen(e) {
               for(let i = startRow; i < data2D.length; i++) {
                   let row = data2D[i];
                   
-                  // Kalau Siabon NIP ada di kolom ke-2 (index 1), kalau Template kita kolom 1 (index 0)
+                  // NIP Siabon ada di index 1 (Kolom B). Template standar di index 0.
                   let nipVal = isSiabonFormat ? row[1] : row[0]; 
                   if(!nipVal) continue;
                   let nipBersih = String(nipVal).replace(/[\s-']/g, '').toLowerCase();
 
-                  // JIKA NIP TIDAK ADA DI LAYAR SAAT INI, ABAIKAN SAJA (Mencegah salah kamar)
                   if(!/^\d{18}$/.test(nipBersih) || !validNips.has(nipBersih)) continue;
 
                   let skpGabungan = "Baik|Menilai"; 
@@ -2354,18 +2357,17 @@ async function submitFormInputAbsen(e) {
                   let cp1=0, cp2=0, cp3=0, cp4=0;
 
                   if (isSiabonFormat) {
-                      // Mapping Otomatis Rumus Bapak untuk format BKD/SIABON
+                      // 👇 MAPPING SESUAI PERMINTAAN BAPAK 👇
                       let val = (colName) => parseInt(row[colMap[colName]]) || 0;
                       
-                      cp4 = val('CP');               // CP -> CP4
-                      tl4 = val('AS');               // AS -> TL4
-                      dl  = val('D') + val('DK');    // D dan DK -> DL
-                      s   = val('S');                // S -> S
-                      kp  = val('I');                // I -> KP
-                      c   = val('C') + val('TB');    // C dan TB -> C
-                      tk  = val('TK') || val('A') || 0; // Jaga-jaga namanya A atau TK
+                      cp4 = val('CP');               // Aplikasi CP4 = Kolom CP
+                      tl4 = val('AS');               // Aplikasi TD4 = Kolom AS
+                      dl  = val('D') + val('DK');    // Aplikasi DL  = Kolom D + DK
+                      s   = val('S');                // Aplikasi S   = Kolom S
+                      kp  = val('I');                // Aplikasi KP  = Kolom I (Izin)
+                      c   = val('C') + val('TB');    // Aplikasi C   = Kolom C + TB
+                      tk  = val('TK') || val('A') || val('ALPA') || 0; 
                   } else {
-                      // Mapping Template Bawaan Sistem
                       let skpVal = String(row[1] || "Baik").trim();
                       let statusMenilaiVal = String(row[2] || "Menilai").trim();
                       skpGabungan = skpVal + "|" + statusMenilaiVal;
@@ -2405,7 +2407,6 @@ async function submitFormInputAbsen(e) {
                   let modalObj = bootstrap.Modal.getInstance(document.getElementById('modalImportExcel'));
                   if(modalObj) modalObj.hide();
                   
-                  // Hapus cache agar saat klik tombol Mata, data langsung terupdate!
                   window.cacheDetailPegawai = {}; 
               }
           }
@@ -3149,9 +3150,3 @@ async function prosesImportUpdateExcel() {
         }
     });
 }
-
-
-
-
-
-

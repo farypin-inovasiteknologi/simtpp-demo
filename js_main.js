@@ -563,10 +563,11 @@ async function doLogin(e) {
             // Jika dikunci, dasarnya abu-abu. Jika terbuka, dasarnya biru.
             let btnClass = isLocked ? 'btn-outline-secondary text-secondary' : 'btn-outline-primary';
             
+            // col-4 artinya memakan 4 ruang dari total 12 (12/4 = 3 kolom per baris)
             container.innerHTML += `
-            <div class="col-6 col-md-3">
-                <button type="button" class="btn ${btnClass} w-100 fw-bold py-2 btn-periode-select shadow-sm text-truncate" onclick="klikBulan('${p.namaPeriode}', '${p.statusLock}', this)" title="${p.namaPeriode}">
-                    ${lockIcon}${p.namaPeriode}
+            <div class="col-4 col-md-3 px-1 mb-1">
+                <button type="button" class="btn ${btnClass} w-100 fw-bold btn-periode-select shadow-sm text-truncate" style="padding: 8px 2px; font-size: 0.75rem;" onclick="klikBulan('${p.namaPeriode}', '${p.statusLock}', this)" title="${p.namaPeriode}">
+                    ${lockIcon}${p.namaPeriode.split(" ")[0]} 
                 </button>
             </div>`; 
         }); 

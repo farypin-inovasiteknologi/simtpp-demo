@@ -84,7 +84,6 @@
     .scroll-to-top { position: fixed; bottom: 85px; right: 15px; width: 45px; height: 45px; background: rgba(13, 110, 253, 0.8); color: white; border-radius: 50%; display: none; justify-content: center; align-items: center; font-size: 1.5rem; z-index: 1020; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: 0.3s; border: 2px solid white; }
 
     @media (max-width: 768px) {
-      @media (max-width: 768px) {
       /* Kunci Layar Landing dan Login agar Kokoh (Tidak Bisa Di-scroll) */
       .bg-landing, body.bg-gradient-login {
         height: 100vh !important;
@@ -96,6 +95,10 @@
         left: 0;
       }
       
+      #viewLanding > div {
+        margin-top: -12vh !important; /* Menarik kotak naik sebesar 12% dari tinggi layar */
+      }
+
       /* Pastikan kotak login tepat di tengah layar HP */
       #viewLogin {
         height: 100vh;
@@ -106,7 +109,7 @@
       }
       #viewLogin > div {
         width: 90%;
-        margin-top: -10vh; /* Agak naik sedikit agar pas di mata */
+        margin-top: -15vh !important;
       }
 
       /* Hapus jarak pinggir bawaan aplikasi khusus di layar HP */
@@ -124,6 +127,13 @@
       }
       #viewPilihBulan .card-header { border-radius: 0 !important; padding: 10px !important; }
       
+      #viewPilihBulan .card-body {
+        padding: 10px !important; /* Padatkan jarak dalam kotak */
+      }
+      
+      #containerTombolPeriode {
+        margin-bottom: 5px !important; /* Kurangi jarak bawah tombol bulan */
+      }
       /* Rapatkan jarak antar kotak (Kotak Atas & Kotak Bawah) */
       #viewPilihBulan .row.g-4 { gap: 0 !important; margin: 0 !important; }
       #viewPilihBulan .col-lg-8, #viewPilihBulan .col-lg-4 { padding: 0 !important; }
@@ -399,14 +409,14 @@
               <i class="bi bi-calendar-week"></i> Pilih Periode TPP
             </div>
             <div class="card-body p-4">
-              <p class="text-muted small mb-3">Klik salah satu bulan di bawah ini. Tombol otomatis menyesuaikan barisnya.</p>
+              <p class="text-muted small mb-3 d-none d-md-block">Klik salah satu bulan di bawah ini. Tombol otomatis menyesuaikan barisnya.</p>
               <div id="containerTombolPeriode" class="row g-2 mb-4">
                 <span class="text-muted small">Memuat periode...</span>
               </div>
               <hr class="text-secondary" style="opacity: 0.2;">
-              <div class="d-flex flex-column flex-md-row gap-2">
-                <button id="btnTambahBulan" class="btn btn-outline-primary fw-bold hidden w-100" onclick="bukaModalTambahPeriode()"><i class="bi bi-plus-circle"></i> Tambah Periode</button>
-                <button id="btnKelolaBulan" class="btn btn-outline-danger fw-bold hidden w-100" onclick="bukaModalEditPeriode()"><i class="bi bi-gear"></i> Kelola Periode (Edit/Import)</button>
+              <div class="d-flex flex-row gap-2 mt-2">
+              <button id="btnTambahBulan" class="btn btn-outline-primary fw-bold hidden w-50" style="font-size: 0.8rem;" onclick="bukaModalTambahPeriode()"><i class="bi bi-plus-circle"></i> Tambah Periode</button>
+              <button id="btnKelolaBulan" class="btn btn-outline-danger fw-bold hidden w-50" style="font-size: 0.8rem;" onclick="bukaModalEditPeriode()"><i class="bi bi-gear"></i> Kelola (Edit/Import)</button>
               </div>
             </div>
           </div>

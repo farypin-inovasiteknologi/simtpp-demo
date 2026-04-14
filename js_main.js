@@ -927,7 +927,7 @@ if(selRef) {
       
       // LOGIKA BARU: Cek apakah data baris ini sudah FINAL
       // Sesuaikan angka 18 dengan urutan kolom status final di database (dimulai dari 0)
-      let isFinal = (row[18] === true || row[18] === "TRUE"); 
+      let isFinal = String(row[18]).trim().toUpperCase() === "TRUE"; 
 
       let btnDetail = `<button class="btn btn-sm btn-info text-white me-1 fw-bold" onclick="${openPanel}"><i class="bi bi-eye"></i> Detail</button>`;
       let btnGaji = "";
@@ -1934,7 +1934,7 @@ async function bukaModalInputAbsen(nip, nama, skpMaster) {
 
     // 👇 BACA STATUS KUNCI DARI DATA TABEL 👇
     let pData = globalDataPegawai.find(p => p[0] == nip);
-    let isFinalDb = pData && (pData[18] === true || pData[18] === "TRUE");
+    let isFinalDb = pData && String(pData[18]).trim().toUpperCase() === "TRUE";
     isDataTerkunci = !isFinalDb; 
     toggleKunciData(true); // skipSave = true, agar tidak nembak server pas baru buka
     
@@ -2065,7 +2065,8 @@ async function submitFormInputAbsen(e) {
         skp: gabunganSKP, 
         dl: getV('iDL'), s: getV('iS'), c: getV('iC'), kp: getV('iKP'), tk: getV('iTK'), asub: getV('iASUB'), 
         tl1: getV('iTL1'), tl2: getV('iTL2'), tl3: getV('iTL3'), tl4: getV('iTL4'), 
-        cp1: getV('iCP1'), cp2: getV('iCP2'), cp3: getV('iCP3'), cp4: getV('iCP4') 
+        cp1: getV('iCP1'), cp2: getV('iCP2'), cp3: getV('iCP3'), cp4: getV('iCP4'),
+        isFinal: isDataTerkunci // Tambahkan baris ini agar status tidak ter-reset
     };
     
     let res = await fetchAPI("simpanPerhitunganTPP", d); 

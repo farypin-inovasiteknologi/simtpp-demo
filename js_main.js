@@ -2115,34 +2115,67 @@ async function submitFormInputAbsen(e) {
       startLoading("Membaca File Excel & Mengirim ke Database...");
       
       try {
-          let arrayBuffer = await file.arrayBuffer();
-          const wb = new ExcelJS.Workbook();
-          await wb.xlsx.load(arrayBuffer);
-          const worksheet = wb.worksheets[0];
-          
           let data2D = [];
-          worksheet.eachRow({ includeEmpty: true }, function(row, rowNumber) {
-              let r = [];
-              for(let i = 1; i <= Math.max(row.cellCount, 60); i++) { // Max dilebarkan ke 60 jaga-jaga format BKD lebar
-                  let cell = row.getCell(i);
-                  let val = cell.value;
-                  if(val && typeof val === 'object') {
-                      if(val.result !== undefined) val = val.result;
-                      else if(val.richText) val = val.richText.map(t => t.text).join("");
+          let fileName = file.name.toLowerCase();
+
+          // =======================================================
+          // 1. JIKA FILE ADALAH CSV (Format teks biasa dari sistem lama)
+          // =======================================================
+          if (fileName.endsWith('.csv')) {
+              let textData = await file.text();
+              let rows = textData.split('\n'); // Pecah datanya per baris
+              
+              for(let i = 0; i < rows.length; i++) {
+                  // Cek apakah pemisahnya pakai koma (,) atau titik koma (;)
+                  let separator = rows[i].includes(';') ? ';' : ',';
+                  let cols = rows[i].split(separator);
+                  
+                  // Bersihkan tanda kutip ganda (") yang sering menempel di file CSV
+                  let r = cols.map(c => c.replace(/^"|"$/g, '').trim());
+                  
+                  // Hanya masukkan ke array jika barisnya tidak kosong
+                  if(r.join('') !== "") { 
+                      data2D.push(r);
                   }
-                  r.push(val === null || val === undefined ? "" : val);
               }
-              data2D.push(r);
-          });
+          } 
+          // =======================================================
+          // 2. JIKA FILE ADALAH EXCEL MODERN (.xlsx)
+          // =======================================================
+          else {
+              let arrayBuffer = await file.arrayBuffer();
+              const wb = new ExcelJS.Workbook();
+              
+              // Jika file adalah "Fake Excel" (HTML yang diubah jadi .xls), proses ini akan gagal (error)
+              // dan akan langsung melompat ke bagian catch(e) di bawah.
+              await wb.xlsx.load(arrayBuffer);
+              const worksheet = wb.worksheets[0];
+              
+              worksheet.eachRow({ includeEmpty: true }, function(row, rowNumber) {
+                  let r = [];
+                  // Kita lebarkan jangkauan pembacaan kolom sampai 60 agar format SIABON yang lebar bisa terbaca
+                  for(let i = 1; i <= Math.max(row.cellCount, 60); i++) {
+                      let cell = row.getCell(i);
+                      let val = cell.value;
+                      if(val && typeof val === 'object') {
+                          if(val.result !== undefined) val = val.result;
+                          else if(val.richText) val = val.richText.map(t => t.text).join("");
+                      }
+                      r.push(val === null || val === undefined ? "" : val);
+                  }
+                  data2D.push(r);
+              });
+          }
 
           if(data2D.length === 0) {
               stopLoading(); 
               if(btnSubmitModal) btnSubmitModal.disabled = false;
-              return alertError("File Excel kosong atau format tidak sesuai!");
+              return alertError("File Excel/CSV kosong atau formatnya tidak dikenali!");
           }
 
           let payload = [];
-
+          
+        
           if(jenis === 'pegawai') {
               if(!bulanTarget) { stopLoading(); return alertError("Pilih Periode Bulan terlebih dahulu!"); }
 

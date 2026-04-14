@@ -927,7 +927,7 @@ if(selRef) {
       
       // LOGIKA BARU: Cek apakah data baris ini sudah FINAL
       // Sesuaikan angka 18 dengan urutan kolom status final di database (dimulai dari 0)
-      let isFinal = (row[19] === true || row[19] === "TRUE"); 
+      let isFinal = (row[18] === true || row[18] === "TRUE"); 
 
       let btnDetail = `<button class="btn btn-sm btn-info text-white me-1 fw-bold" onclick="${openPanel}"><i class="bi bi-eye"></i> Detail</button>`;
       let btnGaji = "";

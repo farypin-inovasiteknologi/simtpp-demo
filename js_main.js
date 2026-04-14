@@ -2143,33 +2143,49 @@ async function submitFormInputAbsen(e) {
               });
 
           } catch (excelError) {
-              // 2. JIKA GAGAL (Error ZIP/Bukan Excel Asli), BACA SEBAGAI TEKS / CSV
-              console.log("Bukan file .xlsx murni, banting setir membaca sebagai teks/CSV...");
+              // 2. JIKA GAGAL BACA EXCELJS (Error ZIP/Bukan Excel Asli), BACA SEBAGAI TEKS / CSV / HTML
+              console.log("Bukan file .xlsx murni, banting setir membaca format alternatif...");
               
               let textData = await file.text();
               
-              // Cek jika ternyata isinya adalah tabel HTML jadul (Sering terjadi di web lama)
+              // CEK 1: JIKA TERNYATA ISINYA ADALAH TABEL HTML JADUL (Web Page / "Fake Excel")
               if (textData.includes("<table") || textData.includes("<TABLE")) {
-                  stopLoading();
-                  if(btnSubmitModal) btnSubmitModal.disabled = false;
-                  return alertError("File ini berisi format HTML dari web. Silakan buka file ini di Microsoft Excel dulu, lalu 'Save As' menjadi Excel Workbook (*.xlsx) sebelum di-import ke aplikasi ini.");
-              }
-              
-              // Jika isinya murni teks CSV (seperti file SIABON Bapak)
-              let rows = textData.split('\n'); 
-              for(let i = 0; i < rows.length; i++) {
-                  let rowStr = rows[i].trim();
-                  if (!rowStr) continue; // Abaikan baris kosong
-
-                  // Deteksi pemisah koma atau titik koma
-                  let separator = rowStr.includes(';') ? ';' : ',';
-                  let cols = rowStr.split(separator);
+                  console.log("Format HTML (Fake Excel) terdeteksi, melakukan parsing tabel HTML...");
+                  let parser = new DOMParser();
+                  let doc = parser.parseFromString(textData, 'text/html');
+                  let tables = doc.getElementsByTagName('table');
                   
-                  // Bersihkan tanda kutip (") yang sering menempel di awal/akhir kata
-                  let r = cols.map(c => c.replace(/^"|"$/g, '').trim());
-                  data2D.push(r);
+                  if (tables.length > 0) {
+                      let rows = tables[0].getElementsByTagName('tr');
+                      for (let i = 0; i < rows.length; i++) {
+                          let r = [];
+                          // Ambil semua th atau td di baris ini
+                          let cells = rows[i].querySelectorAll('td, th');
+                          for (let j = 0; j < cells.length; j++) {
+                              r.push(cells[j].innerText.trim());
+                          }
+                          if (r.length > 0) data2D.push(r);
+                      }
+                  } else {
+                      throw new Error("Format HTML terdeteksi, tapi tabel tidak ditemukan.");
+                  }
+              } 
+              // CEK 2: JIKA MURNI TEKS CSV BIASA
+              else {
+                  let rows = textData.split('\n'); 
+                  for(let i = 0; i < rows.length; i++) {
+                      let rowStr = rows[i].trim();
+                      if (!rowStr) continue; 
+                      
+                      let separator = rowStr.includes(';') ? ';' : ',';
+                      let cols = rowStr.split(separator);
+                      
+                      let r = cols.map(c => c.replace(/^"|"$/g, '').trim());
+                      data2D.push(r);
+                  }
               }
           }
+              
 
           if(data2D.length === 0) {
               stopLoading(); 

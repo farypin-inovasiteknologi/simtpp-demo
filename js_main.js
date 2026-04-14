@@ -2114,46 +2114,22 @@ async function submitFormInputAbsen(e) {
 
       startLoading("Membaca File Excel & Mengirim ke Database...");
       
+      
       try {
           let data2D = [];
-          let fileName = file.name.toLowerCase();
-
+          
           // =======================================================
-          // 1. JIKA FILE ADALAH CSV (Format teks biasa dari sistem lama)
+          // BLOK PEMBACAAN FILE SUPER CERDAS (Tahan Banting)
           // =======================================================
-          if (fileName.endsWith('.csv')) {
-              let textData = await file.text();
-              let rows = textData.split('\n'); // Pecah datanya per baris
-              
-              for(let i = 0; i < rows.length; i++) {
-                  // Cek apakah pemisahnya pakai koma (,) atau titik koma (;)
-                  let separator = rows[i].includes(';') ? ';' : ',';
-                  let cols = rows[i].split(separator);
-                  
-                  // Bersihkan tanda kutip ganda (") yang sering menempel di file CSV
-                  let r = cols.map(c => c.replace(/^"|"$/g, '').trim());
-                  
-                  // Hanya masukkan ke array jika barisnya tidak kosong
-                  if(r.join('') !== "") { 
-                      data2D.push(r);
-                  }
-              }
-          } 
-          // =======================================================
-          // 2. JIKA FILE ADALAH EXCEL MODERN (.xlsx)
-          // =======================================================
-          else {
+          try {
+              // 1. Coba baca sebagai Excel Modern (.xlsx) murni terlebih dahulu
               let arrayBuffer = await file.arrayBuffer();
               const wb = new ExcelJS.Workbook();
-              
-              // Jika file adalah "Fake Excel" (HTML yang diubah jadi .xls), proses ini akan gagal (error)
-              // dan akan langsung melompat ke bagian catch(e) di bawah.
               await wb.xlsx.load(arrayBuffer);
-              const worksheet = wb.worksheets[0];
               
+              const worksheet = wb.worksheets[0];
               worksheet.eachRow({ includeEmpty: true }, function(row, rowNumber) {
                   let r = [];
-                  // Kita lebarkan jangkauan pembacaan kolom sampai 60 agar format SIABON yang lebar bisa terbaca
                   for(let i = 1; i <= Math.max(row.cellCount, 60); i++) {
                       let cell = row.getCell(i);
                       let val = cell.value;
@@ -2165,16 +2141,44 @@ async function submitFormInputAbsen(e) {
                   }
                   data2D.push(r);
               });
+
+          } catch (excelError) {
+              // 2. JIKA GAGAL (Error ZIP/Bukan Excel Asli), BACA SEBAGAI TEKS / CSV
+              console.log("Bukan file .xlsx murni, banting setir membaca sebagai teks/CSV...");
+              
+              let textData = await file.text();
+              
+              // Cek jika ternyata isinya adalah tabel HTML jadul (Sering terjadi di web lama)
+              if (textData.includes("<table") || textData.includes("<TABLE")) {
+                  stopLoading();
+                  if(btnSubmitModal) btnSubmitModal.disabled = false;
+                  return alertError("File ini berisi format HTML dari web. Silakan buka file ini di Microsoft Excel dulu, lalu 'Save As' menjadi Excel Workbook (*.xlsx) sebelum di-import ke aplikasi ini.");
+              }
+              
+              // Jika isinya murni teks CSV (seperti file SIABON Bapak)
+              let rows = textData.split('\n'); 
+              for(let i = 0; i < rows.length; i++) {
+                  let rowStr = rows[i].trim();
+                  if (!rowStr) continue; // Abaikan baris kosong
+
+                  // Deteksi pemisah koma atau titik koma
+                  let separator = rowStr.includes(';') ? ';' : ',';
+                  let cols = rowStr.split(separator);
+                  
+                  // Bersihkan tanda kutip (") yang sering menempel di awal/akhir kata
+                  let r = cols.map(c => c.replace(/^"|"$/g, '').trim());
+                  data2D.push(r);
+              }
           }
 
           if(data2D.length === 0) {
               stopLoading(); 
               if(btnSubmitModal) btnSubmitModal.disabled = false;
-              return alertError("File Excel/CSV kosong atau formatnya tidak dikenali!");
+              return alertError("File Excel/CSV kosong atau format tidak sesuai!");
           }
 
           let payload = [];
-          
+
         
           if(jenis === 'pegawai') {
               if(!bulanTarget) { stopLoading(); return alertError("Pilih Periode Bulan terlebih dahulu!"); }

@@ -99,17 +99,11 @@
         margin-top: -12vh !important; /* Menarik kotak naik sebesar 12% dari tinggi layar */
       }
 
-      /* Pastikan kotak login tepat di tengah layar HP */
-      #viewLogin {
-        height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding-top: 0 !important;
-      }
+    
+      /* 2. Tarik kotak halaman Login ke atas */
       #viewLogin > div {
         width: 90%;
-        margin-top: -15vh !important;
+        margin-top: -17vh !important; /* Semakin besar min-nya, semakin naik ke atas */
       }
 
       /* Hapus jarak pinggir bawaan aplikasi khusus di layar HP */
@@ -410,7 +404,7 @@
             </div>
             <div class="card-body p-4">
               <p class="text-muted small mb-3 d-none d-md-block">Klik salah satu bulan di bawah ini. Tombol otomatis menyesuaikan barisnya.</p>
-              <div id="containerTombolPeriode" class="row g-2 mb-4">
+              <div id="containerTombolPeriode" class="row mb-4">
                 <span class="text-muted small">Memuat periode...</span>
               </div>
               <hr class="text-secondary" style="opacity: 0.2;">

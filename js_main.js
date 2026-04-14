@@ -925,6 +925,23 @@ if(selRef) {
       let args = `'${nip}', '${nama}', '${tglLahir}', '${gol}', '${unorInduk}', '${unit}', '${jab}', '${jenis}', '${stat}', ${gapok}, ${tjJab}, '${rek}', '${skp}', '${uuid}'`; 
       let openPanel = `bukaPanel('${nip}', '${nama}', '${gol}', '${jab}', '${stat}', '${unit}')`; 
       
+      // LOGIKA BARU: Cek apakah data baris ini sudah FINAL
+    // Misal: status final disimpan di row[18] (sesuaikan dengan index kolom di spreadsheet Anda)
+    let isFinal = (row[18] === true || row[18] === "TRUE"); 
+
+    if (globalStatusLock === "Kunci") {
+        btnAbsen = `<button class="btn btn-sm btn-secondary me-1" disabled><i class="bi bi-lock"></i></button>`;
+    } else {
+        // Tambahkan class 'btn-absen-fixed' dan logika icon centang
+        let iconCentang = isFinal ? '<i class="bi bi-check-circle-fill text-success ms-2 icon-final"></i>' : '';
+        
+        btnAbsen = `
+            <button class="btn btn-sm btn-warning me-1 text-dark fw-bold btn-absen-fixed" 
+                    onclick="bukaModalInputAbsen('${nip}', '${nama}', '${skp}')">
+                <i class="bi bi-pencil-fill"></i> Absen${iconCentang}
+            </button>`;
+    }
+
       let btnDetail = `<button class="btn btn-sm btn-info text-white me-1 fw-bold" onclick="${openPanel}"><i class="bi bi-eye"></i> Detail</button>`;
       let btnGaji = "";
       let btnAbsen = "";

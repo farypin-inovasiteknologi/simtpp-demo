@@ -926,21 +926,8 @@ if(selRef) {
       let openPanel = `bukaPanel('${nip}', '${nama}', '${gol}', '${jab}', '${stat}', '${unit}')`; 
       
       // LOGIKA BARU: Cek apakah data baris ini sudah FINAL
-    // Misal: status final disimpan di row[18] (sesuaikan dengan index kolom di spreadsheet Anda)
-    let isFinal = (row[18] === true || row[18] === "TRUE"); 
-
-    if (globalStatusLock === "Kunci") {
-        btnAbsen = `<button class="btn btn-sm btn-secondary me-1" disabled><i class="bi bi-lock"></i></button>`;
-    } else {
-        // Tambahkan class 'btn-absen-fixed' dan logika icon centang
-        let iconCentang = isFinal ? '<i class="bi bi-check-circle-fill text-success ms-2 icon-final"></i>' : '';
-        
-        btnAbsen = `
-            <button class="btn btn-sm btn-warning me-1 text-dark fw-bold btn-absen-fixed" 
-                    onclick="bukaModalInputAbsen('${nip}', '${nama}', '${skp}')">
-                <i class="bi bi-pencil-fill"></i> Absen${iconCentang}
-            </button>`;
-    }
+      // Sesuaikan angka 18 dengan urutan kolom status final di database (dimulai dari 0)
+      let isFinal = (row[18] === true || row[18] === "TRUE"); 
 
       let btnDetail = `<button class="btn btn-sm btn-info text-white me-1 fw-bold" onclick="${openPanel}"><i class="bi bi-eye"></i> Detail</button>`;
       let btnGaji = "";
@@ -949,11 +936,19 @@ if(selRef) {
 
       if (globalStatusLock === "Kunci") {
           btnGaji = `<button class="btn btn-sm btn-secondary me-1" onclick="alertPeringatan('Terkunci Admin!')"><i class="bi bi-lock"></i></button>`;
-          btnAbsen = `<button class="btn btn-sm btn-secondary me-1" onclick="alertPeringatan('Terkunci Admin!')"><i class="bi bi-lock"></i></button>`;
+          btnAbsen = `<button class="btn btn-sm btn-secondary me-1 btn-absen-fixed" onclick="alertPeringatan('Terkunci Admin!')"><i class="bi bi-lock"></i> Absen</button>`;
           btnDel = `<button class="btn btn-sm btn-secondary" onclick="alertPeringatan('Terkunci Admin!')"><i class="bi bi-lock"></i></button>`;
       } else {
           btnGaji = `<button class="btn btn-sm btn-primary me-1 fw-bold" onclick="bukaModalPegawai('edit', ${args})"><i class="bi bi-pencil-square"></i> Gaji</button>`;
-          btnAbsen = `<button class="btn btn-sm btn-warning me-1 text-dark fw-bold" onclick="bukaModalInputAbsen('${nip}', '${nama}', '${skp}')"><i class="bi bi-pencil-fill"></i> Absen</button>`;
+          
+          // Logika tombol absen memanjang dengan centang hijau
+          let iconCentang = isFinal ? '<i class="bi bi-check-circle-fill text-success ms-2 icon-final"></i>' : '';
+          
+          btnAbsen = `
+              <button class="btn btn-sm btn-warning me-1 text-dark fw-bold btn-absen-fixed" 
+                      onclick="bukaModalInputAbsen('${nip}', '${nama}', '${skp}')">
+                  <i class="bi bi-pencil-fill"></i> Absen${iconCentang}
+              </button>`;
           
           if (isRestrictedRole) {
               btnDel = `<button class="btn btn-sm btn-secondary" onclick="alertPeringatan('Akses Ditolak: Hanya Admin OPD yang dapat menghapus.')" title="Dilarang"><i class="bi bi-trash"></i></button>`;

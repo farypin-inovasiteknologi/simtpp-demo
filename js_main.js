@@ -1910,6 +1910,14 @@ async function bukaModalInputAbsen(nip, nama, skpMaster) {
     document.getElementById('iSKP').value = skpMaster || "Baik";
     document.getElementById('iTidakMenilai').checked = false;
 
+    // 👇 LOGIKA HIDE TOMBOL UNTUK ADMIN OPD / ADMIN SUB UNIT 👇
+    let btnKunci = document.getElementById('btnKunciData');
+    if (currentUser.role === "Operator") {
+        btnKunci.style.display = 'block'; // Operator bisa ngunci
+    } else {
+        btnKunci.style.display = 'none';  // Admin cuma bisa lihat badge statusnya aja
+    }
+
     let modalObj = new bootstrap.Modal(document.getElementById('modalInputAbsen'));
     modalObj.show();
 
@@ -2015,6 +2023,7 @@ function hitungMatriksTPPInput() {
       if(document.getElementById('iTotPot_'+k)) document.getElementById('iTotPot_'+k).innerText = fR(totPot); 
       if(document.getElementById('iHasil_'+k)) document.getElementById('iHasil_'+k).innerText = fR(hasilAkhir); 
     });
+    triggerAutoSave();
 }
 
 async function submitFormInputAbsen(e) {
@@ -3141,4 +3150,96 @@ async function prosesImportUpdateExcel() {
             muatDataPegawai(true); 
         }
     });
+}
+
+// ==========================================
+// FITUR AUTO-SAVE & KUNCI DATA (WORKFLOW)
+// ==========================================
+let timerAutoSimpan;
+let isDataTerkunci = false;
+
+async function toggleKunciData() {
+    isDataTerkunci = !isDataTerkunci;
+    let btn = document.getElementById('btnKunciData');
+    let badge = document.getElementById('statusFinalBadge');
+    
+    // Ambil semua input di dalam form absen
+    let inputs = document.querySelectorAll('#formInputAbsen input, #formInputAbsen select');
+
+    if (isDataTerkunci) {
+        // Mode Terkunci (Final)
+        badge.className = "badge bg-success mb-1";
+        badge.innerText = "Status: Final ✔️";
+        btn.className = "btn btn-danger fw-bold w-100 shadow-sm";
+        btn.innerHTML = '<i class="bi bi-lock-fill"></i> Buka Kunci';
+        
+        // Disable semua input
+        inputs.forEach(el => {
+            if(el.id !== 'btnKunciData') {
+                el.disabled = true;
+                el.classList.add('readonly-field');
+            }
+        });
+    } else {
+        // Mode Terbuka (Belum Final)
+        badge.className = "badge bg-secondary mb-1";
+        badge.innerText = "Belum Final";
+        btn.className = "btn btn-outline-dark fw-bold w-100 shadow-sm";
+        btn.innerHTML = '<i class="bi bi-unlock"></i> Kunci Data';
+        
+        // Enable semua input kembali
+        inputs.forEach(el => {
+            // Kecuali input pola hari kerja yang emang dikunci dari awal
+            if(el.id !== 'btnKunciData' && el.id !== 'iHariKerja') { 
+                el.disabled = false;
+                el.classList.remove('readonly-field');
+            }
+        });
+    }
+}
+
+// Eksekutor Auto Save (Debounce 1.5 Detik)
+function triggerAutoSave() {
+    if (isDataTerkunci) return; // Jangan save kalau lagi dikunci
+
+    let indikator = document.getElementById('indikatorSimpan');
+    indikator.style.display = 'block';
+    indikator.innerText = "Mengetik...";
+    indikator.className = "text-warning mt-1 fw-bold";
+
+    clearTimeout(timerAutoSimpan);
+    
+    timerAutoSimpan = setTimeout(async () => {
+        indikator.innerText = "Menyimpan otomatis...";
+        indikator.className = "text-primary mt-1 fw-bold";
+        
+        const getV = (id) => parseInt(document.getElementById(id).value) || 0;
+        let statusMenilai = document.getElementById('iTidakMenilai').checked ? "Tidak Menilai" : "Menilai";
+        let gabunganSKP = document.getElementById('iSKP').value + "|" + statusMenilai;
+        let hkDB = document.getElementById('iHariKerja').value;
+
+        const d = { 
+            nip: asNIPAktif, 
+            bulan: globalBulanAktif, 
+            hariKerja: hkDB, 
+            skp: gabunganSKP, 
+            dl: getV('iDL'), s: getV('iS'), c: getV('iC'), kp: getV('iKP'), tk: getV('iTK'), asub: getV('iASUB'), 
+            tl1: getV('iTL1'), tl2: getV('iTL2'), tl3: getV('iTL3'), tl4: getV('iTL4'), 
+            cp1: getV('iCP1'), cp2: getV('iCP2'), cp3: getV('iCP3'), cp4: getV('iCP4') 
+        };
+
+        // Panggil API secara siluman (tanpa startLoading)
+        let res = await fetchAPI("simpanPerhitunganTPP", d); 
+        
+        if(res && res.status !== "error") {
+            indikator.innerText = "Tersimpan ✔️";
+            indikator.className = "text-success mt-1 fw-bold";
+            if(window.cacheDetailPegawai) delete window.cacheDetailPegawai[asNIPAktif + "_" + globalBulanAktif];
+        } else {
+            indikator.innerText = "Gagal simpan ❌";
+            indikator.className = "text-danger mt-1 fw-bold";
+        }
+        
+        setTimeout(() => { indikator.style.display = 'none'; }, 3000);
+    }, 1500); // Tunggu 1.5 detik setelah user diam, baru tembak ke server
 }

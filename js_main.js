@@ -2098,6 +2098,9 @@ async function submitFormInputAbsen(e) {
   // =========================================================
   // FUNGSI: IMPORT EXCEL (BKD / MASTER / AKUN / ABSEN) 
   // =========================================================
+  // =========================================================
+  // FUNGSI: IMPORT EXCEL (BKD / MASTER / AKUN / ABSEN) 
+  // =========================================================
   async function prosesImportExcel(fileInputElemen = null, periodeTarget = null, periodeDataTerbaru = null, btnSubmitModal = null) {
       let fileInput = fileInputElemen || document.getElementById('fileImport'); 
       if(!fileInput.files[0]) return alertPeringatan("Pilih file Excel/CSV terlebih dahulu!");
@@ -2140,7 +2143,7 @@ async function submitFormInputAbsen(e) {
 
           } catch (excelError) {
               // 2. JIKA GAGAL, BACA SEBAGAI TEKS / CSV (KHUSUS SIABON)
-              console.log("Bukan file .xlsx murni, membaca sebagai format CSV alternatif...");
+              console.log("Bukan file .xlsx murni, membaca format alternatif...");
               let textData = await file.text();
               
               if (textData.includes("<table") || textData.includes("<TABLE")) {
@@ -2202,6 +2205,9 @@ async function submitFormInputAbsen(e) {
 
           let payload = [];
 
+          // ========================================================
+          // BLOK IMPORT PEGAWAI
+          // ========================================================
           if(jenis === 'pegawai') {
               if(!bulanTarget) { stopLoading(); return alertError("Pilih Periode Bulan terlebih dahulu!"); }
 
@@ -2249,7 +2255,7 @@ async function submitFormInputAbsen(e) {
               if(String(resImport).includes("Error")) { 
                   alertError(resImport.pesan || resImport); 
               } else { 
-                  alertSukses(`Data SKP berhasil diimpor ke bulan ${bulanTarget}!`); 
+                  alertSukses(`Data Pegawai berhasil diimpor ke bulan ${bulanTarget}!`); 
               }
 
               if (periodeTarget && periodeDataTerbaru) {
@@ -2301,44 +2307,34 @@ async function submitFormInputAbsen(e) {
               if(String(res).includes("Error") || String(res).includes("Gagal")) alertError(res.pesan || res); else alertSukses(res); bootstrap.Modal.getInstance(document.getElementById('modalImportExcel')).hide(); muatDaftarAkun(); 
           }
           // ========================================================
-          // BLOK IMPORT ABSENSI (DENGAN PEMETAAN KHUSUS SIABON)
+          // BLOK IMPORT ABSENSI (DENGAN PEMETAAN DARI BELAKANG)
           // ========================================================
           else if(jenis === 'absen') {
               if(!bulanTarget) { stopLoading(); return alertError("Pilih Periode Bulan terlebih dahulu!"); }
 
               let validNips = new Set(globalDataPegawai.map(p => String(p[0]).trim().toLowerCase().replace(/'/g, "")));
               
-              let headerRowIndex = -1;
-              let colMap = {};
+              let isSiabonFormat = false;
+              let startRow = 1;
               
-              // Cari Header Dinamis dari Excel (Cek 15 baris pertama)
+              // Cek Format File (Apakah ini SIABON atau Template Aplikasi)
               for(let i = 0; i < Math.min(15, data2D.length); i++) {
-                  let rowData = data2D[i].map(c => String(c).trim().toUpperCase());
-                  
-                  if (rowData.includes("CP") && rowData.includes("AS") && rowData.includes("S")) {
-                      headerRowIndex = i;
-                      rowData.forEach((colName, idx) => { if(colName) colMap[colName] = idx; });
+                  let rowJoined = data2D[i].join("").toUpperCase();
+                  if (rowJoined.includes("CP") && rowJoined.includes("AS") && rowJoined.includes("DK")) {
+                      isSiabonFormat = true;
+                      startRow = i + 1; // Mulai baca data dari baris di bawah judul
                       break;
-                  } 
-                  else if (rowData.includes("NIP (ANGKA SAJA)") && rowData.includes("NILAI SKP")) {
-                      headerRowIndex = i;
+                  } else if (rowJoined.includes("NIP(ANGKASAJA)") || rowJoined.includes("NILAISKP")) {
+                      startRow = i + 1;
                       break;
                   }
               }
 
-              let isSiabonFormat = Object.keys(colMap).includes("CP") && Object.keys(colMap).includes("AS");
-              let startRow = headerRowIndex !== -1 ? headerRowIndex + 1 : 1;
-              
-              // DETEKSI OTOMATIS BUG SIABON: Jika judul kolom tanggal "1" ada di index 3, berarti file ini bergeser
-              let siabonOffset = 0;
-              if (isSiabonFormat && colMap['1'] === 3) {
-                  siabonOffset = 1; // Geser bacaan data ke kanan 1 kolom agar sinkron!
-              }
-
               for(let i = startRow; i < data2D.length; i++) {
                   let row = data2D[i];
+                  if (row.length < 5) continue; // Abaikan baris kosong
                   
-                  // NIP Siabon biasanya ada di kolom B (index 1)
+                  // NIP di SIABON ada di urutan kedua (index 1), Template di urutan pertama (index 0)
                   let nipVal = isSiabonFormat ? row[1] : row[0]; 
                   if(!nipVal) continue;
                   let nipBersih = String(nipVal).replace(/[\s-']/g, '').toLowerCase();
@@ -2351,17 +2347,20 @@ async function submitFormInputAbsen(e) {
                   let cp1=0, cp2=0, cp3=0, cp4=0;
 
                   if (isSiabonFormat) {
-                      // PENARIKAN DATA DENGAN OFFSET AGAR TIDAK MELESET
-                      let val = (colName) => parseInt(row[colMap[colName] + siabonOffset]) || 0;
+                      // KUNCI SAKTI: Baca elemen dari paling belakang (Length - x)
+                      // Ini kebal dari efek pergeseran kolom Merge Cell (rowspan/colspan)!
+                      let L = row.length;
+                      let v = (offsetFromEnd) => parseInt(row[L - offsetFromEnd]) || 0;
                       
-                      cp4 = val('CP');               // Aplikasi CP4 = Kolom CP (Siabon)
-                      tl4 = val('AS');               // Aplikasi TD4 = Kolom AS (Siabon)
-                      dl  = val('D') + val('DK');    // Aplikasi DL  = Kolom D + DK (Siabon)
-                      s   = val('S');                // Aplikasi S   = Kolom S (Siabon)
-                      kp  = val('I');                // Aplikasi KP  = Kolom I (Siabon)
-                      c   = val('C') + val('TB');    // Aplikasi C   = Kolom C + TB (Siabon)
-                      tk  = val('TK') || val('A') || val('ALPA') || 0; 
+                      cp4 = v(14);             // CP (Cepat Pulang) -> Masuk ke CP4
+                      tl4 = v(13);             // AS (Terlambat) -> Masuk ke TD4
+                      dl  = v(6) + v(1);       // D + DK -> Masuk ke DL
+                      s   = v(5);              // S -> Sakit
+                      kp  = v(4);              // I -> Masuk ke KP
+                      c   = v(3) + v(2);       // C + TB -> Masuk ke Cuti
+                      tk  = 0;                 // Siabon biasanya tidak menampilkan jumlah Alpa langsung
                   } else {
+                      // Jika pakai template bawaan Aplikasi
                       let skpVal = String(row[1] || "Baik").trim();
                       let statusMenilaiVal = String(row[2] || "Menilai").trim();
                       skpGabungan = skpVal + "|" + statusMenilaiVal;
@@ -2373,8 +2372,7 @@ async function submitFormInputAbsen(e) {
                   }
 
                   payload.push({
-                      nip: nipBersih,
-                      skp: skpGabungan,
+                      nip: nipBersih, skp: skpGabungan,
                       dl: dl, kp: kp, s: s, c: c,
                       tk: tk, asub: asub,
                       tl1: tl1, tl2: tl2, tl3: tl3, tl4: tl4,

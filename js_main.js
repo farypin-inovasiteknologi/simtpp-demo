@@ -1905,13 +1905,13 @@ function ubahPolaHKInput() {
 }
 
 
+// UPDATE MODAL AGAR MEMBACA STATUS KUNCI DARI DATABASE SAAT DIBUKA
 async function bukaModalInputAbsen(nip, nama, skpMaster) {
     asNIPAktif = nip;
     document.getElementById('lblInputAbsenNama').innerText = nama;
     document.getElementById('lblInputAbsenNip').innerText = nip;
     document.getElementById('lblInputAbsenBulan').innerText = globalBulanAktif;
     
-    // Set default HK
     document.getElementById('iPolaHK').value = "5";
     document.getElementById('iHariKerja').value = globalHariKerja;
 
@@ -1922,16 +1922,25 @@ async function bukaModalInputAbsen(nip, nama, skpMaster) {
     document.getElementById('iSKP').value = skpMaster || "Baik";
     document.getElementById('iTidakMenilai').checked = false;
 
-    // 👇 LOGIKA HIDE TOMBOL UNTUK ADMIN OPD / ADMIN SUB UNIT 👇
     let btnKunci = document.getElementById('btnKunciData');
     if (currentUser.role === "Operator") {
-        btnKunci.style.display = 'block'; // Operator bisa ngunci
+        btnKunci.style.display = 'block'; 
     } else {
-        btnKunci.style.display = 'none';  // Admin cuma bisa lihat badge statusnya aja
+        btnKunci.style.display = 'none';  
     }
 
     let modalObj = new bootstrap.Modal(document.getElementById('modalInputAbsen'));
     modalObj.show();
+
+    // 👇 BACA STATUS KUNCI DARI DATA TABEL 👇
+    let pData = globalDataPegawai.find(p => p[0] == nip);
+    let isFinalDb = pData && (pData[18] === true || pData[18] === "TRUE");
+    isDataTerkunci = !isFinalDb; 
+    toggleKunciData(true); // skipSave = true, agar tidak nembak server pas baru buka
+    
+    clearTimeout(timerAutoSimpan);
+    let indikator = document.getElementById('indikatorSimpan');
+    if(indikator) indikator.style.display = 'none';
 
     let cacheKey = nip + "_" + globalBulanAktif;
     let res;
@@ -1950,7 +1959,6 @@ async function bukaModalInputAbsen(nip, nama, skpMaster) {
     if(res && res.pergub) baseTPP = res.pergub;
 
     if(res && res.absen) {
-        // Tarik data Hari Kerja dari Database
         let hkDb = parseInt(res.absen[3]); 
         document.getElementById('iPolaHK').value = (hkDb === globalHariKerja6) ? "6" : "5";
         document.getElementById('iHariKerja').value = hkDb;
@@ -3170,22 +3178,18 @@ async function prosesImportUpdateExcel() {
 let timerAutoSimpan;
 let isDataTerkunci = false;
 
-async function toggleKunciData() {
+// Tambahkan parameter skipSave agar tidak nyepam server pas modal baru dibuka
+async function toggleKunciData(skipSave = false) {
     isDataTerkunci = !isDataTerkunci;
     let btn = document.getElementById('btnKunciData');
     let badge = document.getElementById('statusFinalBadge');
-    
-    // Ambil semua input di dalam form absen
     let inputs = document.querySelectorAll('#formInputAbsen input, #formInputAbsen select');
 
     if (isDataTerkunci) {
-        // Mode Terkunci (Final)
         badge.className = "badge bg-success mb-1";
         badge.innerText = "Status: Final ✔️";
         btn.className = "btn btn-danger fw-bold w-100 shadow-sm";
         btn.innerHTML = '<i class="bi bi-lock-fill"></i> Buka Kunci';
-        
-        // Disable semua input
         inputs.forEach(el => {
             if(el.id !== 'btnKunciData') {
                 el.disabled = true;
@@ -3193,26 +3197,27 @@ async function toggleKunciData() {
             }
         });
     } else {
-        // Mode Terbuka (Belum Final)
         badge.className = "badge bg-secondary mb-1";
         badge.innerText = "Belum Final";
         btn.className = "btn btn-outline-dark fw-bold w-100 shadow-sm";
         btn.innerHTML = '<i class="bi bi-unlock"></i> Kunci Data';
-        
-        // Enable semua input kembali
         inputs.forEach(el => {
-            // Kecuali input pola hari kerja yang emang dikunci dari awal
             if(el.id !== 'btnKunciData' && el.id !== 'iHariKerja') { 
                 el.disabled = false;
                 el.classList.remove('readonly-field');
             }
         });
     }
+    
+    // Paksa simpan saat diklik, KECUALI saat modal baru pertama dibuka
+    if (!skipSave) {
+        triggerAutoSave(true); 
+    }
 }
 
-// Eksekutor Auto Save (Debounce 1.5 Detik)
-function triggerAutoSave() {
-    if (isDataTerkunci) return; // Jangan save kalau lagi dikunci
+function triggerAutoSave(forceSave = false) {
+    // Jangan save otomatis dari ketikan kalau lagi dikunci
+    if (isDataTerkunci && !forceSave) return; 
 
     let indikator = document.getElementById('indikatorSimpan');
     indikator.style.display = 'block';
@@ -3221,6 +3226,9 @@ function triggerAutoSave() {
 
     clearTimeout(timerAutoSimpan);
     
+    // Kalau forceSave (dari tombol kunci), langsung proses tanpa jeda
+    let jeda = forceSave ? 0 : 1500;
+
     timerAutoSimpan = setTimeout(async () => {
         indikator.innerText = "Menyimpan otomatis...";
         indikator.className = "text-primary mt-1 fw-bold";
@@ -3237,21 +3245,30 @@ function triggerAutoSave() {
             skp: gabunganSKP, 
             dl: getV('iDL'), s: getV('iS'), c: getV('iC'), kp: getV('iKP'), tk: getV('iTK'), asub: getV('iASUB'), 
             tl1: getV('iTL1'), tl2: getV('iTL2'), tl3: getV('iTL3'), tl4: getV('iTL4'), 
-            cp1: getV('iCP1'), cp2: getV('iCP2'), cp3: getV('iCP3'), cp4: getV('iCP4') 
+            cp1: getV('iCP1'), cp2: getV('iCP2'), cp3: getV('iCP3'), cp4: getV('iCP4'),
+            isFinal: isDataTerkunci // 👈 INI KUNCINYA, STATUS DIKIRIM KE SERVER!
         };
 
-        // Panggil API secara siluman (tanpa startLoading)
         let res = await fetchAPI("simpanPerhitunganTPP", d); 
         
         if(res && res.status !== "error") {
             indikator.innerText = "Tersimpan ✔️";
             indikator.className = "text-success mt-1 fw-bold";
             if(window.cacheDetailPegawai) delete window.cacheDetailPegawai[asNIPAktif + "_" + globalBulanAktif];
+            
+            // 👇 UPDATE UI TABEL OTOMATIS: Munculkan/Hilangkan centang tanpa refresh 👇
+            let idx = globalDataPegawai.findIndex(p => p[0] == asNIPAktif);
+            if (idx > -1) {
+                globalDataPegawai[idx][18] = isDataTerkunci ? "TRUE" : "FALSE";
+                terapkanFilter(); 
+            }
         } else {
             indikator.innerText = "Gagal simpan ❌";
             indikator.className = "text-danger mt-1 fw-bold";
         }
         
         setTimeout(() => { indikator.style.display = 'none'; }, 3000);
-    }, 1500); // Tunggu 1.5 detik setelah user diam, baru tembak ke server
+    }, jeda); 
 }
+
+

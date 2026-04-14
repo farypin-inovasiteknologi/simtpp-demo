@@ -2109,7 +2109,7 @@ async function submitFormInputAbsen(e) {
       if (periodeTarget) jenis = 'pegawai';
       let bulanTarget = periodeTarget || globalBulanAktif;
 
-      startLoading("Membaca File & Mengurai Kolom...");
+      startLoading("Membaca File & Memetakan Kolom...");
       
       try {
           let data2D = [];
@@ -2118,7 +2118,7 @@ async function submitFormInputAbsen(e) {
           // BLOK PEMBACAAN FILE SUPER CERDAS (Tahan Banting)
           // =======================================================
           try {
-              // 1. Coba baca sebagai Excel Modern (.xlsx) murni terlebih dahulu
+              // 1. Coba baca sebagai Excel Modern (.xlsx) murni
               let arrayBuffer = await file.arrayBuffer();
               const wb = new ExcelJS.Workbook();
               await wb.xlsx.load(arrayBuffer);
@@ -2139,14 +2139,11 @@ async function submitFormInputAbsen(e) {
               });
 
           } catch (excelError) {
-              // 2. JIKA GAGAL (Error ZIP/Bukan Excel Asli), BACA SEBAGAI TEKS / CSV / HTML
-              console.log("Bukan file .xlsx murni, banting setir membaca format alternatif...");
-              
+              // 2. JIKA GAGAL, BACA SEBAGAI TEKS / CSV (KHUSUS SIABON)
+              console.log("Bukan file .xlsx murni, membaca sebagai format CSV alternatif...");
               let textData = await file.text();
               
-              // CEK 1: JIKA TERNYATA ISINYA ADALAH TABEL HTML JADUL (Web Page / "Fake Excel")
               if (textData.includes("<table") || textData.includes("<TABLE")) {
-                  console.log("Format HTML (Fake Excel) terdeteksi, melakukan parsing tabel HTML...");
                   let parser = new DOMParser();
                   let doc = parser.parseFromString(textData, 'text/html');
                   let tables = doc.getElementsByTagName('table');
@@ -2165,7 +2162,6 @@ async function submitFormInputAbsen(e) {
                       throw new Error("Format HTML terdeteksi, tapi tabel tidak ditemukan.");
                   }
               } 
-              // CEK 2: JIKA MURNI TEKS CSV BIASA (SEPERTI FILE SIABON)
               else {
                   let rows = textData.split('\n'); 
                   for(let i = 0; i < rows.length; i++) {
@@ -2174,7 +2170,7 @@ async function submitFormInputAbsen(e) {
                       
                       let separator = rowStr.includes(';') ? ';' : ',';
                       
-                      // PARSER CSV ANTI-BADAI (Mengabaikan koma di dalam tanda kutip nama pegawai)
+                      // PARSER CSV ANTI-BADAI: Mengabaikan koma di dalam nama yang punya gelar
                       let r = [];
                       let current = '';
                       let inQuotes = false;
@@ -2280,7 +2276,6 @@ async function submitFormInputAbsen(e) {
               for(let i = 1; i < data2D.length; i++) { 
                   let row = data2D[i]; 
                   if(!row[0]) continue; 
-                  
                   payload.push({ 
                       namaJabatan: row[0], 
                       kelasJabatan: row[1], 
@@ -2294,14 +2289,7 @@ async function submitFormInputAbsen(e) {
               }
               let res = await fetchAPI("importPergubMassal", payload); 
               stopLoading(); 
-              
-              if(res && res.status === "error") { 
-                  alertError(res.pesan); 
-              } else { 
-                  alertSukses(res.pesan || "Sukses"); 
-                  bootstrap.Modal.getInstance(document.getElementById('modalImportExcel')).hide(); 
-                  muatDataPergub(); 
-              }
+              if(res && res.status === "error") alertError(res.pesan); else { alertSukses(res.pesan || "Sukses"); bootstrap.Modal.getInstance(document.getElementById('modalImportExcel')).hide(); muatDataPergub(); }
           } 
           else if(jenis === 'akun') {
               for(let i = 1; i < data2D.length; i++) { 
@@ -2313,7 +2301,7 @@ async function submitFormInputAbsen(e) {
               if(String(res).includes("Error") || String(res).includes("Gagal")) alertError(res.pesan || res); else alertSukses(res); bootstrap.Modal.getInstance(document.getElementById('modalImportExcel')).hide(); muatDaftarAkun(); 
           }
           // ========================================================
-          // BLOK IMPORT ABSENSI SIABON
+          // BLOK IMPORT ABSENSI (DENGAN PEMETAAN KHUSUS SIABON)
           // ========================================================
           else if(jenis === 'absen') {
               if(!bulanTarget) { stopLoading(); return alertError("Pilih Periode Bulan terlebih dahulu!"); }
@@ -2323,7 +2311,7 @@ async function submitFormInputAbsen(e) {
               let headerRowIndex = -1;
               let colMap = {};
               
-              // Cari Header Dinamis dari Excel
+              // Cari Header Dinamis dari Excel (Cek 15 baris pertama)
               for(let i = 0; i < Math.min(15, data2D.length); i++) {
                   let rowData = data2D[i].map(c => String(c).trim().toUpperCase());
                   
@@ -2340,11 +2328,17 @@ async function submitFormInputAbsen(e) {
 
               let isSiabonFormat = Object.keys(colMap).includes("CP") && Object.keys(colMap).includes("AS");
               let startRow = headerRowIndex !== -1 ? headerRowIndex + 1 : 1;
+              
+              // DETEKSI OTOMATIS BUG SIABON: Jika judul kolom tanggal "1" ada di index 3, berarti file ini bergeser
+              let siabonOffset = 0;
+              if (isSiabonFormat && colMap['1'] === 3) {
+                  siabonOffset = 1; // Geser bacaan data ke kanan 1 kolom agar sinkron!
+              }
 
               for(let i = startRow; i < data2D.length; i++) {
                   let row = data2D[i];
                   
-                  // NIP Siabon ada di index 1 (Kolom B). Template standar di index 0.
+                  // NIP Siabon biasanya ada di kolom B (index 1)
                   let nipVal = isSiabonFormat ? row[1] : row[0]; 
                   if(!nipVal) continue;
                   let nipBersih = String(nipVal).replace(/[\s-']/g, '').toLowerCase();
@@ -2357,15 +2351,15 @@ async function submitFormInputAbsen(e) {
                   let cp1=0, cp2=0, cp3=0, cp4=0;
 
                   if (isSiabonFormat) {
-                      // 👇 MAPPING SESUAI PERMINTAAN BAPAK 👇
-                      let val = (colName) => parseInt(row[colMap[colName]]) || 0;
+                      // PENARIKAN DATA DENGAN OFFSET AGAR TIDAK MELESET
+                      let val = (colName) => parseInt(row[colMap[colName] + siabonOffset]) || 0;
                       
-                      cp4 = val('CP');               // Aplikasi CP4 = Kolom CP
-                      tl4 = val('AS');               // Aplikasi TD4 = Kolom AS
-                      dl  = val('D') + val('DK');    // Aplikasi DL  = Kolom D + DK
-                      s   = val('S');                // Aplikasi S   = Kolom S
-                      kp  = val('I');                // Aplikasi KP  = Kolom I (Izin)
-                      c   = val('C') + val('TB');    // Aplikasi C   = Kolom C + TB
+                      cp4 = val('CP');               // Aplikasi CP4 = Kolom CP (Siabon)
+                      tl4 = val('AS');               // Aplikasi TD4 = Kolom AS (Siabon)
+                      dl  = val('D') + val('DK');    // Aplikasi DL  = Kolom D + DK (Siabon)
+                      s   = val('S');                // Aplikasi S   = Kolom S (Siabon)
+                      kp  = val('I');                // Aplikasi KP  = Kolom I (Siabon)
+                      c   = val('C') + val('TB');    // Aplikasi C   = Kolom C + TB (Siabon)
                       tk  = val('TK') || val('A') || val('ALPA') || 0; 
                   } else {
                       let skpVal = String(row[1] || "Baik").trim();
@@ -2413,7 +2407,7 @@ async function submitFormInputAbsen(e) {
       } catch(e) {
           stopLoading();
           if(btnSubmitModal) btnSubmitModal.disabled = false;
-          alertError("Gagal memproses file Excel: " + e.message);
+          alertError("Gagal memproses file: " + e.message);
       }
   }
 

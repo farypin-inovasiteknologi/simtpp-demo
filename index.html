@@ -83,6 +83,19 @@
 
     .scroll-to-top { position: fixed; bottom: 85px; right: 15px; width: 45px; height: 45px; background: rgba(13, 110, 253, 0.8); color: white; border-radius: 50%; display: none; justify-content: center; align-items: center; font-size: 1.5rem; z-index: 1020; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: 0.3s; border: 2px solid white; }
 
+    /* Tombol Gradien Cetak Laporan (Ungu - Abu Gelap) */
+    .btn-cetak-gradien {
+      background: linear-gradient(135deg, #6a11cb 0%, #4a4a4a 50%, #212529 100%);
+      color: white !important;
+      border: none;
+      transition: all 0.3s ease;
+    }
+    .btn-cetak-gradien:hover {
+      background: linear-gradient(135deg, #5b0eb0 0%, #3b3b3b 50%, #111417 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+    }
+
     @media (max-width: 768px) {
       /* Kunci Layar Landing dan Login agar Kokoh (Tidak Bisa Di-scroll) */
       .bg-landing, body.bg-gradient-login {
@@ -463,64 +476,30 @@
     </div>
 
     <div id="viewDaftarPegawai" class="hidden">
-      <div class="alert alert-primary fw-bold text-center fs-5 shadow-sm mb-3">
-        PENGELOLAAN DATA PEGAWAI & TPP<br>
-        <span class="text-dark" style="font-size: 1rem; font-weight: normal;">
-          Periode : <span id="labelBulanAktif" class="text-danger fw-bold text-uppercase"></span> 
-          <span class="d-block d-md-inline mt-1 mt-md-0">( HK : <span id="labelHKAktif"></span> Hari )</span>
-        </span>
-      </div>
-      <div id="warningLock" class="alert alert-danger fw-bold text-center shadow-sm hidden border-danger">
-        <i class="bi bi-lock-fill"></i> PERIODE INI SUDAH DIKUNCI OLEH ADMIN <br> <span class="small text-dark">Data hanya dapat dilihat dan dicetak.</span>
+     <div class="d-flex flex-column flex-md-row justify-content-between align-items-stretch mb-3 gap-3 mt-3">
+        
+        <div class="alert alert-primary fw-bold text-center text-md-start fs-5 shadow-sm mb-0 flex-grow-1 d-flex flex-column justify-content-center">
+          <div>PENGELOLAAN DATA PEGAWAI & TPP</div>
+          <div class="text-dark mt-1" style="font-size: 1rem; font-weight: normal;">
+            Periode : <span id="labelBulanAktif" class="text-danger fw-bold text-uppercase"></span> 
+            <span class="d-block d-md-inline mt-1 mt-md-0">( HK : <span id="labelHKAktif"></span> Hari )</span>
+          </div>
+        </div>
+
+        <div class="d-flex flex-column gap-2 justify-content-center" style="min-width: 280px;">
+          <div class="d-flex gap-2">
+            <button id="btnTambahPegawai" class="btn btn-primary btn-sm fw-bold shadow-sm flex-fill py-2" onclick="bukaModalPegawai('tambah')"><i class="bi bi-person-plus"></i> Tambah</button>
+            <button id="btnImportAbsen" class="btn btn-success btn-sm fw-bold shadow-sm flex-fill py-2" onclick="bukaModalImport('absen')"><i class="bi bi-file-earmark-excel"></i> Import Absen</button>
+          </div>
+          <button class="btn btn-cetak-gradien w-100 fw-bold shadow-sm py-2" type="button" data-bs-toggle="modal" data-bs-target="#modalMenuCetak">
+            <i class="bi bi-printer-fill me-1"></i> MENU CETAK LAPORAN
+          </button>
+        </div>
+
       </div>
       
-      <div class="d-flex flex-column flex-md-row justify-content-between align-items-start mb-3 gap-2">
-        <div class="action-left d-flex flex-wrap gap-2 w-100 w-md-auto">
-          <button id="btnTambahPegawai" class="btn btn-primary btn-sm fw-bold shadow-sm"><i class="bi bi-person-plus"></i> Tambah</button>
-          <button id="btnImportAbsen" class="btn btn-success btn-sm fw-bold shadow-sm"><i class="bi bi-file-earmark-excel"></i> Import Absen</button>
-        </div>
-        
-        <button class="btn btn-success w-100 fw-bold d-md-none shadow-sm py-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasMenuCetak">
-          <i class="bi bi-printer-fill"></i> MENU CETAK LAPORAN
-        </button>
-
-        <div class="action-right d-none d-md-flex flex-wrap gap-2 justify-content-md-end">
-          <div class="btn-group shadow-sm">
-            <button class="btn btn-success btn-sm dropdown-toggle fw-bold" data-bs-toggle="dropdown"><i class="bi bi-printer"></i> Nominatif</button>
-            <ul class="dropdown-menu shadow text-center">
-              <li><a class="dropdown-item fw-bold text-success" href="javascript:void(0)" onclick="unduhNominatifKolektif('excel', event)">Unduh Excel</a></li>
-              <li><a class="dropdown-item fw-bold text-danger" href="javascript:void(0)" onclick="unduhNominatifKolektif('pdf', event)">Unduh PDF</a></li>
-            </ul>
-          </div>
-          <div class="btn-group shadow-sm">
-            <button class="btn btn-warning btn-sm dropdown-toggle fw-bold" data-bs-toggle="dropdown"><i class="bi bi-printer"></i> Perhitungan</button>
-            <ul class="dropdown-menu shadow text-center">
-              <li><a class="dropdown-item fw-bold text-success" href="javascript:void(0)" onclick="unduhPerhitunganKolektif('excel', event)">Unduh Excel</a></li>
-              <li><a class="dropdown-item fw-bold text-danger" href="javascript:void(0)" onclick="unduhPerhitunganKolektif('pdf', event)">Unduh PDF</a></li>
-            </ul>
-          </div>
-          <div class="btn-group shadow-sm">
-            <button class="btn btn-info text-white btn-sm dropdown-toggle fw-bold" data-bs-toggle="dropdown"><i class="bi bi-bar-chart-fill"></i> Rekap Gol.</button>
-            <ul class="dropdown-menu shadow text-center">
-              <li><a class="dropdown-item fw-bold text-success" href="javascript:void(0)" onclick="unduhRekapGolongan('excel', event)">Unduh Excel</a></li>
-              <li><a class="dropdown-item fw-bold text-danger" href="javascript:void(0)" onclick="unduhRekapGolongan('pdf', event)">Unduh PDF</a></li>
-            </ul>
-          </div>
-          <div class="btn-group shadow-sm">
-            <button class="btn btn-secondary btn-sm dropdown-toggle fw-bold" data-bs-toggle="dropdown"><i class="bi bi-bank"></i> Rekening</button>
-            <ul class="dropdown-menu shadow text-center">
-              <li><a class="dropdown-item fw-bold text-success" href="javascript:void(0)" onclick="unduhRekening('excel', event)">Unduh Excel</a></li>
-              <li><a class="dropdown-item fw-bold text-danger" href="javascript:void(0)" onclick="unduhRekening('pdf', event)">Unduh PDF</a></li>
-            </ul>
-          </div>
-          <div class="btn-group shadow-sm">
-            <button class="btn btn-danger btn-sm dropdown-toggle fw-bold" data-bs-toggle="dropdown"><i class="bi bi-receipt"></i> Rekap Pajak</button>
-            <ul class="dropdown-menu shadow text-center">
-              <li><a class="dropdown-item fw-bold text-success" href="javascript:void(0)" onclick="unduhRekapPajak('excel', event)">Unduh Excel</a></li>
-              <li><a class="dropdown-item fw-bold text-danger" href="javascript:void(0)" onclick="unduhRekapPajak('pdf', event)">Unduh PDF</a></li>
-            </ul>
-          </div>
-        </div>
+      <div id="warningLock" class="alert alert-danger fw-bold text-center shadow-sm hidden border-danger">
+        <i class="bi bi-lock-fill"></i> PERIODE INI SUDAH DIKUNCI OLEH ADMIN <br> <span class="small text-dark">Data hanya dapat dilihat dan dicetak.</span>
       </div>
 
       <div class="row mb-3 bg-light p-2 border rounded shadow-sm mx-0">
@@ -2004,54 +1983,58 @@
     </div>
   </div>
 
-  <div class="offcanvas offcanvas-bottom rounded-top-4" tabindex="-1" id="offcanvasMenuCetak" style="height: auto; max-height: 85vh;">
-      <div class="offcanvas-header bg-success text-white rounded-top-4 py-3">
-        <h5 class="offcanvas-title fw-bold m-0"><i class="bi bi-printer-fill"></i> Pilih Menu Cetak</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-      </div>
-      <div class="offcanvas-body pb-5">
-        <div class="d-flex flex-column gap-3">
-          
-          <div class="border-bottom pb-2">
-            <label class="fw-bold mb-2 text-success small"><i class="bi bi-list-check"></i> 1. Daftar Nominatif</label>
-            <div class="d-flex gap-2">
-              <button class="btn btn-outline-success w-50 fw-bold" onclick="unduhNominatifKolektif('excel', event); bootstrap.Offcanvas.getInstance(document.getElementById('offcanvasMenuCetak')).hide();"><i class="bi bi-file-earmark-excel"></i> Excel</button>
-              <button class="btn btn-outline-danger w-50 fw-bold" onclick="unduhNominatifKolektif('pdf', event); bootstrap.Offcanvas.getInstance(document.getElementById('offcanvasMenuCetak')).hide();"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
+  <div class="modal fade" id="modalMenuCetak" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0 rounded-4">
+          <div class="modal-header text-white rounded-top-4 py-3" style="background: linear-gradient(135deg, #6a11cb, #4a4a4a, #212529);">
+            <h5 class="modal-title fw-bold m-0"><i class="bi bi-printer-fill"></i> Pilih Menu Cetak</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-4 bg-light">
+            <div class="d-flex flex-column gap-3">
+              
+              <div class="bg-white p-3 rounded border shadow-sm">
+                <label class="fw-bold mb-2 text-success"><i class="bi bi-list-check"></i> 1. Daftar Nominatif</label>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-outline-success w-50 fw-bold" onclick="unduhNominatifKolektif('excel', event); bootstrap.Modal.getInstance(document.getElementById('modalMenuCetak')).hide();"><i class="bi bi-file-earmark-excel"></i> Excel</button>
+                  <button class="btn btn-outline-danger w-50 fw-bold" onclick="unduhNominatifKolektif('pdf', event); bootstrap.Modal.getInstance(document.getElementById('modalMenuCetak')).hide();"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
+                </div>
+              </div>
+
+              <div class="bg-white p-3 rounded border shadow-sm">
+                <label class="fw-bold mb-2 text-warning text-dark"><i class="bi bi-calculator"></i> 2. Rekap Perhitungan TPP</label>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-outline-success w-50 fw-bold" onclick="unduhPerhitunganKolektif('excel', event); bootstrap.Modal.getInstance(document.getElementById('modalMenuCetak')).hide();"><i class="bi bi-file-earmark-excel"></i> Excel</button>
+                  <button class="btn btn-outline-danger w-50 fw-bold" onclick="unduhPerhitunganKolektif('pdf', event); bootstrap.Modal.getInstance(document.getElementById('modalMenuCetak')).hide();"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
+                </div>
+              </div>
+
+              <div class="bg-white p-3 rounded border shadow-sm">
+                <label class="fw-bold mb-2 text-info text-dark"><i class="bi bi-bar-chart-fill"></i> 3. Rekap Golongan</label>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-outline-success w-50 fw-bold" onclick="unduhRekapGolongan('excel', event); bootstrap.Modal.getInstance(document.getElementById('modalMenuCetak')).hide();"><i class="bi bi-file-earmark-excel"></i> Excel</button>
+                  <button class="btn btn-outline-danger w-50 fw-bold" onclick="unduhRekapGolongan('pdf', event); bootstrap.Modal.getInstance(document.getElementById('modalMenuCetak')).hide();"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
+                </div>
+              </div>
+
+              <div class="bg-white p-3 rounded border shadow-sm">
+                <label class="fw-bold mb-2 text-secondary text-dark"><i class="bi bi-bank"></i> 4. Rekening Bank</label>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-outline-success w-50 fw-bold" onclick="unduhRekening('excel', event); bootstrap.Modal.getInstance(document.getElementById('modalMenuCetak')).hide();"><i class="bi bi-file-earmark-excel"></i> Excel</button>
+                  <button class="btn btn-outline-danger w-50 fw-bold" onclick="unduhRekening('pdf', event); bootstrap.Modal.getInstance(document.getElementById('modalMenuCetak')).hide();"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
+                </div>
+              </div>
+
+              <div class="bg-white p-3 rounded border shadow-sm mb-2">
+                <label class="fw-bold mb-2 text-danger"><i class="bi bi-receipt"></i> 5. Rekap Pajak PPh 21</label>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-outline-success w-50 fw-bold" onclick="unduhRekapPajak('excel', event); bootstrap.Modal.getInstance(document.getElementById('modalMenuCetak')).hide();"><i class="bi bi-file-earmark-excel"></i> Excel</button>
+                  <button class="btn btn-outline-danger w-50 fw-bold" onclick="unduhRekapPajak('pdf', event); bootstrap.Modal.getInstance(document.getElementById('modalMenuCetak')).hide();"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
+                </div>
+              </div>
+
             </div>
           </div>
-
-          <div class="border-bottom pb-2">
-            <label class="fw-bold mb-2 text-warning small"><i class="bi bi-calculator"></i> 2. Rincian Perhitungan</label>
-            <div class="d-flex gap-2">
-              <button class="btn btn-outline-success w-50 fw-bold" onclick="unduhPerhitunganKolektif('excel', event); bootstrap.Offcanvas.getInstance(document.getElementById('offcanvasMenuCetak')).hide();"><i class="bi bi-file-earmark-excel"></i> Excel</button>
-              <button class="btn btn-outline-danger w-50 fw-bold" onclick="unduhPerhitunganKolektif('pdf', event); bootstrap.Offcanvas.getInstance(document.getElementById('offcanvasMenuCetak')).hide();"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
-            </div>
-          </div>
-
-          <div class="border-bottom pb-2">
-            <label class="fw-bold mb-2 text-info small"><i class="bi bi-bar-chart-fill"></i> 3. Rekap Golongan</label>
-            <div class="d-flex gap-2">
-              <button class="btn btn-outline-success w-50 fw-bold" onclick="unduhRekapGolongan('excel', event); bootstrap.Offcanvas.getInstance(document.getElementById('offcanvasMenuCetak')).hide();"><i class="bi bi-file-earmark-excel"></i> Excel</button>
-              <button class="btn btn-outline-danger w-50 fw-bold" onclick="unduhRekapGolongan('pdf', event); bootstrap.Offcanvas.getInstance(document.getElementById('offcanvasMenuCetak')).hide();"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
-            </div>
-          </div>
-
-          <div class="border-bottom pb-2">
-            <label class="fw-bold mb-2 text-secondary small"><i class="bi bi-bank"></i> 4. Rekening Bank</label>
-            <div class="d-flex gap-2">
-              <button class="btn btn-outline-success w-50 fw-bold" onclick="unduhRekening('excel', event); bootstrap.Offcanvas.getInstance(document.getElementById('offcanvasMenuCetak')).hide();"><i class="bi bi-file-earmark-excel"></i> Excel</button>
-              <button class="btn btn-outline-danger w-50 fw-bold" onclick="unduhRekening('pdf', event); bootstrap.Offcanvas.getInstance(document.getElementById('offcanvasMenuCetak')).hide();"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
-            </div>
-          </div>
-
-          <div class="pb-2">
-            <label class="fw-bold mb-2 text-danger small"><i class="bi bi-receipt"></i> 5. Rekap Pajak PPh 21</label>
-            <div class="d-flex gap-2">
-              <button class="btn btn-outline-success w-50 fw-bold" onclick="unduhRekapPajak('excel', event); bootstrap.Offcanvas.getInstance(document.getElementById('offcanvasMenuCetak')).hide();"><i class="bi bi-file-earmark-excel"></i> Excel</button>
-              <button class="btn btn-outline-danger w-50 fw-bold" onclick="unduhRekapPajak('pdf', event); bootstrap.Offcanvas.getInstance(document.getElementById('offcanvasMenuCetak')).hide();"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
-            </div>
-          </div>
-
         </div>
       </div>
     </div>

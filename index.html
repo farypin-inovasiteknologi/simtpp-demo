@@ -977,10 +977,12 @@
         <span class="badge bg-primary fs-6" id="lblInputAbsenNip">NIP: </span>
       </div>
       
-      <div class="col-md-3 col-12 text-md-end text-center">
-        <button type="submit" class="btn btn-primary fw-bold w-100 shadow-sm" style="height: 100%;">
-          <i class="bi bi-save"></i> SIMPAN<br>DATA
+     <div class="col-md-3 col-12 text-md-end text-center d-flex flex-column align-items-end justify-content-center">
+        <span id="statusFinalBadge" class="badge bg-secondary mb-1" style="font-size: 0.75rem;">Belum Final</span>
+        <button type="button" id="btnKunciData" class="btn btn-outline-dark fw-bold w-100 shadow-sm" onclick="toggleKunciData()">
+          <i class="bi bi-unlock"></i> Kunci Data
         </button>
+        <span id="indikatorSimpan" class="text-muted fw-bold mt-1" style="font-size: 0.75rem; display: none;">Menyimpan...</span>
       </div>
       
     </div>

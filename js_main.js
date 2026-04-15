@@ -2,7 +2,7 @@
 // 1. KONFIGURASI SUPER MASTER (CUKUP 1 URL UNTUK SELURUH PROVINSI)
 // =========================================================================
 // Masukkan URL hasil Deploy Super Master Anda di sini:
-const API_URL = "https://script.google.com/macros/s/AKfycbx3lW4D4Jc09hgDjqSNbkywGQq3HwOsAWC5sEM_6xakfcNI31FcT3CU4rvmNEWDg_g/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbwz8bG4Mb6xNqSxpfQZFy36g5CS1f8JZSCc5yITipyF5cP6DlM_wlQPxid39j0vJVk/exec"; 
 
 let listOPD = []; // Dikosongkan, karena akan ditarik otomatis dari Super Master
 
@@ -3345,12 +3345,15 @@ function renderTabelArsipSaya() {
 
   dataSaya.forEach(d => {
       let waktu = new Date(d.waktu).toLocaleString('id-ID', {day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'});
-      // Beri warna lencana sesuai status
-      let badgeStatus = d.status === "Terverifikasi" ? "bg-success" : "bg-warning text-dark";
+      
+      // Warnai badge sesuai status
+      let badgeStatus = d.status === "Terverifikasi" ? "bg-success" : (d.status === "Ditolak" ? "bg-danger" : "bg-warning text-dark");
+      // Munculkan catatan jika ditolak
+      let catatanHtml = d.status === "Ditolak" ? `<div class="mt-1 small text-danger fw-bold"><i class="bi bi-exclamation-circle"></i> Alasan: ${d.catatan}</div>` : "";
       
       html += `<tr>
         <td class="small text-muted">${waktu}</td>
-        <td class="fw-bold text-dark">${d.judul}</td>
+        <td class="text-dark"><b>${d.judul}</b>${catatanHtml}</td>
         <td class="text-center"><span class="badge ${badgeStatus}">${d.status}</span></td>
         <td class="text-center text-nowrap">
           <a href="${d.link}" target="_blank" class="btn btn-sm btn-primary py-0"><i class="bi bi-box-arrow-up-right"></i> Buka</a>
@@ -3366,7 +3369,6 @@ function terapkanFilterPantauArsip() {
   let fSub = document.getElementById('filterPantauSubUnit') ? document.getElementById('filterPantauSubUnit').value.toLowerCase() : "";
   
   let dataBawahan = globalDataBuktiAbsen.filter(d => !d.isOwn);
-  
   let filtered = dataBawahan.filter(d => {
       let unitRow = String(d.unit).toLowerCase();
       let judulRow = String(d.judul).toLowerCase();
@@ -3391,21 +3393,22 @@ function terapkanFilterPantauArsip() {
 
   filtered.forEach(d => {
       let waktu = new Date(d.waktu).toLocaleString('id-ID', {day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'});
-      let badgeStatus = d.status === "Terverifikasi" ? "bg-success" : "bg-warning text-dark";
+      let badgeStatus = d.status === "Terverifikasi" ? "bg-success" : (d.status === "Ditolak" ? "bg-danger" : "bg-warning text-dark");
+      let catatanHtml = d.status === "Ditolak" ? `<div class="mt-1 small text-danger fw-bold"><i class="bi bi-exclamation-circle"></i> Alasan: ${d.catatan}</div>` : "";
       
-      // Tombol Dasar
       let btnAksi = `<a href="${d.link}" target="_blank" class="btn btn-sm btn-primary fw-bold shadow-sm py-0"><i class="bi bi-box-arrow-up-right"></i> Buka</a>`;
       
-      // 👇 JIKA LOGIN SEBAGAI ADMIN UPTD & STATUS MASIH MENUNGGU -> TAMPILKAN TOMBOL VERIFIKASI 👇
-      if (currentUser.role === "Admin Sub Unit/UPTD" && d.status !== "Terverifikasi") {
-          btnAksi += `<button class="btn btn-sm btn-success fw-bold shadow-sm py-0 ms-1 mt-1 mt-md-0" onclick="verifikasiArsip('${d.uuid}')"><i class="bi bi-check-circle"></i> Verifikasi</button>`;
+      // 👇 MUNCULKAN TOMBOL VERIFIKASI & TOLAK (KHUSUS ADMIN UPTD) 👇
+      if (currentUser.role === "Admin Sub Unit/UPTD" && d.status === "Menunggu Verifikasi") {
+          btnAksi += `<button class="btn btn-sm btn-success fw-bold shadow-sm py-0 ms-1 mt-1 mt-md-0" onclick="verifikasiArsip('${d.uuid}')" title="Verifikasi"><i class="bi bi-check-circle"></i></button>`;
+          btnAksi += `<button class="btn btn-sm btn-danger fw-bold shadow-sm py-0 ms-1 mt-1 mt-md-0" onclick="tolakArsip('${d.uuid}')" title="Tolak dengan Catatan">Tolak</button>`;
       }
 
       html += `<tr>
         <td class="small text-muted d-none d-md-table-cell">${waktu}</td>
         <td class="fw-bold text-primary">${d.unit}</td>
         <td class="small d-none d-md-table-cell"><span class="badge bg-secondary">${d.role}</span><br><span class="text-muted" style="font-size:0.7rem">${d.user}</span></td>
-        <td class="text-dark"><b>${d.judul}</b></td>
+        <td class="text-dark"><b>${d.judul}</b>${catatanHtml}</td>
         <td class="text-center text-nowrap">
           <span class="badge ${badgeStatus} d-block mb-1">${d.status}</span>
           ${btnAksi}
@@ -3413,6 +3416,37 @@ function terapkanFilterPantauArsip() {
       </tr>`;
   });
   tbody.innerHTML = html;
+}
+
+// 👇 FUNGSI BARU UNTUK TOLAK DENGAN CATATAN 👇
+function tolakArsip(uuid) {
+    Swal.fire({
+        title: 'Tolak Bukti Absen?',
+        text: 'Masukkan alasan penolakan agar Unit Kerja dapat memperbaikinya:',
+        input: 'text',
+        inputPlaceholder: 'Contoh: File buram / Link belum di-share',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="bi bi-x-circle"></i> Tolak Arsip',
+        preConfirm: (catatan) => {
+            if (!catatan) Swal.showValidationMessage('Alasan penolakan wajib diisi!');
+            return catatan;
+        }
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            startLoading("Menolak Arsip...");
+            let res = await fetchAPI("tolakBuktiAbsen", { bulan: globalBulanAktif, uuid: uuid, catatan: result.value });
+            stopLoading();
+            if (res && res.status === "sukses") {
+                alertSukses(res.pesan);
+                muatBuktiAbsen(); // Refresh tabel langsung
+            } else {
+                alertError(res.pesan || "Gagal menolak arsip.");
+            }
+        }
+    });
 }
 
 // Fungsi API untuk Eksekusi Verifikasi

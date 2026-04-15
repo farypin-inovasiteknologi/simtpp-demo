@@ -2,7 +2,7 @@
 // 1. KONFIGURASI SUPER MASTER (CUKUP 1 URL UNTUK SELURUH PROVINSI)
 // =========================================================================
 // Masukkan URL hasil Deploy Super Master Anda di sini:
-const API_URL = "https://script.google.com/macros/s/AKfycbzeBokg7MoGJ39HsV1gPc6NxN9VoV8las6YqF4vcYEQnSmXINH2WeojAiWELyod4Kcu/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbx3lW4D4Jc09hgDjqSNbkywGQq3HwOsAWC5sEM_6xakfcNI31FcT3CU4rvmNEWDg_g/exec"; 
 
 let listOPD = []; // Dikosongkan, karena akan ditarik otomatis dari Super Master
 
@@ -3275,6 +3275,203 @@ function triggerAutoSave(forceSave = false) {
         
         setTimeout(() => { indikator.style.display = 'none'; }, 3000);
     }, jeda); 
+}
+
+// ========================================================
+// LOGIKA BUKTI ABSEN (GOOGLE DRIVE)
+// ========================================================
+let globalDataBuktiAbsen = [];
+
+async function bukaModalBuktiAbsen() {
+  document.getElementById('lblBulanArsip').innerText = globalBulanAktif;
+  document.getElementById('formBuktiAbsen').reset();
+  
+  // Atur visibilitas Tab Pantau berdasarkan Role
+  let navPantau = document.getElementById('navPantauArsipContainer');
+  let boxFilterSub = document.getElementById('boxFilterSubUnitPantau');
+  
+  if (currentUser.role === "Operator") {
+      navPantau.classList.add('hidden'); // Operator tidak bisa pantau
+  } else {
+      navPantau.classList.remove('hidden');
+      // Filter Sub Unit cuma untuk Admin OPD & Super Admin
+      if (currentUser.role === "Admin Sub Unit/UPTD") {
+          boxFilterSub.classList.add('hidden');
+      } else {
+          boxFilterSub.classList.remove('hidden');
+          // Isi dropdown Sub Unit
+          let sel = document.getElementById('filterPantauSubUnit');
+          sel.innerHTML = '<option value="">-- Semua Sub Unit / Wilayah --</option>';
+          arraySubUnitValid.sort().forEach(s => sel.innerHTML += `<option value="${s}">${s}</option>`);
+      }
+  }
+
+  // Kembali ke Tab 1 by default
+  let triggerEl = document.querySelector('#pills-tab-arsip button[data-bs-target="#tabUploadArsip"]');
+  bootstrap.Tab.getOrCreateInstance(triggerEl).show();
+
+  let modalObj = new bootstrap.Modal(document.getElementById('modalBuktiAbsen'));
+  modalObj.show();
+
+  await muatBuktiAbsen();
+}
+
+async function muatBuktiAbsen() {
+  document.getElementById('tabelArsipSaya').innerHTML = '<tr><td colspan="3" class="text-center text-primary fw-bold">Mengambil data arsip...</td></tr>';
+  document.getElementById('tabelPantauArsip').innerHTML = '<tr><td colspan="5" class="text-center text-primary fw-bold">Mengambil data arsip...</td></tr>';
+  
+  let res = await fetchAPI("getBuktiAbsen", { bulan: globalBulanAktif, role: currentUser.role, unitkerja: currentUser.unitkerja });
+  
+  if (res && res.status === "sukses") {
+      globalDataBuktiAbsen = res.data;
+      renderTabelArsipSaya();
+      terapkanFilterPantauArsip();
+  } else {
+      let errRow = `<tr><td colspan="5" class="text-center text-danger">${res.pesan || 'Gagal memuat.'}</td></tr>`;
+      document.getElementById('tabelArsipSaya').innerHTML = errRow;
+      document.getElementById('tabelPantauArsip').innerHTML = errRow;
+  }
+}
+
+function renderTabelArsipSaya() {
+  let dataSaya = globalDataBuktiAbsen.filter(d => d.isOwn);
+  let tbody = document.getElementById('tabelArsipSaya');
+  let html = "";
+  
+  if (dataSaya.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Belum ada arsip yang Anda upload bulan ini.</td></tr>';
+      return;
+  }
+
+  dataSaya.forEach(d => {
+      let waktu = new Date(d.waktu).toLocaleString('id-ID', {day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'});
+      // Beri warna lencana sesuai status
+      let badgeStatus = d.status === "Terverifikasi" ? "bg-success" : "bg-warning text-dark";
+      
+      html += `<tr>
+        <td class="small text-muted">${waktu}</td>
+        <td class="fw-bold text-dark">${d.judul}</td>
+        <td class="text-center"><span class="badge ${badgeStatus}">${d.status}</span></td>
+        <td class="text-center text-nowrap">
+          <a href="${d.link}" target="_blank" class="btn btn-sm btn-primary py-0"><i class="bi bi-box-arrow-up-right"></i> Buka</a>
+          <button class="btn btn-sm btn-danger py-0 ms-1" onclick="hapusBuktiAbsen('${d.uuid}')"><i class="bi bi-trash"></i></button>
+        </td>
+      </tr>`;
+  });
+  tbody.innerHTML = html;
+}
+
+function terapkanFilterPantauArsip() {
+  let fCari = document.getElementById('filterPantauCari').value.toLowerCase();
+  let fSub = document.getElementById('filterPantauSubUnit') ? document.getElementById('filterPantauSubUnit').value.toLowerCase() : "";
+  
+  let dataBawahan = globalDataBuktiAbsen.filter(d => !d.isOwn);
+  
+  let filtered = dataBawahan.filter(d => {
+      let unitRow = String(d.unit).toLowerCase();
+      let judulRow = String(d.judul).toLowerCase();
+      let matchCari = unitRow.includes(fCari) || judulRow.includes(fCari);
+      
+      let matchSub = true;
+      if (fSub !== "") {
+          let objMap = arrayUnitKerjaFull.find(x => String(x.nama).trim().toLowerCase() === unitRow);
+          let subOfUnit = objMap ? String(objMap.subUnit).trim().toLowerCase() : "";
+          matchSub = (subOfUnit === fSub);
+      }
+      return matchCari && matchSub;
+  });
+
+  let tbody = document.getElementById('tabelPantauArsip');
+  let html = "";
+  
+  if (filtered.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Tidak ada data arsip dari bawahan yang ditemukan.</td></tr>';
+      return;
+  }
+
+  filtered.forEach(d => {
+      let waktu = new Date(d.waktu).toLocaleString('id-ID', {day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'});
+      let badgeStatus = d.status === "Terverifikasi" ? "bg-success" : "bg-warning text-dark";
+      
+      // Tombol Dasar
+      let btnAksi = `<a href="${d.link}" target="_blank" class="btn btn-sm btn-primary fw-bold shadow-sm py-0"><i class="bi bi-box-arrow-up-right"></i> Buka</a>`;
+      
+      // 👇 JIKA LOGIN SEBAGAI ADMIN UPTD & STATUS MASIH MENUNGGU -> TAMPILKAN TOMBOL VERIFIKASI 👇
+      if (currentUser.role === "Admin Sub Unit/UPTD" && d.status !== "Terverifikasi") {
+          btnAksi += `<button class="btn btn-sm btn-success fw-bold shadow-sm py-0 ms-1 mt-1 mt-md-0" onclick="verifikasiArsip('${d.uuid}')"><i class="bi bi-check-circle"></i> Verifikasi</button>`;
+      }
+
+      html += `<tr>
+        <td class="small text-muted d-none d-md-table-cell">${waktu}</td>
+        <td class="fw-bold text-primary">${d.unit}</td>
+        <td class="small d-none d-md-table-cell"><span class="badge bg-secondary">${d.role}</span><br><span class="text-muted" style="font-size:0.7rem">${d.user}</span></td>
+        <td class="text-dark"><b>${d.judul}</b></td>
+        <td class="text-center text-nowrap">
+          <span class="badge ${badgeStatus} d-block mb-1">${d.status}</span>
+          ${btnAksi}
+        </td>
+      </tr>`;
+  });
+  tbody.innerHTML = html;
+}
+
+// Fungsi API untuk Eksekusi Verifikasi
+function verifikasiArsip(uuid) {
+    Swal.fire({
+      title: 'Verifikasi Arsip?', 
+      text: "Setelah diverifikasi, arsip ini akan otomatis diteruskan ke Admin OPD Dinas. Lanjutkan?", 
+      icon: 'question',
+      showCancelButton: true, confirmButtonColor: '#198754', cancelButtonColor: '#6c757d', 
+      confirmButtonText: '<i class="bi bi-check-circle"></i> Ya, Verifikasi!'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+          startLoading("Memverifikasi...");
+          let res = await fetchAPI("verifikasiBuktiAbsen", { bulan: globalBulanAktif, uuid: uuid });
+          stopLoading();
+          if(res && res.status === "sukses") { 
+              alertSukses(res.pesan); 
+              muatBuktiAbsen(); // Refresh tabel agar status langsung berubah hijau
+          } else { 
+              alertError(res.pesan || "Gagal diverifikasi."); 
+          }
+      }
+    });
+}
+
+async function submitBuktiAbsen(e) {
+  e.preventDefault();
+  startLoading("Menyimpan Link Drive...");
+  
+  let d = {
+      bulan: globalBulanAktif, role: currentUser.role, unitkerja: currentUser.unitkerja, user: currentUser.username,
+      judul: document.getElementById('bJudul').value, link: document.getElementById('bLink').value
+  };
+
+  let res = await fetchAPI("simpanBuktiAbsen", d);
+  stopLoading();
+  
+  if(res && res.status === "sukses") {
+      alertSukses(res.pesan);
+      document.getElementById('formBuktiAbsen').reset();
+      muatBuktiAbsen(); // Refresh tabel langsung
+  } else {
+      alertError(res.pesan || "Terjadi kesalahan!");
+  }
+}
+
+function hapusBuktiAbsen(uuid) {
+  Swal.fire({
+      title: 'Hapus Arsip?', text: "Yakin ingin menghapus link bukti absen ini?", icon: 'warning',
+      showCancelButton: true, confirmButtonColor: '#dc3545', cancelButtonColor: '#6c757d', confirmButtonText: 'Ya, Hapus!'
+  }).then(async (result) => {
+      if (result.isConfirmed) {
+          startLoading("Menghapus...");
+          let res = await fetchAPI("hapusBuktiAbsen", { bulan: globalBulanAktif, uuid: uuid });
+          stopLoading();
+          if(res && res.status === "sukses") { alertSukses(res.pesan); muatBuktiAbsen(); } 
+          else { alertError(res.pesan || "Gagal dihapus."); }
+      }
+  });
 }
 
 

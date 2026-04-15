@@ -1992,34 +1992,45 @@
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body p-4 bg-light">
-            <div class="alert alert-info small fw-bold mb-4 border-info">
+            <div class="alert alert-info small fw-bold mb-4 border-info text-center shadow-sm">
               <i class="bi bi-info-circle-fill"></i> Laporan massal akan diunduh dalam format <b>Excel (.xlsx)</b> untuk menjaga kerapian kolom.
             </div>
-            <div class="d-flex flex-column gap-3">
+            
+            <div class="row g-3">
               
-              <div class="bg-white p-3 rounded border shadow-sm">
-                <label class="fw-bold mb-2 text-success"><i class="bi bi-list-check"></i> 1. Daftar Nominatif</label>
-                <button class="btn btn-success w-100 fw-bold" onclick="unduhNominatifKolektif('excel', event); bootstrap.Modal.getInstance(document.getElementById('modalMenuCetak')).hide();"><i class="bi bi-file-earmark-excel"></i> Unduh Laporan (Excel)</button>
+              <div class="col-12 col-md-6">
+                <div class="bg-white p-3 rounded border shadow-sm h-100 d-flex flex-column justify-content-between border-primary" style="border-width: 2px !important;">
+                  <label class="fw-bold mb-3 text-primary"><i class="bi bi-list-check fs-5 me-1"></i> 1. Daftar Nominatif</label>
+                  <button class="btn btn-primary w-100 fw-bold py-2" onclick="unduhNominatifKolektif('excel', event); bootstrap.Modal.getInstance(document.getElementById('modalMenuCetak')).hide();"><i class="bi bi-file-earmark-excel"></i> Unduh Laporan</button>
+                </div>
               </div>
 
-              <div class="bg-white p-3 rounded border shadow-sm">
-                <label class="fw-bold mb-2 text-warning text-dark"><i class="bi bi-calculator"></i> 2. Rincian Perhitungan</label>
-                <button class="btn btn-success w-100 fw-bold" onclick="unduhPerhitunganKolektif('excel', event); bootstrap.Modal.getInstance(document.getElementById('modalMenuCetak')).hide();"><i class="bi bi-file-earmark-excel"></i> Unduh Laporan (Excel)</button>
+              <div class="col-12 col-md-6">
+                <div class="bg-white p-3 rounded border shadow-sm h-100 d-flex flex-column justify-content-between border-warning" style="border-width: 2px !important;">
+                  <label class="fw-bold mb-3 text-warning text-dark"><i class="bi bi-calculator fs-5 me-1"></i> 2. Rekap Perhitungan TPP</label>
+                  <button class="btn btn-warning w-100 fw-bold text-dark py-2" onclick="unduhPerhitunganKolektif('excel', event); bootstrap.Modal.getInstance(document.getElementById('modalMenuCetak')).hide();"><i class="bi bi-file-earmark-excel"></i> Unduh Laporan</button>
+                </div>
               </div>
 
-              <div class="bg-white p-3 rounded border shadow-sm">
-                <label class="fw-bold mb-2 text-info text-dark"><i class="bi bi-bar-chart-fill"></i> 3. Rekap Golongan</label>
-                <button class="btn btn-success w-100 fw-bold" onclick="unduhRekapGolongan('excel', event); bootstrap.Modal.getInstance(document.getElementById('modalMenuCetak')).hide();"><i class="bi bi-file-earmark-excel"></i> Unduh Laporan (Excel)</button>
+              <div class="col-12 col-md-6">
+                <div class="bg-white p-3 rounded border shadow-sm h-100 d-flex flex-column justify-content-between border-info" style="border-width: 2px !important;">
+                  <label class="fw-bold mb-3 text-info text-dark"><i class="bi bi-bar-chart-fill fs-5 me-1"></i> 3. Rekap Golongan</label>
+                  <button class="btn btn-info w-100 fw-bold text-white py-2" onclick="unduhRekapGolongan('excel', event); bootstrap.Modal.getInstance(document.getElementById('modalMenuCetak')).hide();"><i class="bi bi-file-earmark-excel"></i> Unduh Laporan</button>
+                </div>
               </div>
 
-              <div class="bg-white p-3 rounded border shadow-sm">
-                <label class="fw-bold mb-2 text-secondary text-dark"><i class="bi bi-bank"></i> 4. Rekening Bank</label>
-                <button class="btn btn-success w-100 fw-bold" onclick="unduhRekening('excel', event); bootstrap.Modal.getInstance(document.getElementById('modalMenuCetak')).hide();"><i class="bi bi-file-earmark-excel"></i> Unduh Laporan (Excel)</button>
+              <div class="col-12 col-md-6">
+                <div class="bg-white p-3 rounded border shadow-sm h-100 d-flex flex-column justify-content-between border-secondary" style="border-width: 2px !important;">
+                  <label class="fw-bold mb-3 text-secondary text-dark"><i class="bi bi-bank fs-5 me-1"></i> 4. Rekening Bank</label>
+                  <button class="btn btn-secondary w-100 fw-bold py-2" onclick="unduhRekening('excel', event); bootstrap.Modal.getInstance(document.getElementById('modalMenuCetak')).hide();"><i class="bi bi-file-earmark-excel"></i> Unduh Laporan</button>
+                </div>
               </div>
 
-              <div class="bg-white p-3 rounded border shadow-sm mb-2">
-                <label class="fw-bold mb-2 text-danger"><i class="bi bi-receipt"></i> 5. Rekap Pajak PPh 21</label>
-                <button class="btn btn-success w-100 fw-bold" onclick="unduhRekapPajak('excel', event); bootstrap.Modal.getInstance(document.getElementById('modalMenuCetak')).hide();"><i class="bi bi-file-earmark-excel"></i> Unduh Laporan (Excel)</button>
+              <div class="col-12 col-md-12">
+                <div class="bg-white p-3 rounded border shadow-sm h-100 d-flex flex-column justify-content-between border-danger" style="border-width: 2px !important;">
+                  <label class="fw-bold mb-3 text-danger"><i class="bi bi-receipt fs-5 me-1"></i> 5. Rekap Pajak PPh 21</label>
+                  <button class="btn btn-danger w-100 fw-bold py-2 fs-6" onclick="unduhRekapPajak('excel', event); bootstrap.Modal.getInstance(document.getElementById('modalMenuCetak')).hide();"><i class="bi bi-file-earmark-excel"></i> Unduh Laporan Pajak</button>
+                </div>
               </div>
 
             </div>

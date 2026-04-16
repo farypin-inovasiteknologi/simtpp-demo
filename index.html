@@ -2213,6 +2213,50 @@
   </div>
 </div>
 
+<div class="modal fade" id="modalTambahOPD" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog">
+    <div class="modal-content shadow-lg border-0">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title fw-bold"><i class="bi bi-building-add"></i> Registrasi OPD Baru</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body bg-light">
+        <form id="formTambahOPD" onsubmit="submitOPDBaru(event)">
+          <div class="alert alert-info small border-info shadow-sm mb-3">
+            <b>Panduan:</b> Buatlah file Google Spreadsheet kosong baru, lalu salin ID unik yang ada di URL-nya (di antara <code>/d/</code> dan <code>/edit</code>) ke dalam form di bawah ini. Sistem akan merakit databasenya otomatis!
+          </div>
+          <div class="mb-3">
+            <label class="fw-bold text-secondary">Nama Dinas / Instansi / OPD</label>
+            <input type="text" id="tOpdNama" class="form-control form-control-lg border-primary" placeholder="Cth: DINAS KESEHATAN" required>
+          </div>
+          <div class="mb-4">
+            <label class="fw-bold text-secondary">ID Spreadsheet (Google Sheets)</label>
+            <input type="text" id="tOpdSheetId" class="form-control form-control-lg border-primary text-primary fw-bold" placeholder="Cth: 1V7ASQtli3SRiqDD5lWV..." required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm"><i class="bi bi-save"></i> SIMPAN & SETUP DATABASE</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalImportOPD" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content shadow-lg border-0">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title fw-bold"><i class="bi bi-file-earmark-excel"></i> Import Daftar OPD</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center p-4">
+        <button class="btn btn-outline-success fw-bold mb-4 w-100" onclick="unduhTemplateOPD()"><i class="bi bi-download"></i> Unduh Template Excel OPD</button>
+        <h6 class="fw-bold text-dark border-bottom pb-2 text-start">Upload File Anda (.xlsx)</h6>
+        <input type="file" id="fileImportOPD" class="form-control form-control-lg border-success mb-3" accept=".xlsx, .xls">
+        <button class="btn btn-success w-100 fw-bold py-2 fs-5" onclick="prosesImportOPDMassal()"><i class="bi bi-upload"></i> MULAI IMPORT OPD</button>
+      </div>
+    </div>
+  </div>
+</div>
+
       <div class="custom-footer text-center no-print">
       <p class="mb-1 fw-bold">SIM TPP ONLINE &copy; 2026 Pemerintah Provinsi Jambi</p>
       <p class="mb-0 small text-muted">Created with ❤️ by : Fary | <a href="#" class="text-decoration-none text-primary fw-bold" data-bs-toggle="modal" data-bs-target="#modalPrivasi"><i class="bi bi-shield-check"></i> Kebijakan Privasi & Keamanan</a></p>

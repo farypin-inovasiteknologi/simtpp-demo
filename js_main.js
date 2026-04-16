@@ -2,7 +2,7 @@
 // 1. KONFIGURASI SUPER MASTER (CUKUP 1 URL UNTUK SELURUH PROVINSI)
 // =========================================================================
 // Masukkan URL hasil Deploy Super Master Anda di sini:
-const API_URL = "https://script.google.com/macros/s/AKfycbwz8bG4Mb6xNqSxpfQZFy36g5CS1f8JZSCc5yITipyF5cP6DlM_wlQPxid39j0vJVk/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbzlpqUspjQQ1xIeQbGuztXky2Mt9rdTh1AJXttMNPscuJx8YGAGl7N5NPaCQpcxNz2r/exec"; 
 
 let listOPD = []; // Dikosongkan, karena akan ditarik otomatis dari Super Master
 
@@ -141,18 +141,6 @@ function ubahNamaOPD(element) {
   }
 }
 
-async function masukKeLogin() {
-  let target = sessionStorage.getItem('targetSheetId');
-  if(!target) return alertPeringatan("Silakan pilih Instansi / OPD Anda terlebih dahulu!");
-  
-  startLoading("Menghubungkan ke Database OPD..."); 
-  await inisialisasiAplikasi(); 
-  stopLoading();
-  
-  document.getElementById('viewLanding').classList.add('hidden'); 
-  document.getElementById('viewLogin').classList.remove('hidden'); 
-  document.body.classList.add('bg-gradient-login');
-}
 
 function kembaliKeLanding() {
   sessionStorage.clear(); 
@@ -178,74 +166,53 @@ function togglePassword(inputId, btn) {
   else { inp.type = "password"; icon.classList.replace('bi-eye-slash', 'bi-eye'); } 
 }
 
+function masukKeLogin() {
+  // Tidak perlu lagi ngecek sessionStorage.getItem('targetSheetId') di awal
+  document.getElementById('viewLanding').classList.add('hidden'); 
+  document.getElementById('viewLogin').classList.remove('hidden'); 
+  document.body.classList.add('bg-gradient-login');
+}
+
 async function doLogin(e) {
-  e.preventDefault(); startLoading("Memeriksa Akses..."); 
+  e.preventDefault(); 
+  startLoading("Memeriksa Akses..."); 
   let u = document.getElementById('logUser').value; 
   let p = document.getElementById('logPass').value;
   
+  // Panggil API (Sekarang fetchAPI akan menembak tanpa butuh sheetId terlebih dahulu)
   let res = await fetchAPI("prosesLogin", {username: u, password: p});
   stopLoading(); 
   
   if(res.status === "sukses") {
-    sessionStorage.setItem('authToken', res.token); currentUser = res.user; 
-    document.getElementById('navInfoRole').innerText = currentUser.unitkerja; 
-    document.getElementById('mHeaderUnit').innerText = currentUser.unitkerja; 
-    
-    let r = currentUser.role;
-      let isSuper = (r === "Super Admin");
-      let isOpd = (r === "Admin OPD");
-
-      // 1. MASTER TPP: Hanya Super Admin
-      if(isSuper) { 
-          document.getElementById('btnMasterAdmin').classList.remove('hidden'); 
-      } else { 
-          document.getElementById('btnMasterAdmin').classList.add('hidden'); 
-      }
-      
-      // 2. KELOLA AKUN: Super Admin DAN Admin OPD bisa lihat!
-      if(isSuper || isOpd) { 
-          document.getElementById('btnAkunAdmin').classList.remove('hidden'); 
-      } else { 
-          document.getElementById('btnAkunAdmin').classList.add('hidden'); 
-      }
-      
-      // 3. SETTING: Hanya Super Admin & Admin OPD (Operator disembunyikan)
-      if(isSuper || isOpd) { 
-          document.getElementById('btnSettingAdmin').classList.remove('hidden'); 
-          if(document.getElementById('mHeaderAdminIcons')) document.getElementById('mHeaderAdminIcons').classList.remove('hidden');
-      } else { 
-          document.getElementById('btnSettingAdmin').classList.add('hidden'); 
-          if(document.getElementById('mHeaderAdminIcons')) document.getElementById('mHeaderAdminIcons').classList.add('hidden');
-      }
-      
-      // 4. IKON DI HP MOBILE
-      let iconMasterHP = document.querySelector('i[onclick="switchView(\'viewMasterPergub\')"]');
-      let iconAkunHP = document.querySelector('i[onclick="muatDaftarAkun()"]');
-
-      if(isSuper || isOpd) { 
-          document.getElementById('btnTambahBulan').classList.remove('hidden'); 
-          document.getElementById('btnKelolaBulan').classList.remove('hidden'); 
-          
-          // Ikon Master TPP HP: Hanya Super Admin
-          if(iconMasterHP && isSuper) iconMasterHP.classList.remove('hidden'); 
-          else if(iconMasterHP) iconMasterHP.classList.add('hidden');
-          
-          // Ikon Kelola Akun HP: Super Admin & Admin OPD
-          if(iconAkunHP && (isSuper || isOpd)) iconAkunHP.classList.remove('hidden'); 
-          else if(iconAkunHP) iconAkunHP.classList.add('hidden');
-      } else { 
-          document.getElementById('btnTambahBulan').classList.add('hidden'); 
-          document.getElementById('btnKelolaBulan').classList.add('hidden'); 
-          if(iconMasterHP) iconMasterHP.classList.add('hidden');
-          if(iconAkunHP) iconAkunHP.classList.add('hidden');
-      }
+    sessionStorage.setItem('authToken', res.token); 
+    currentUser = res.user; 
+    sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+    sessionStorage.setItem('isLoggedIn', 'true'); 
 
     document.getElementById('viewLogin').classList.add('hidden'); 
     document.getElementById('mainNav').classList.remove('hidden');
-    sessionStorage.setItem('isLoggedIn', 'true'); 
-    sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
-    switchView('viewPilihBulan'); 
-    inisialisasiAplikasi();
+    
+    // ===============================================
+    // ROUTING CERDAS BERDASARKAN ROLE
+    // ===============================================
+    if (currentUser.role === "Super Admin") {
+        // SUPER ADMIN: Arahkan ke Lobby Kendali
+        switchView('viewLobbySuperAdmin');
+        muatLobbyOPD(); // Panggil fungsi (yang akan kita buat) untuk merender kotak OPD
+    } else {
+        // ADMIN OPD / OPERATOR: Pastikan mereka punya ID Spreadsheet
+        if(!currentUser.sheetId || currentUser.sheetId === "") {
+            kembaliKeLanding();
+            return alertError("Akses Ditolak: Akun Anda belum dikaitkan dengan database OPD manapun. Silakan hubungi Super Admin.");
+        }
+        
+        // Simpan ID Spreadsheet target mereka ke memori browser
+        sessionStorage.setItem('targetSheetId', currentUser.sheetId);
+        
+        // Langsung arahkan ke Dashboard (Pilih Bulan) dan inisialisasi data
+        switchView('viewPilihBulan'); 
+        inisialisasiAplikasi();
+    }
   } else { 
     alertError(res.pesan); 
   }

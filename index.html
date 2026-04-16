@@ -2163,6 +2163,56 @@
       </div>
     </div>
 
+
+    <div class="modal fade" id="modalEditHierarki" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content shadow-lg border-0">
+      <div class="modal-header bg-secondary text-white">
+        <h5 class="modal-title fw-bold"><i class="bi bi-diagram-3-fill"></i> Kelola Hierarki: <span id="lblNamaOPDHierarki" class="text-warning"></span></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" onclick="tutupModalHierarki()"></button>
+      </div>
+      <div class="modal-body bg-light p-4">
+        
+        <form id="formTambahHierarki" onsubmit="submitHierarkiBaru(event)">
+          <div class="row g-2 mb-4 align-items-end bg-white p-3 border rounded shadow-sm">
+            <div class="col-md-5">
+              <label class="fw-bold small">Sub Unit / UPTD / Cabdin (Opsional)</label>
+              <input type="text" id="hSubUnit" class="form-control border-secondary" placeholder="Cth: Cabdin Wilayah 1">
+            </div>
+            <div class="col-md-5">
+              <label class="fw-bold small text-primary">Nama Unit Kerja (Wajib)</label>
+              <input type="text" id="hUnitKerja" class="form-control border-primary" placeholder="Cth: SMAN 1 Jambi" required>
+            </div>
+            <div class="col-md-2">
+              <button type="submit" class="btn btn-primary w-100 fw-bold"><i class="bi bi-plus-lg"></i> Tambah</button>
+            </div>
+          </div>
+        </form>
+        
+        <div class="table-responsive bg-white border rounded shadow-sm">
+          <table class="table table-hover table-bordered align-middle mb-0" style="font-size: 0.85rem;">
+            <thead class="table-dark text-center">
+              <tr>
+                <th width="5%">No</th>
+                <th width="35%">Induk / Sub Unit (Kategori)</th>
+                <th width="45%">Unit Kerja (Tujuan Akun Operator)</th>
+                <th width="15%">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tabelBodyHierarki">
+              <tr><td colspan="4" class="text-center">Memuat data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal" onclick="tutupModalHierarki()">Selesai & Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
       <div class="custom-footer text-center no-print">
       <p class="mb-1 fw-bold">SIM TPP ONLINE &copy; 2026 Pemerintah Provinsi Jambi</p>
       <p class="mb-0 small text-muted">Created with ❤️ by : Fary | <a href="#" class="text-decoration-none text-primary fw-bold" data-bs-toggle="modal" data-bs-target="#modalPrivasi"><i class="bi bi-shield-check"></i> Kebijakan Privasi & Keamanan</a></p>

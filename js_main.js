@@ -3574,8 +3574,112 @@ function kembaliKeLobby() {
   muatLobbyOPD();
 }
 
-// Tombol "Edit" (Sementara kita pancing dulu)
+// ==============================================================
+// LOGIKA EDIT HIERARKI UNIT KERJA (SUPER ADMIN)
+// ==============================================================
+
+// 1. Membuka Modal & Mengambil Data
 function bukaModalEditHierarkiOPD(sheetId, namaOPD) {
-    alertPeringatan("Fitur Edit Hierarki Sub Unit & Unit Kerja untuk " + namaOPD + " siap kita eksekusi di langkah berikutnya!");
+  // Tanamkan sheetId target ke ingatan browser sementara
+  sessionStorage.setItem('targetSheetId', sheetId); 
+  
+  document.getElementById('lblNamaOPDHierarki').innerText = namaOPD;
+  document.getElementById('formTambahHierarki').reset();
+  
+  let modalObj = new bootstrap.Modal(document.getElementById('modalEditHierarki'));
+  modalObj.show();
+  
+  muatTabelHierarki(); // Ambil data dari GAS
+}
+
+// 2. Membersihkan Sesi Saat Modal Ditutup
+function tutupModalHierarki() {
+  // Hapus sheetId target agar Super Admin tidak nyangkut jika pindah ke OPD lain
+  sessionStorage.removeItem('targetSheetId'); 
+}
+
+// 3. Fetch Data ke Tabel
+async function muatTabelHierarki() {
+  document.getElementById('tabelBodyHierarki').innerHTML = '<tr><td colspan="4" class="text-center text-primary fw-bold"><div class="spinner-border spinner-border-sm"></div> Memuat hierarki...</td></tr>';
+  
+  let res = await fetchAPI("getHierarkiUnitKerja", {}); // fetchAPI otomatis mengirim targetSheetId
+  if (res && res.status === "sukses") {
+    renderTabelHierarki(res.data);
+  } else {
+    document.getElementById('tabelBodyHierarki').innerHTML = `<tr><td colspan="4" class="text-center text-danger">${res.pesan || "Gagal memuat"}</td></tr>`;
+  }
+}
+
+// 4. Render HTML Tabel
+function renderTabelHierarki(data) {
+  let tbody = document.getElementById('tabelBodyHierarki');
+  if (data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Belum ada Unit Kerja. Silakan tambah melalui form di atas.</td></tr>';
+    return;
+  }
+  
+  let html = "";
+  data.forEach((d, i) => {
+    // Beri penanda visual jika tidak punya Sub Unit (Langsung di bawah Dinas)
+    let badgeSub = d.subUnit ? `<span class="badge bg-secondary">${d.subUnit}</span>` : `<span class="badge bg-light text-muted border">- Induk OPD -</span>`;
+    
+    html += `<tr>
+      <td class="text-center">${i + 1}</td>
+      <td>${badgeSub}</td>
+      <td class="fw-bold text-primary">${d.nama}</td>
+      <td class="text-center">
+        <button class="btn btn-sm btn-danger py-0 shadow-sm" onclick="hapusHierarki('${d.id}', '${d.nama}')" title="Hapus"><i class="bi bi-trash"></i></button>
+      </td>
+    </tr>`;
+  });
+  tbody.innerHTML = html;
+}
+
+// 5. Menyimpan Unit Kerja Baru
+async function submitHierarkiBaru(e) {
+  e.preventDefault();
+  startLoading("Menyimpan Unit Kerja...");
+  
+  let d = {
+    subUnit: document.getElementById('hSubUnit').value,
+    nama: document.getElementById('hUnitKerja').value
+  };
+  
+  let res = await fetchAPI("simpanHierarkiUnitKerja", d);
+  stopLoading();
+  
+  if (res && res.status === "sukses") {
+    alertSukses(res.pesan);
+    document.getElementById('formTambahHierarki').reset();
+    muatTabelHierarki(); // Refresh tabel langsung
+  } else {
+    alertError(res.pesan || "Terjadi kesalahan sistem");
+  }
+}
+
+// 6. Menghapus Unit Kerja
+function hapusHierarki(id, nama) {
+  Swal.fire({
+    title: 'Hapus Unit Kerja?',
+    text: `Yakin ingin menghapus ${nama}? Jika ada Akun Operator yang menggunakan unit ini, mereka harus diatur ulang.`,
+    icon: 'warning', 
+    showCancelButton: true, 
+    confirmButtonColor: '#dc3545',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: '<i class="bi bi-trash"></i> Ya, Hapus!'
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      startLoading("Menghapus...");
+      let res = await fetchAPI("hapusHierarkiUnitKerja", id);
+      stopLoading();
+      
+      if (res && res.status === "sukses") {
+        alertSukses(res.pesan);
+        muatTabelHierarki(); // Refresh tabel langsung
+      } else {
+        alertError(res.pesan || "Gagal menghapus data");
+      }
+    }
+  });
 }
 

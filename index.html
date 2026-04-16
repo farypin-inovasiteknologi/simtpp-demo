@@ -428,6 +428,31 @@
     </div>
   </nav>
 
+  <div id="viewLobbySuperAdmin" class="hidden" style="margin-top: 3rem;">
+  <div class="row mb-4 align-items-center">
+    <div class="col-md-6">
+      <h3 class="fw-bold text-primary"><i class="bi bi-buildings-fill"></i> LOBBY SUPER ADMIN</h3>
+      <p class="text-muted fw-bold">Pusat Kendali Seluruh Instansi / OPD</p>
+    </div>
+    <div class="col-md-6 text-md-end">
+      <button class="btn btn-success fw-bold shadow-sm me-2" onclick="bukaModalImportOPD()"><i class="bi bi-file-earmark-excel"></i> Import OPD</button>
+      <button class="btn btn-primary fw-bold shadow-sm" onclick="bukaModalTambahOPD()"><i class="bi bi-plus-circle"></i> Tambah OPD Baru</button>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <input type="text" id="cariOPDLobby" class="form-control form-control-lg border-primary shadow-sm" placeholder="🔍 Cari Nama OPD atau Instansi..." oninput="filterLobbyOPD()">
+    </div>
+  </div>
+
+  <div class="row g-4" id="gridLobbyOPD">
+    <div class="col-12 text-center text-muted fw-bold py-5">
+      <div class="spinner-border text-primary" role="status"></div><br>Memuat Data OPD...
+    </div>
+  </div>
+</div>
+
   <div class="p-4 no-print">
 
     <div id="viewPilihBulan" class="hidden" style="margin-top: 3rem;">

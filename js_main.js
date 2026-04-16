@@ -3683,3 +3683,103 @@ function hapusHierarki(id, nama) {
   });
 }
 
+// ==============================================================
+// FUNGSI TAMBAH & IMPORT OPD (SUPER ADMIN LOBBY)
+// ==============================================================
+
+// --- 1. Fungsi Tambah OPD Manual ---
+function bukaModalTambahOPD() {
+  document.getElementById('formTambahOPD').reset();
+  let modalObj = new bootstrap.Modal(document.getElementById('modalTambahOPD'));
+  modalObj.show();
+}
+
+async function submitOPDBaru(e) {
+  e.preventDefault();
+  startLoading("Menyimpan & Menyiapkan Database OPD... (Ini memakan waktu sekitar 10 detik)");
+  
+  let d = {
+    nama: document.getElementById('tOpdNama').value.trim(),
+    sheetId: document.getElementById('tOpdSheetId').value.trim()
+  };
+  
+  let res = await fetchAPI("simpanOPDBaru", d);
+  stopLoading();
+  
+  if (res && res.status === "sukses") {
+    alertSukses(res.pesan);
+    bootstrap.Modal.getInstance(document.getElementById('modalTambahOPD')).hide();
+    muatLobbyOPD(); // Refresh kotak-kotak Lobby
+  } else {
+    alertError(res.pesan || "Terjadi kesalahan sistem");
+  }
+}
+
+// --- 2. Fungsi Import OPD Massal (Excel) ---
+function bukaModalImportOPD() {
+  document.getElementById('fileImportOPD').value = "";
+  let modalObj = new bootstrap.Modal(document.getElementById('modalImportOPD'));
+  modalObj.show();
+}
+
+async function unduhTemplateOPD() {
+  try {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Template_Daftar_OPD');
+    
+    sheet.addRow(["Nama OPD / Instansi", "ID Spreadsheet Google Sheets"]);
+    sheet.addRow(["DINAS KESEHATAN PROVINSI", "1A2B3C4D5E6F7G8H9I0J..."]);
+    
+    sheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    sheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF198754' } };
+    sheet.columns.forEach(column => { column.width = 40; });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    saveAs(blob, "Template_Import_OPD.xlsx");
+  } catch (err) {
+    alertError("Gagal membuat template: " + err.message);
+  }
+}
+
+async function prosesImportOPDMassal() {
+  let fileInput = document.getElementById('fileImportOPD');
+  if(!fileInput.files[0]) return alertPeringatan("Pilih file Excel OPD terlebih dahulu!");
+  
+  startLoading("Membaca File OPD...");
+  try {
+    let arrayBuffer = await fileInput.files[0].arrayBuffer();
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(arrayBuffer);
+    const worksheet = wb.worksheets[0];
+    
+    let payload = [];
+    worksheet.eachRow({ includeEmpty: false }, function(row, rowNumber) {
+      if(rowNumber > 1) { // Lewati Header
+        let namaVal = row.getCell(1).value;
+        let idVal = row.getCell(2).value;
+        if(namaVal && idVal) {
+          payload.push({ nama: String(namaVal).trim(), sheetId: String(idVal).trim() });
+        }
+      }
+    });
+
+    if(payload.length === 0) {
+      stopLoading(); return alertError("File Excel kosong atau format tidak sesuai!");
+    }
+
+    Swal.getHtmlContainer().innerHTML = `Mendaftarkan ${payload.length} OPD ke Lobby...`;
+    let res = await fetchAPI("importOPDMassal", payload);
+    stopLoading();
+    
+    if (res && res.status === "sukses") {
+      alertSukses(res.pesan);
+      bootstrap.Modal.getInstance(document.getElementById('modalImportOPD')).hide();
+      muatLobbyOPD(); // Refresh kotak-kotak Lobby
+    } else {
+      alertError(res.pesan);
+    }
+  } catch(e) {
+    stopLoading(); alertError("Gagal memproses file: " + e.message);
+  }
+}

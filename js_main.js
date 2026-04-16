@@ -245,8 +245,8 @@ async function doLogin(e) {
   }
 
   function switchView(viewId) { 
-    // PERBAIKAN: #viewManajemenASN dihapus agar tidak bentrok dengan Popup
-    document.querySelectorAll('#viewLogin, #viewLanding, #viewPilihBulan, #viewDaftarPegawai, #viewMasterPergub, #viewSetting, #viewPanduan, #viewManajemenAkun').forEach(el => el.classList.add('hidden')); 
+    // 👇 Tambahkan #viewLobbySuperAdmin ke dalam daftar yang harus disembunyikan 👇
+    document.querySelectorAll('#viewLobbySuperAdmin, #viewLogin, #viewLanding, #viewPilihBulan, #viewDaftarPegawai, #viewMasterPergub, #viewSetting, #viewPanduan, #viewManajemenAkun').forEach(el => el.classList.add('hidden'));
     
     let appContainer = document.getElementById('appContainer'); 
     let mHeader = document.getElementById('mobileHeader'); 
@@ -3475,4 +3475,107 @@ function hapusBuktiAbsen(uuid) {
   });
 }
 
+// ==============================================================
+// FITUR LOBBY SUPER ADMIN (MARKAS BESAR)
+// ==============================================================
+let globalDataOPDLobby = [];
+
+async function muatLobbyOPD() {
+  startLoading("Memuat Daftar OPD...");
+  
+  // Tarik data dari Super Master (Fungsi getDaftarOPD sudah ada di Kode.gs kamu)
+  let res = await fetchAPI("getDaftarOPD", {}); 
+  stopLoading();
+
+  if (res && res.status === "sukses") {
+    globalDataOPDLobby = res.data;
+    renderGridOPD(globalDataOPDLobby);
+    
+    // Tampilkan tombol "Lobby" di Navbar khusus untuk Super Admin
+    if (currentUser.role === "Super Admin") {
+        let btnLobby = document.getElementById('btnLobbyAdmin');
+        if(btnLobby) btnLobby.classList.remove('hidden');
+    }
+  } else {
+    document.getElementById('gridLobbyOPD').innerHTML = `<div class="col-12 text-center text-danger fw-bold">Gagal memuat data: ${res.pesan || 'Error'}</div>`;
+  }
+}
+
+function renderGridOPD(data) {
+  let container = document.getElementById('gridLobbyOPD');
+  container.innerHTML = "";
+
+  if (data.length === 0) {
+    container.innerHTML = `<div class="col-12 text-center text-muted fw-bold py-5">Belum ada OPD yang terdaftar.<br>Silakan klik tombol "Tambah OPD Baru".</div>`;
+    return;
+  }
+
+  // Render kotak-kotak OPD (3 Baris Kesamping / col-md-4)
+  data.forEach(opd => {
+    container.innerHTML += `
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm border-0 rounded-4" style="border-top: 5px solid #0d6efd !important;">
+        <div class="card-body p-4 d-flex flex-column">
+          <h5 class="fw-bold text-dark mb-1">${opd.nama}</h5>
+          <p class="text-muted small mb-4" style="font-size: 0.75rem;">
+            <i class="bi bi-database"></i> ID: ${opd.sheetId.substring(0, 20)}...
+          </p>
+          
+          <div class="mt-auto d-flex gap-2">
+            <button class="btn btn-primary fw-bold w-100 shadow-sm" onclick="masukDashboardOPD('${opd.sheetId}', '${opd.nama}')">
+              <i class="bi bi-box-arrow-in-right"></i> Masuk
+            </button>
+            <button class="btn btn-outline-secondary fw-bold w-100" onclick="bukaModalEditHierarkiOPD('${opd.sheetId}', '${opd.nama}')">
+              <i class="bi bi-diagram-3-fill"></i> Edit
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  });
+}
+
+function filterLobbyOPD() {
+  let cari = document.getElementById('cariOPDLobby').value.toLowerCase();
+  let filtered = globalDataOPDLobby.filter(opd => opd.nama.toLowerCase().includes(cari));
+  renderGridOPD(filtered);
+}
+
+// Tombol "Masuk" -> Terjun ke dalam OPD spesifik
+function masukDashboardOPD(sheetId, namaOPD) {
+  // 1. Simpan ID file target ke sesi browser
+  sessionStorage.setItem('targetSheetId', sheetId);
+  
+  // 2. Sembunyikan Lobby, Munculkan Layout App utama
+  document.getElementById('viewLobbySuperAdmin').classList.add('hidden');
+  switchView('viewPilihBulan'); 
+  
+  // 3. Tarik data khusus OPD tersebut
+  inisialisasiAplikasi();
+}
+
+// Tombol "Kembali ke Lobby" (Di Navbar Atas)
+function kembaliKeLobby() {
+  // 1. Bersihkan ingatan tentang OPD sebelumnya
+  sessionStorage.removeItem('targetSheetId');
+  sessionStorage.removeItem('globalBulanAktif');
+  globalBulanAktif = "";
+  
+  // 2. Bersihkan UI Dashboard
+  document.querySelectorAll('#viewPilihBulan, #viewDaftarPegawai, #viewMasterPergub, #viewSetting, #viewPanduan, #viewManajemenAkun').forEach(el => el.classList.add('hidden'));
+  
+  // 3. Munculkan kembali Lobby
+  document.getElementById('viewLobbySuperAdmin').classList.remove('hidden');
+  
+  // 4. Update nama dinas di Navbar menjadi Pusat Kendali
+  document.getElementById('navInfoRole').innerText = "Pusat Kendali";
+  
+  // 5. Muat ulang kotak-kotak OPD
+  muatLobbyOPD();
+}
+
+// Tombol "Edit" (Sementara kita pancing dulu)
+function bukaModalEditHierarkiOPD(sheetId, namaOPD) {
+    alertPeringatan("Fitur Edit Hierarki Sub Unit & Unit Kerja untuk " + namaOPD + " siap kita eksekusi di langkah berikutnya!");
+}
 
